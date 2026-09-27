@@ -94,3 +94,12 @@ model donaciones {
   rut_usuario String 
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
 }
+
+model adoptante {
+  id_adoptante              Int         @id @default(autoincrement())
+  direccion                 String
+  telefono                  String
+  correo                    String
+  fecha_naciciento          DateTime
+  obsercaciones_adoptante   String?
+}
