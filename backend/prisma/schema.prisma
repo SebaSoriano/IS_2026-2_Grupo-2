@@ -70,3 +70,12 @@ model hitorial_medico {
     obervaciones String? @db.VarChar(500)
     id_animal Int @relation(fields: [rut_animal], references: [rut_animal])
 }
+
+model animales {
+  id_animal Int @id @default(autoincrement())
+  edad Int
+  via_ingreso String @db.VarChar(100)
+  peso_animal 
+  especie_animal String @db.VarChar(100)
+  observaciones_animal String? // Why though?
+}
