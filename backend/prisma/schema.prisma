@@ -103,3 +103,11 @@ model adoptante {
   fecha_naciciento          DateTime
   observaciones_adoptante   String?
 }
+
+model adopciones {
+  fecha_adopcion DateTime
+
+  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+  animal animales @relation(fields: [id_animal], references:[id_animal])
+  adoptante adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
+}
