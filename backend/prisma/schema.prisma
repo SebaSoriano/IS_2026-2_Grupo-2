@@ -18,6 +18,8 @@ model Usuario {
     contrasena String @db.VarChar(100)
     agendamientos  Agendamiento[] //el "Muchos" de la relacion
     insumos        Insumo[] //el "Muchos" de la relacion
+    turnos        Turno[] //el "Muchos" de la relacion
+
 }
 
 model Agendamiento {
@@ -41,4 +43,19 @@ model Insumo{
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
 }
 
+// Relacion N:N, un usuario puede tener muchos horarios, y un horario puede ser compartido por muchos usuarios
+model Horario{
+  id Int @id @default(autoincrement())
+  fecha DateTime
+  turnos Turno[] //el "Muchos" de la relacion
 
+}
+
+model Turno {
+  rut_usuario String
+  horario_id Int
+  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+  horario Horario @relation(fields: [horario_id], references: [id])
+
+  @@id([rut_usuario, horario_id]) //Clave primaria compuesta
+}
