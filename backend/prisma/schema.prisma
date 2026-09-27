@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelos de la base de datos
+
+// Relacion 1:N, un usuario puede tener muchos agendamientos, pero un agendamiento solo puede tener un usuario
+model Usuario {
+    rut_usuario String @id
+    correo String? @db.VarChar(100) //el "?" indica que es opcional
+    telefono String? @db.VarChar(15)
+    fecha_nacimiento DateTime?
+    contrasena String @db.VarChar(100)
+    agendamientos Agendamiento[] //el "Muchos" de la relacion
+}
+
+model Agendamiento {
+    id Int @id @default(autoincrement())
+    fecha DateTime
+    hora_inicio DateTime
+    hora_fin DateTime
+    rut_usuario String
+    usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario]) //Establecer la FK 
+}
