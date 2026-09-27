@@ -68,7 +68,7 @@ model hitorial_medico {
     fecha_tratamiento DateTime
     veterinario String @db.VarChar(100)
     obervaciones String? @db.VarChar(500)
-    id_animal Int @relation(fields: [rut_animal], references: [rut_animal])
+    id_animal Int @relation(fields: [id_animal], references: [id_animal])
 }
 
 model animales {
