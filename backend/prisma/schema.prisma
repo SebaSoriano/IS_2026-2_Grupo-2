@@ -101,5 +101,5 @@ model adoptante {
   telefono                  String
   correo                    String
   fecha_naciciento          DateTime
-  obsercaciones_adoptante   String?
+  observaciones_adoptante   String?
 }
