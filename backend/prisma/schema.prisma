@@ -41,4 +41,12 @@ model Insumo{
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
 }
 
-
+model hitorial_medico {
+    id_historial Int @id @default(autoincrement())
+    nombre String? @db.VarChar(100)
+    tratamiento String @db.VarChar(500)
+    fecha_tratamiento DateTime
+    veterinario String @db.VarChar(100)
+    obervaciones String? @db.VarChar(500)
+    id_animal Int @relation(fields: [rut_animal], references: [rut_animal])
+}
