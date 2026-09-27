@@ -19,6 +19,7 @@ model Usuario {
     agendamientos  Agendamiento[] //el "Muchos" de la relacion
     insumos        Insumo[] //el "Muchos" de la relacion
     turnos        Turno[] //el "Muchos" de la relacion
+    donaciones    donaciones[] //el "Muchos" de la relacion
 
 }
 
@@ -82,4 +83,14 @@ model animales {
   observaciones_animal  String?
 
   historial hitorial_medico[]
+}
+
+model donaciones {
+  id_donacion Int @id @default(autoincrement())
+  tipo_donacion String @db.VarChar(100)
+  monto_donacion Int?
+  fecha_donacion DateTime
+  
+  rut_usuario String 
+  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
 }
