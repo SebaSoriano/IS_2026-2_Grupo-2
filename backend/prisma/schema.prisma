@@ -19,7 +19,8 @@ model Usuario {
     agendamientos  Agendamiento[] //el "Muchos" de la relacion
     insumos        Insumo[] //el "Muchos" de la relacion
     turnos        Turno[] //el "Muchos" de la relacion
-
+    donaciones    donaciones[] //el "Muchos" de la relacion
+    adopciones  adopciones[]
 }
 
 model Agendamiento {
@@ -62,11 +63,60 @@ model Turno {
 }
 
 model hitorial_medico {
-    id_historial Int @id @default(autoincrement())
-    nombre String? @db.VarChar(100)
-    tratamiento String @db.VarChar(500)
-    fecha_tratamiento DateTime
-    veterinario String @db.VarChar(100)
-    obervaciones String? @db.VarChar(500)
-    id_animal Int @relation(fields: [rut_animal], references: [rut_animal])
+  id_historial      Int       @id @default(autoincrement())
+  nombre            String?   @db.VarChar(100)
+  tratamiento       String    @db.VarChar(500)
+  fecha_tratamiento DateTime
+  veterinario       String    @db.VarChar(100)
+  observaciones     String?   @db.VarChar(500)
+
+  id_animal Int
+  animal    animales @relation(fields: [id_animal], references: [id_animal])
+}
+
+model animales {
+  id_animal             Int               @id @default(autoincrement())
+  edad                  Int
+  via_ingreso           String            @db.VarChar(100)
+  peso_animal           Int
+  especie_animal        String            @db.VarChar(100)
+  observaciones_animal  String?
+
+  historial hitorial_medico[]
+  adopciones adopciones[]
+}
+
+model donaciones {
+  id_donacion Int @id @default(autoincrement())
+  tipo_donacion String @db.VarChar(100)
+  monto_donacion Int?
+  fecha_donacion DateTime
+  
+  rut_usuario String 
+  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+}
+
+model adoptante {
+  id_adoptante              Int         @id @default(autoincrement())
+  direccion                 String
+  telefono                  String
+  correo                    String
+  fecha_naciciento          DateTime
+  observaciones_adoptante   String?
+  adopciones adopciones[]
+}
+
+model adopciones {
+  fecha_adopcion DateTime
+
+  id_usuario String
+  usuario Usuario @relation(fields: [id_usuario], references: [rut_usuario])
+
+  id_animal Int
+  animal animales @relation(fields: [id_animal], references:[id_animal])
+
+  id_adoptante Int
+  adoptante adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
+
+  @@id([id_usuario, id_animal, id_adoptante])
 }
