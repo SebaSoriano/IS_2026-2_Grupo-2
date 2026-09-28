@@ -9,6 +9,10 @@ let mascotas = [
     {nombre: 'Miau', tipo: 'gato', edad: 2}
 ]
 
+app.get('/mascotas', (req, res) => {
+    res.json(mascotas)
+})
+
 app.listen(PORT, () => {
     console.log(`Server listening in http://localhost:${PORT}`)
 })
