@@ -20,7 +20,7 @@ model Usuario {
     insumos        Insumo[] //el "Muchos" de la relacion
     turnos        Turno[] //el "Muchos" de la relacion
     donaciones    donaciones[] //el "Muchos" de la relacion
-
+    adopciones  adopciones[]
 }
 
 model Agendamiento {
@@ -83,6 +83,7 @@ model animales {
   observaciones_animal  String?
 
   historial hitorial_medico[]
+  adopciones adopciones[]
 }
 
 model donaciones {
@@ -102,17 +103,20 @@ model adoptante {
   correo                    String
   fecha_naciciento          DateTime
   observaciones_adoptante   String?
+  adopciones adopciones[]
 }
 
 model adopciones {
   fecha_adopcion DateTime
 
   id_usuario String
-  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+  usuario Usuario @relation(fields: [id_usuario], references: [rut_usuario])
 
   id_animal Int
   animal animales @relation(fields: [id_animal], references:[id_animal])
 
   id_adoptante Int
   adoptante adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
+
+  @@id([id_usuario, id_animal, id_adoptante])
 }
