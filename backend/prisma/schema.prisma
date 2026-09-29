@@ -79,7 +79,7 @@ model animales {
   id_animal             Int               @id @default(autoincrement())
   edad                  Int
   via_ingreso           String            @db.VarChar(100)
-  peso_animal           Int
+  peso_animal           Float
   especie_animal        String            @db.VarChar(100)
   observaciones_animal  String?
 
