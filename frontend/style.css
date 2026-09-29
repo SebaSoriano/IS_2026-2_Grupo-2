@@ -1,0 +1,84 @@
+/* Contenedor de la barra de navegacion*/
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #effdff;
+  padding: 12px 24px;
+}
+
+/* Titulo y logo*/
+.mainlogo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 64px;
+  height: 64px;
+}
+
+.title {
+  font-family: sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+  color: #000000;
+  margin: 0;
+}
+
+/* Grupo de botones donar y se voluntario*/
+.navbar-actions {
+  display: flex;
+  gap: 34px;
+  align-items: center;
+}
+
+/* Botones de donación y se voluntario*/
+.btn-header {
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  height: 64px;
+  min-width: 150px;
+}
+.btn-donar {
+  background-color: #81f5ff;
+  color: #0f7482;
+}
+.btn-volun {
+  background-color: #ffe0a3;
+  color: #e16e27;
+}
+.btn-intranet {
+  background-color: #96d0da;
+  color: #0f7482;
+  padding: 10px 5px 10px 5px;
+  max-height: 32px;
+}
+
+.btn-donar:hover {
+  background-color: #0f7482;
+  color: #b1f3f9;
+}
+.btn-volun:hover {
+  background-color: #e16e27;
+  color: #ffe0a3;
+}
+/*Boton de filtro*/
+.filters{
+  display: block;
+  align-items: center;
+}
+.btn-filter{
+  background-color: #89e9f1;
+  border: none;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor:pointer;
+}
