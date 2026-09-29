@@ -63,7 +63,7 @@ model Turno {
   @@id([rut_usuario, horario_id]) //Clave primaria compuesta
 }
 
-model hitorial_medico {
+model historial_medico {
   id_historial      Int       @id @default(autoincrement())
   nombre            String?   @db.VarChar(100)
   tratamiento       String    @db.VarChar(500)
@@ -83,7 +83,7 @@ model animales {
   especie_animal        String            @db.VarChar(100)
   observaciones_animal  String?
 
-  historial hitorial_medico[]
+  historial historial_medico[]
   adopciones adopciones[]
 }
 
