@@ -1,4 +1,7 @@
+import { useState } from 'react'
+
 export default function InternalPage() {
+  const [activeSection, setActiveSection] = useState('adopcion')
   const sections = [
     { label: 'Horario', id: 'horario' },
     { label: 'Adopción', id: 'adopcion' },
@@ -18,15 +21,16 @@ export default function InternalPage() {
         </div>
 
         <nav className="section-nav" aria-label="Secciones principales">
-          {sections.map((section, index) => (
-            <a
-              className={`nav-link${index === 1 ? ' is-active' : ''}`}
-              href={`#${section.id}`}
-              aria-current={index === 0 ? 'page' : undefined}
+          {sections.map((section) => (
+            <button
+              className={`nav-link${activeSection === section.id ? ' is-active' : ''}`}
+              type="button"
+              aria-pressed={activeSection === section.id}
+              onClick={() => setActiveSection(section.id)}
               key={section.id}
             >
               {section.label}
-            </a>
+            </button>
           ))}
         </nav>
       </header>
