@@ -9,6 +9,7 @@ const usuarioPublico = {
   select: { rut_usuario: true, correo: true },
 };
 
+//obtener todos los insumos incluyendo el usuario que registro el insumo
 export async function getAllInsumos() {
   return prisma.insumo.findMany({
     include: {
@@ -16,3 +17,14 @@ export async function getAllInsumos() {
     },
   });
 }
+
+//obtener insumo por id con la informacion del usuario que lo registro
+export async function getInsumoById(id) {
+  return prisma.insumo.findUnique({
+    where: {id},
+    include:{
+      usuario: usuarioPublico,
+     },
+  });
+}
+
