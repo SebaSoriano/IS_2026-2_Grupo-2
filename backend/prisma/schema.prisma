@@ -102,7 +102,7 @@ model adoptante {
   direccion                 String
   telefono                  String
   correo                    String
-  fecha_naciciento          DateTime
+  fecha_nacimiento          DateTime
   observaciones_adoptante   String?
   adopciones adopciones[]
 }
