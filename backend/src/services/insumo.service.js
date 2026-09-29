@@ -3,16 +3,16 @@
 //este import hace que se ocupe una sola instancia
 import prisma from '../config/prisma.js';
 
+// estandarizacion de lo que se mostrar publicamente del usuario, esto para evitar volver a escribir las mismas lineas de codigo
+// nunca incluir la contrasena
+const usuarioPublico = {
+  select: { rut_usuario: true, correo: true },
+};
 
-//listar todos los insumos
 export async function getAllInsumos() {
- return prisma.insumo.findMany({
-   include: {
-    usuario: {
-        // select explicito para no traer la contraseña y demas campos del usuario, solamente traermos el rut y el correo
-        // de quien registro el insumo
-        select: {rut_usuario: true, correo: true},
-     },  
-    },    
- });
+  return prisma.insumo.findMany({
+    include: {
+      usuario: usuarioPublico,
+    },
+  });
 }
