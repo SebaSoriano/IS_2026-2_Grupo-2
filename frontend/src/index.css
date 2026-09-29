@@ -16,7 +16,16 @@ body {
 
 .brand {
   display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  color: #071b1c;
   text-decoration: none;
+}
+
+.brand-title {
+  font-size: 30px;
+  font-weight: 600;
+  transform: translate(-20px, 2px);
 }
 
 .brand-logo {
@@ -36,5 +45,13 @@ body {
   .brand-logo {
     width: 44px;
     height: 44px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-title {
+    font-size: 28px;
   }
 }
