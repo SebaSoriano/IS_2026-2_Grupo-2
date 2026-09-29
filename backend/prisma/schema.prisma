@@ -76,6 +76,7 @@ model hitorial_medico {
 
 model animales {
   id_animal             Int               @id @default(autoincrement())
+  nombre_animal         String
   edad                  Int
   via_ingreso           String            @db.VarChar(100)
   peso_animal           Int
@@ -98,6 +99,7 @@ model donaciones {
 
 model adoptante {
   id_adoptante              Int         @id @default(autoincrement())
+  nombre_adoptante          String
   direccion                 String
   telefono                  String
   correo                    String
@@ -108,7 +110,7 @@ model adoptante {
 
 model adopciones {
   fecha_adopcion DateTime
-
+// Posibilidad de agregar un ID a la adopcion para que no se repitan
   id_usuario String
   usuario Usuario @relation(fields: [id_usuario], references: [rut_usuario])
 
