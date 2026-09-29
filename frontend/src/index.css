@@ -36,6 +36,38 @@ body {
   transform: translateX(-5px);
 }
 
+.section-nav {
+  min-height: 58px;
+  padding: 0 5.7%;
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  overflow-x: auto;
+  background: #3ba5a3;
+}
+
+.nav-link {
+  flex: 0 0 auto;
+  min-width: 148px;
+  padding: 11px 12px;
+  border-radius: 4px;
+  color: #10494b;
+  background: #c3eeee;
+  box-shadow: 0 4px 8px #174d4c40;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.nav-link:hover {
+  background: #dcf8f5;
+}
+
+.nav-link.is-active {
+  color: #064c3e;
+  background: #19efa0;
+}
+
 @media (max-width: 600px) {
   .brand-row {
     min-height: 60px;
@@ -53,5 +85,15 @@ body {
 
   .brand-title {
     font-size: 28px;
+  }
+
+  .section-nav {
+    min-height: 56px;
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .nav-link {
+    min-width: 132px;
   }
 }
