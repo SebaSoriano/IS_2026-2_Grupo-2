@@ -51,6 +51,7 @@
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .nav-link:hover {
@@ -60,6 +61,11 @@
 .nav-link.is-active {
   color: #064c3e;
   background: #19efa0;
+}
+
+.section-area {
+  min-height: calc(100vh - 126px);
+  background: #fff;
 }
 
 @media (max-width: 600px) {
@@ -89,5 +95,9 @@
 
   .nav-link {
     min-width: 132px;
+  }
+
+  .section-area {
+    min-height: calc(100vh - 116px);
   }
 }

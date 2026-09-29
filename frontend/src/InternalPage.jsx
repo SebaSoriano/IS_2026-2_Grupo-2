@@ -1,14 +1,58 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+
+const sections = [
+  { label: 'Horario', id: 'horario' },
+  { label: 'Adopción', id: 'adopcion' },
+  { label: 'Historial Médico', id: 'historial-medico' },
+  { label: 'Inventario', id: 'inventario' },
+  { label: 'Donaciones', id: 'donaciones' },
+]
+
+function getSectionFromPath(pathname) {
+  const normalizedPath = pathname.replace(/\/+$/, '') || '/'
+  return sections.find((section) => `/${section.id}` === normalizedPath)?.id
+}
 
 export default function InternalPage() {
-  const [activeSection, setActiveSection] = useState('adopcion')
-  const sections = [
-    { label: 'Horario', id: 'horario' },
-    { label: 'Adopción', id: 'adopcion' },
-    { label: 'Historial Médico', id: 'historial-medico' },
-    { label: 'Inventario', id: 'inventario' },
-    { label: 'Donaciones', id: 'donaciones' },
-  ]
+  const [activeSection, setActiveSection] = useState(
+    () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
+  )
+
+  useEffect(() => {
+    const syncSectionWithPath = () => {
+      const sectionId = getSectionFromPath(window.location.pathname)
+      if (sectionId) {
+        setActiveSection(sectionId)
+        return
+      }
+
+      window.history.replaceState(null, '', '/adopcion')
+      setActiveSection('adopcion')
+    }
+
+    syncSectionWithPath()
+    window.addEventListener('popstate', syncSectionWithPath)
+    return () => window.removeEventListener('popstate', syncSectionWithPath)
+  }, [])
+
+  const navigateToSection = (event, sectionId) => {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    const path = `/${sectionId}`
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path)
+    }
+    setActiveSection(sectionId)
+  }
 
   return (
     <main>
@@ -22,19 +66,27 @@ export default function InternalPage() {
 
         <nav className="section-nav" aria-label="Secciones principales">
           {sections.map((section) => (
-            <button
+            <a
               className={`nav-link${activeSection === section.id ? ' is-active' : ''}`}
-              type="button"
-              aria-pressed={activeSection === section.id}
-              onClick={() => setActiveSection(section.id)}
+              href={`/${section.id}`}
+              aria-current={activeSection === section.id ? 'page' : undefined}
+              onClick={(event) => navigateToSection(event, section.id)}
               key={section.id}
             >
               {section.label}
-            </button>
+            </a>
           ))}
         </nav>
       </header>
 
+      {sections.map((section) => (
+        <section
+          className={`section-area section-area--${section.id}`}
+          aria-label={`Área de ${section.label}`}
+          hidden={activeSection !== section.id}
+          key={section.id}
+        />
+      ))}
     </main>
   )
 }
