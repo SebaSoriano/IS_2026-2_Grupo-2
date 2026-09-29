@@ -1,3 +1,40 @@
 body {
   margin: 0;
+  min-width: 320px;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #123e40;
+  background: #f5f8f7;
+}
+
+.brand-row {
+  min-height: 68px;
+  padding: 0 24px 0 10px;
+  display: flex;
+  align-items: center;
+  background: #9bd6d3;
+}
+
+.brand {
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.brand-logo {
+  display: block;
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  transform: translateX(-5px);
+}
+
+@media (max-width: 600px) {
+  .brand-row {
+    min-height: 60px;
+    padding-right: 12px;
+  }
+
+  .brand-logo {
+    width: 44px;
+    height: 44px;
+  }
 }
