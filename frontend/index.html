@@ -2,12 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo_straypaws.svg" />
+    <link rel="icon" type="image/svg+xml" href="public/logo_straypaws.png" />
+    <link rel="stylesheet" href="style.css"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Huellas sin hogar</title>
   </head>
   <body>
-    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <header class="navbar">
+      <!-- Sección izquierda: Logo y Título -->
+      <div class="mainlogo">
+        <img src="public/logo_straypaws.png" alt="Logo" class="logo" />
+        <h1 class="title">Huellas sin hogar</h1>
+      </div>
+      <!-- Sección derecha: Botones -->
+      <div class="navbar-actions">
+        <button class="btn-header btn-donar">DONAR</button>
+        <button class="btn-header btn-volun">SE VOLUNTARIO</button>
+        <button class="btn-header btn-intranet">Acceder a Intranet</button>
+      </div>
+    </header>
+    <div id="filters">
+      <button class="btn-filter"> Filtrar por...</button>
+    </div>
   </body>
 </html>
