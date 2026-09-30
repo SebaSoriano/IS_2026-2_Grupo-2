@@ -28,3 +28,22 @@ export async function getInsumoById(id) {
   });
 }
 
+export async function createInsumo(data) {
+  return prisma.insumo.create({
+    data,
+    include: { usuario: usuarioPublico },
+  });
+}
+
+export async function updateInsumo(id, data) {
+  return prisma.insumo.update({
+    where: { id },
+    data,
+    include: { usuario: usuarioPublico },
+  });
+}
+
+export async function deleteInsumo(id) {
+  return prisma.insumo.delete({ where: { id } });
+}
+
