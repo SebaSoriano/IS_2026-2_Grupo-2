@@ -68,6 +68,34 @@
   background: #fff;
 }
 
+.schedule-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 30px 16px;
+}
+
+.schedule-action {
+  box-sizing: border-box;
+  width: 120px;
+  height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  color: #315052;
+  background: #c3eeee;
+  box-shadow: 0 4px 8px #174d4c40;
+  font: inherit;
+  cursor: pointer;
+}
+
+.schedule-action:hover,
+.schedule-action:focus-visible {
+  color: #064c3e;
+  background: #19efa0;
+}
+
 @media (max-width: 600px) {
   .brand-row {
     min-height: 60px;

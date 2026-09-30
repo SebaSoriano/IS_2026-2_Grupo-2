@@ -8,6 +8,14 @@ const sections = [
   { label: 'Donaciones', id: 'donaciones' },
 ]
 
+const scheduleActions = [
+  'Añadir turno',
+  'Editar turno',
+  'Borrar turno',
+  'Asistencia',
+  'Exportar',
+]
+
 function getSectionFromPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/'
   return sections.find((section) => `/${section.id}` === normalizedPath)?.id
@@ -85,7 +93,17 @@ export default function InternalPage() {
           aria-label={`Área de ${section.label}`}
           hidden={activeSection !== section.id}
           key={section.id}
-        />
+        >
+          {section.id === 'horario' && (
+            <div className="schedule-actions" role="group" aria-label="Acciones de horario">
+              {scheduleActions.map((action) => (
+                <button className="schedule-action" type="button" key={action}>
+                  {action}
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
       ))}
     </main>
   )
