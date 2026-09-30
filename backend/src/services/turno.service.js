@@ -1,6 +1,6 @@
 //este import hace que se ocupe una sola instancia
 import prisma from '../config/prisma.js';
-import usuarioPublico from './usuario.select.js';
+import { usuarioPublico } from './usuario.select.js';
 
 
 export const  crearTurno = (data) => {
