@@ -1,20 +1,6 @@
 import { useEffect, useState } from 'react'
-
-const sections = [
-  { label: 'Horario', id: 'horario' },
-  { label: 'Adopción', id: 'adopcion' },
-  { label: 'Historial Médico', id: 'historial-medico' },
-  { label: 'Inventario', id: 'inventario' },
-  { label: 'Donaciones', id: 'donaciones' },
-]
-
-const scheduleActions = [
-  'Añadir turno',
-  'Editar turno',
-  'Borrar turno',
-  'Asistencia',
-  'Exportar',
-]
+import { sections } from './data/sections.js'
+import { scheduleActions } from './data/scheduleActions.js'
 
 function getSectionFromPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/'
