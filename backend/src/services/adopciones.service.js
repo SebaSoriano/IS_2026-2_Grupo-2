@@ -1,5 +1,5 @@
 import prisma from '../config/prisma.js';
-import { HttpError } from '../middlewares/validate.middleware.js';
+import { HttpError } from '../middlewares/error.middleware.js';
 
 // Registra la adopción de un animal. Todo ocurre dentro de una transacción:
 // si falla cualquier paso, no queda nada a medias en la base de datos.
