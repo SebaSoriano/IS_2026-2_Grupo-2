@@ -68,7 +68,7 @@
   background: #fff;
 }
 
-.schedule-actions {
+.area-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -76,7 +76,7 @@
   padding: 30px 16px;
 }
 
-.schedule-action {
+.area-action {
   box-sizing: border-box;
   width: 120px;
   height: 36px;
@@ -90,10 +90,14 @@
   cursor: pointer;
 }
 
-.schedule-action:hover,
-.schedule-action:focus-visible {
+.area-action:hover,
+.area-action:focus-visible {
   color: #064c3e;
   background: #19efa0;
+}
+
+.area-actions--inventario .area-action {
+  width: 164px;
 }
 
 @media (max-width: 600px) {

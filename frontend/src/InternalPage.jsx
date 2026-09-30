@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import { scheduleActions } from './data/scheduleActions.js'
 
@@ -80,10 +81,14 @@ export default function InternalPage() {
           hidden={activeSection !== section.id}
           key={section.id}
         >
-          {section.id === 'horario' && (
-            <div className="schedule-actions" role="group" aria-label="Acciones de horario">
-              {scheduleActions.map((action) => (
-                <button className="schedule-action" type="button" key={action}>
+          {(section.id === 'horario' || section.id === 'inventario') && (
+            <div
+              className={`area-actions area-actions--${section.id}`}
+              role="group"
+              aria-label={`Acciones de ${section.label.toLowerCase()}`}
+            >
+              {(section.id === 'horario' ? scheduleActions : inventoryActions).map((action) => (
+                <button className="area-action" type="button" key={action}>
                   {action}
                 </button>
               ))}
