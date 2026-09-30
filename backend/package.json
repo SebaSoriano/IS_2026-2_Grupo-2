@@ -11,6 +11,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@faker-js/faker": "10.6.0",
     "prisma": "6.19.3"
   },
   "dependencies": {
@@ -21,5 +22,8 @@
     "prisma@6.19.3": true,
     "@prisma/engines@6.19.3": true,
     "@prisma/client@6.19.3": true
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
