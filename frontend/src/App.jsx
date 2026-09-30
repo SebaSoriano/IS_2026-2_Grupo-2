@@ -1,4 +1,5 @@
-import PublicPage from './PublicPage.jsx'
+import InternalPage from './InternalPage.jsx'
+
 export default function App() {
-  return <PublicPage />
+  return <InternalPage />
 }

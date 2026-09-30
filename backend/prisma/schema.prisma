@@ -12,6 +12,7 @@ datasource db {
 // Relacion 1:N, un usuario puede tener muchos agendamientos, pero un agendamiento solo puede tener un usuario
 model Usuario {
     rut_usuario String @id
+    nombre_usuario String
     correo String? @db.VarChar(100) //el "?" indica que es opcional
     telefono String? @db.VarChar(15)
     fecha_nacimiento DateTime?
@@ -21,6 +22,8 @@ model Usuario {
     turnos        Turno[] //el "Muchos" de la relacion
     donaciones    donaciones[] //el "Muchos" de la relacion
     adopciones  adopciones[]
+    rol_id Int
+    rol Rol @relation(fields: [rol_id], references: [id])
 }
 
 model Agendamiento {
@@ -62,7 +65,7 @@ model Turno {
   @@id([rut_usuario, horario_id]) //Clave primaria compuesta
 }
 
-model hitorial_medico {
+model historial_medico {
   id_historial      Int       @id @default(autoincrement())
   nombre            String?   @db.VarChar(100)
   tratamiento       String    @db.VarChar(500)
@@ -78,11 +81,11 @@ model animales {
   id_animal             Int               @id @default(autoincrement())
   edad                  Int
   via_ingreso           String            @db.VarChar(100)
-  peso_animal           Int
+  peso_animal           Float
   especie_animal        String            @db.VarChar(100)
   observaciones_animal  String?
 
-  historial hitorial_medico[]
+  historial historial_medico[]
   adopciones adopciones[]
 }
 
@@ -101,7 +104,7 @@ model adoptante {
   direccion                 String
   telefono                  String
   correo                    String
-  fecha_naciciento          DateTime
+  fecha_nacimiento          DateTime
   observaciones_adoptante   String?
   adopciones adopciones[]
 }
@@ -119,4 +122,10 @@ model adopciones {
   adoptante adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
 
   @@id([id_usuario, id_animal, id_adoptante])
+}
+
+model Rol {
+  id Int @id
+  nombre String @unique @db.VarChar(50)
+  usuarios Usuario []
 }
