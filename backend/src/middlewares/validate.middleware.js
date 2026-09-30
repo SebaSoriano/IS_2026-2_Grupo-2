@@ -10,10 +10,10 @@ export const validate = (schema, target = 'body') => {
         }
 
         if (target === 'query'){
-            req.validateQuery = result.data;
+            req.validateQuery = datos;
         }
         else{
-            req[target] = result.data;
+            req[target] = datos;
         }
 
         next();
