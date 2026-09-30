@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import insumosRouter from './insumos.routes.js';
 import animalesRoutes from './animales.routes.js';
+import turnosRoutes from './turnos.routes.js';
 
 const router = Router();
 
@@ -11,5 +12,6 @@ router.get('/health', (req, res) => {
 
 router.use('/insumos', insumosRouter);
 router.use('/animales', animalesRoutes);
+router.use('/turnos', turnosRoutes);
 
 export default router;

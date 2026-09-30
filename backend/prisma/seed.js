@@ -39,6 +39,17 @@ async function main() {
             create: rol,
         });
     }
+
+    console.log('-Creando horarios');
+    const horarios = await Promise.all(
+      [1, 2, 3].map((dias) =>
+        prisma.horario.create({
+          data: { fecha: faker.date.soon({ days: 7 * dias }) },
+        })
+      )
+    );
+
+console.log(`Horarios creados: ${horarios.length}`);
     console.log('-Creando usuarios');
     const usuarios = await Promise.all(
         rutUsuarios.map((rut_usuario, i) => {
