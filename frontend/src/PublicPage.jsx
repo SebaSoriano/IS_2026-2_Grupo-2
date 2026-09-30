@@ -12,7 +12,12 @@ export default function PublicPage (){
         <div class="navbar-actions">
           <button class="btn-header btn-donar">DONAR</button>
           <button class="btn-header btn-volun">SE VOLUNTARIO</button>
-          <button class="btn-header btn-intranet">Acceder a Intranet</button>
+          <button
+            className="btn-header btn-intranet"
+            onClick={() => window.location.assign('/adopcion')}
+          >
+            Acceder a Intranet
+          </button>
         </div>
       </header>
       <div className="filter-container">
