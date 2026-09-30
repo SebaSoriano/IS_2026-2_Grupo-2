@@ -21,7 +21,7 @@ export const errorHandler = (err, req, res, next) => {
     //Errores de Prisma (base de datos)
     if (err.code === 'P2002') {
         return res.status(409).json({
-            error: 'Ya existe un registro con el mismo valor en: ${err.meta?.target}',
+            error: `Ya existe un registro con el mismo valor en: ${err.meta?.target}`,
         });
     }
     if (err.code === 'P2003'){
