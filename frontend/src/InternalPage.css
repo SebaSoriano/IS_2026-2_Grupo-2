@@ -100,6 +100,10 @@
   width: 164px;
 }
 
+.area-actions--adopcion .area-action {
+  width: 164px;
+}
+
 @media (max-width: 600px) {
   .brand-row {
     min-height: 60px;
