@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 export class HttpError extends Error {
     constructor(status, message) {
         super(message);
@@ -7,6 +9,10 @@ export class HttpError extends Error {
 
 export const errorHandler = (err, req, res, next) => {
     console.error(err);
+
+    if (err.type === 'entity.parse.failed') {
+        return res.status(400).json({ error: 'El JSON enviado está mal formado.' });
+    }
 
     //Errores a proposito desde services/controllers
     if (err instanceof HttpError) {
