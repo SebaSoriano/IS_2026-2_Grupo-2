@@ -82,3 +82,29 @@
   border-radius: 4px;
   cursor:pointer;
 }
+
+.filter-container {
+  background-color: #8ed3c7;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-select {
+  background-color: #72c3b8;
+  color: #1e3a36;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.filter-select:hover {
+  background-color: #61b5aa;
+}

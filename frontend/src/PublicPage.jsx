@@ -1,5 +1,5 @@
 import React from 'react';
-import './index.css';
+import './PublicPage.css';
 
 export const Navbar = () => {
   return (
@@ -19,5 +19,27 @@ export const Navbar = () => {
         <button>Filtrar por...</button>
       </div>
     </body>
+  );
+};
+
+export const FilterBar = ({ onFilterChange }) => {
+  return (
+    <div className="filter-container">
+      <select 
+        className="filter-select"
+        onChange={(e) => onFilterChange(e.target.value)}
+        defaultValue=""
+      >
+        <option value="" disabled hidden>
+          Filtrar por...
+        </option>
+        <option value="todos">Todos</option>
+        <option value="macho">Género: Macho</option>
+        <option value="hembra">Género: Hembra</option>
+        <option value="pequeno">Tamaño: Pequeño</option>
+        <option value="mediano">Tamaño: Mediano</option>
+        <option value="grande">Tamaño: Grande</option>
+      </select>
+    </div>
   );
 };
