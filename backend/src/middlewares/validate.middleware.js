@@ -1,17 +1,12 @@
 export const validate = (schema, target = 'body') => {
     return (req, res, next) => {
-        const result = schema.safeParse(req[target]);
+        const { errores, datos } = schema(req[target] ?? {});
 
-        if(!result.success) {
+        if (errores.length > 0) {
             return res.status(400).json({
                 error: "Error de validación de los datos enviados",
-                details: result.error.issues.map((issue) => ({
-                    campo: issue.path.join('.'),
-                    mensaje: issue.message,
-                })),
-            
+                details: errores,
             });
-
         }
 
         if (target === 'query'){
