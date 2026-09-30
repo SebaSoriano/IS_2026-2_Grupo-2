@@ -12,6 +12,7 @@ datasource db {
 // Relacion 1:N, un usuario puede tener muchos agendamientos, pero un agendamiento solo puede tener un usuario
 model Usuario {
     rut_usuario String @id
+    nombre_usuario String
     correo String? @db.VarChar(100) //el "?" indica que es opcional
     telefono String? @db.VarChar(15)
     fecha_nacimiento DateTime?
@@ -62,7 +63,7 @@ model Turno {
   @@id([rut_usuario, horario_id]) //Clave primaria compuesta
 }
 
-model hitorial_medico {
+model historial_medico {
   id_historial      Int       @id @default(autoincrement())
   nombre            String?   @db.VarChar(100)
   tratamiento       String    @db.VarChar(500)
@@ -76,14 +77,13 @@ model hitorial_medico {
 
 model animales {
   id_animal             Int               @id @default(autoincrement())
-  nombre_animal         String
   edad                  Int
   via_ingreso           String            @db.VarChar(100)
-  peso_animal           Int
+  peso_animal           Float
   especie_animal        String            @db.VarChar(100)
   observaciones_animal  String?
 
-  historial hitorial_medico[]
+  historial historial_medico[]
   adopciones adopciones[]
 }
 
@@ -99,18 +99,17 @@ model donaciones {
 
 model adoptante {
   id_adoptante              Int         @id @default(autoincrement())
-  nombre_adoptante          String
   direccion                 String
   telefono                  String
   correo                    String
-  fecha_naciciento          DateTime
+  fecha_nacimiento          DateTime
   observaciones_adoptante   String?
   adopciones adopciones[]
 }
 
 model adopciones {
   fecha_adopcion DateTime
-// Posibilidad de agregar un ID a la adopcion para que no se repitan
+
   id_usuario String
   usuario Usuario @relation(fields: [id_usuario], references: [rut_usuario])
 

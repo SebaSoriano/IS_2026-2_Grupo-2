@@ -1,4 +1,4 @@
-express = require('express')
+import express from 'express'
 const app = express()
 const PORT = 3000
 
@@ -22,4 +22,3 @@ app.post('/mascotas', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server listening in http://localhost:${PORT}`)
 })
-

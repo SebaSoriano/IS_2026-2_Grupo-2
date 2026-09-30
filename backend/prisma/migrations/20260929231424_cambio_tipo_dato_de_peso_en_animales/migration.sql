@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "animales" ALTER COLUMN "peso_animal" SET DATA TYPE DOUBLE PRECISION;
