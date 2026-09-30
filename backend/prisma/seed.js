@@ -21,35 +21,52 @@ async function main() {
     await prisma.adoptante.deleteMany();
     await prisma.usuario.deleteMany();
 
-    console.log('-Creando usuarios');
-    const rutUsuarios = ['11111111-1','22222222-2','12123123-2','44444444-4'];
     
+    const rutUsuarios = ['11111111-1', '22222222-2', '12123123-2', '44444444-4'];
+
+
+    const roles = [
+        { id: 1, nombre: 'Admin' },
+        { id: 2, nombre: 'Veterinaria' },
+        { id: 3, nombre: 'Voluntario' },
+    ];
+    
+    console.log('-Creando roles');
+    for (const rol of roles) {
+        await prisma.rol.upsert({
+            where: { id: rol.id },
+            update: { nombre: rol.nombre },
+            create: rol,
+        });
+    }
+    console.log('-Creando usuarios');
     const usuarios = await Promise.all(
-    rutUsuarios.map((rut_usuario) => {
-    const nombre = faker.person.firstName();
-    const apellido = faker.person.lastName();
+        rutUsuarios.map((rut_usuario, i) => {
+            const nombre = faker.person.firstName();
+            const apellido = faker.person.lastName();
 
-    return prisma.usuario.create({ 
-        data: {
-        rut_usuario,
-        nombre_usuario: `${nombre} ${apellido}`, 
-        correo: faker.internet.email({ firstName: nombre, lastName: apellido}) ,
-        telefono: '9' + faker.string.numeric(8),
-        contrasena: faker.word.words(3),
-        fecha_nacimiento: faker.date.birthdate({min:15, max:65, mode: 'age'}),
-       },
-     });
-  })
-);
+            return prisma.usuario.create({
+                data: {
+                    rut_usuario,
+                    rol_id: i === 0 ? 1 : 3,
+                    nombre_usuario: `${nombre} ${apellido}`,
+                    correo: faker.internet.email({ firstName: nombre, lastName: apellido }),
+                    telefono: '9' + faker.string.numeric(8),
+                    contrasena: faker.word.words(3),
+                    fecha_nacimiento: faker.date.birthdate({ min: 15, max: 65, mode: 'age' }),
+                },
+            });
+        })
+    );
 
-console.log(`Usuarios creados: ${usuarios.length}`);
+    console.log(`Usuarios creados: ${usuarios.length}`);
 
 }
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1); //si algo falla, el comando termina con codigo de error y no aparenta que todo salio bien
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+    .catch((e) => {
+        console.error(e);
+        process.exit(1); //si algo falla, el comando termina con codigo de error y no aparenta que todo salio bien
+    })
+    .finally(async () => {
+        await prisma.$disconnect();
+    });
