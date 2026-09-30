@@ -22,6 +22,8 @@ model Usuario {
     turnos        Turno[] //el "Muchos" de la relacion
     donaciones    donaciones[] //el "Muchos" de la relacion
     adopciones  adopciones[]
+    rol_id Int
+    rol Rol @relation(fields: [rol_id], references: [id])
 }
 
 model Agendamiento {
@@ -120,4 +122,10 @@ model adopciones {
   adoptante adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
 
   @@id([id_usuario, id_animal, id_adoptante])
+}
+
+model Rol {
+  id Int @id
+  nombre String @unique @db.VarChar(50)
+  usuarios Usuario []
 }
