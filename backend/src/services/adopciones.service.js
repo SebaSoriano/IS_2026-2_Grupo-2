@@ -6,7 +6,7 @@ import { HttpError } from '../middlewares/error.middleware.js';
 export const registrarAdopcion = (id_animal, datos) => {
   const {
     fecha_adopcion, rut_usuario,
-    nombre_adoptante, direccion, telefono, correo, fecha_nacimiento, 
+    nombre_adoptante, direccion, telefono, correo, fecha_nacimiento, observaciones_adoptante,
   } = datos;
 
   return prisma.$transaction(async (tx) => {
@@ -20,15 +20,18 @@ export const registrarAdopcion = (id_animal, datos) => {
     // 2. Y no puede estar adoptado (la tabla actual no lo impide por sí sola)
     if (animal.adopciones.length > 0) throw new HttpError(409, 'El animal ya fue adoptado');
 
-    // 3. Se crea el adoptante. Si el rut_usuario no existe, Prisma lanza P2003 
-    //    y se deshace todo (no se crea la adopción ni el adoptante).
+    // 3. Se crea el adoptante
     const adoptante = await tx.adoptante.create({
       data: {
         direccion,
         telefono,
         correo,
         fecha_nacimiento,
-        nombre_adoptante,
+        // La tabla "adoptante" todavía no tiene columna para el nombre,
+        // así que por ahora se guarda al inicio de observaciones_adoptante.
+        observaciones_adoptante: observaciones_adoptante
+          ? `Nombre: ${nombre_adoptante} | ${observaciones_adoptante}`
+          : `Nombre: ${nombre_adoptante}`,
       },
     });
 
@@ -45,3 +48,14 @@ export const registrarAdopcion = (id_animal, datos) => {
     });
   });
 };
+
+// Listado de adopciones, de la más reciente a la más antigua
+export const getAllAdopciones = () =>
+  prisma.adopciones.findMany({
+    orderBy: { fecha_adopcion: 'desc' },
+    include: {
+      animal: true,
+      adoptante: true,
+      usuario: { select: { rut_usuario: true, nombre_usuario: true } },
+    },
+  });
