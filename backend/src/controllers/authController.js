@@ -42,7 +42,6 @@ const login = async (req, res) => {
     });
 };
 
-
 // cerrar sesión
 const logout = async (req, res) => {
     res.cookie("jwt", "", {
