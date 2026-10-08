@@ -1,5 +1,6 @@
 @import './InternalPage.css';
 @import './PublicPage.css';
+@import './Auth.css';
 
 body {
   margin: 0;
