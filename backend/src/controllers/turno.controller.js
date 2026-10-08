@@ -1,4 +1,5 @@
 import { crearTurno } from '../services/turno.service.js';
+import { obtenerTurnos } from '../services/turno.service.js';
 
 export const crearTurnoController = async (req, res, next) => {
   try {
@@ -7,4 +8,11 @@ export const crearTurnoController = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const obtenerTurnosController = async (req, res) => {
+  const turnos = await obtenerTurnos(req, res);
+  res.status(200).json(turnos);
+
+  
 };
