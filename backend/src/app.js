@@ -5,6 +5,7 @@ import { errorHandler } from './middlewares/error.middleware.js'
 const app = express()
 
 app.use(express.json())
+import routes from './routes/index.routes.js';
 
 // Todas las rutas de la API quedan bajo /api
 app.use('/api', indexRouter)
@@ -15,4 +16,4 @@ app.use((req, res) => res.status(404).json({ error: 'Ruta no encontrada' }))
 // para que capture cualquier error que haya ocurrido en los controllers o middlewares previos
 app.use(errorHandler)
 
-export default app
+export default app  
