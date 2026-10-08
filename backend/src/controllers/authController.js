@@ -1,4 +1,4 @@
-import { prisma } from '../config/prisma.js';
+import prisma from "../config/prisma.js";
 // importando bcrypt desbloqueamos el hash y no trabajamos 
 // las contraseñas con texto plano
 import bcrypt from "bcryptjs"; // npm install bcrypt
