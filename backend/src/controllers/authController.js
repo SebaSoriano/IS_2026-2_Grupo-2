@@ -57,6 +57,8 @@ const register = async (req, res) => {
 };
 
 
+// Cambiar en el apartado LOGIN las variables de user,
+// email y id, por usuario, correo y rut_usuario
 // log in
 const login = async (req, res) => {
     // 1. sacamos del body solo el email y la contraseña
