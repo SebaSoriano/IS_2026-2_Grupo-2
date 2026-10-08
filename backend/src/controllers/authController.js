@@ -3,7 +3,8 @@ import { prisma } from '../config/prisma.js';
 // las contraseñas con texto plano
 import bcrypt from "bcryptjs"; // npm install bcrypt
 
-// sign up
+
+// crear cuenta
 const register = async (req, res) => {
     // TODO
 };
@@ -40,3 +41,18 @@ const login = async (req, res) => {
         },
     });
 };
+
+
+// cerrar sesión
+const logout = async (req, res) => {
+    res.cookie("jwt", "", {
+        httpOnly: true,
+        expires: new Date(0)
+    });
+    res.status(200).json({
+        status: "success",
+        message: "Looged out successfully",
+    });
+};
+
+export { login, register, logout }
