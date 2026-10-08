@@ -1,12 +1,59 @@
-import { prisma } from '../config/prisma.js';
+import prisma from '../config/prisma.js';
 // importando bcrypt desbloqueamos el hash y no trabajamos 
 // las contraseñas con texto plano
 import bcrypt from "bcryptjs"; // npm install bcrypt
 
-
 // crear cuenta
 const register = async (req, res) => {
     // TODO
+    const { 
+        rut_usuario, 
+        nombre_usuario,
+        correo, 
+        telefono,
+        fecha_nacimiento,
+        contrasena,
+        rol_id }  = req.body;
+    
+    // Se encripta la contraseña con hashing
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(contrasena, salt);
+
+    // Se revisa si el rut tiene un correo registrado
+    //const existingUserByRut = await prisma.usuario.findUnique({ where: { rut_usuario } });
+    //if (existingUserByRut) {
+    //    return res.status(400).json({ error: "Rut ya está registrado" });
+    //}
+    //const existingUser = await prisma.usuario.findUnique({ where: { correo } });
+    //if (existingUser) {
+    //    return res.status(400).json({ error: "Correo ya está registrado" });
+    //}
+    // Se crea el usuario en la base de datos con el correo y la contraseña encriptada
+    const newUser = await prisma.usuario.create({
+        data: {
+            rut_usuario,
+            nombre_usuario,
+            telefono,
+            fecha_nacimiento,
+            correo,
+            contrasena: hashedPassword,
+            rol_id,
+        },
+    });
+    res.status(201).json({
+        status: "Success",
+        data: {
+            user: {
+                id: newUser.id,
+                rut_usuario: newUser.rut_usuario,
+                nombre_usuario: newUser.nombre_usuario,
+                telefono: newUser.telefono,
+                fecha_nacimiento: newUser.fecha_nacimiento,
+                correo: newUser.correo,
+                rol_id: newUser.rol_id,
+            },
+        },
+    });
 };
 
 
@@ -17,7 +64,7 @@ const login = async (req, res) => {
 
     // comprobamos que el usuario esté en la base de datos comparando su email
     // se asigna el usuario encontrado a la variable user, sino queda null
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.usuario.findUnique({ where: { email } });
 
     // si user es false significa que no hay un usuario con el email
     // por ende se muestra un error
