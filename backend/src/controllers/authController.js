@@ -57,35 +57,37 @@ const register = async (req, res) => {
 };
 
 
+
 // Cambiar en el apartado LOGIN las variables de user,
 // email y id, por usuario, correo y rut_usuario
 // log in
 const login = async (req, res) => {
     // 1. sacamos del body solo el email y la contraseña
-    const { email, password } = req.body;
+    const { rut_usuario, contrasena } = req.body;
 
     // comprobamos que el usuario esté en la base de datos comparando su email
     // se asigna el usuario encontrado a la variable user, sino queda null
-    const user = await prisma.usuario.findUnique({ where: { email } });
+    const user = await prisma.usuario.findUnique({ where: { rut_usuario } });
 
     // si user es false significa que no hay un usuario con el email
     // por ende se muestra un error
-    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    if (!user) return res.status(401).json({ error: "Rut o contraseña inválidos" });
 
     // compara los hash entre los datos recibidos y los guardados en la base de datos
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(contrasena, user.contrasena);
 
-    if(!isPasswordValid) return res.status(401).json({ error: "Invalid email or password" });
+    if(!isPasswordValid) return res.status(401).json({ error: "Rut o contraseña inválidos" });
 
 
     // al hacer login exitoso, el servidor responde con el id
-    // del usuario ingresado y el email
+    // del usuario ingresado y el rut_usuario, para que el 
+    // front-end pueda usarlo en la sesión
     res.status(201).json({
         status: "Success",
         data: {
             user: {
                 id: user.id,
-                email: email,            
+                rut_usuario: user.rut_usuario,
             },
         },
     });
