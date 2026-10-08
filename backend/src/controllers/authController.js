@@ -57,6 +57,15 @@ const register = async (req, res) => {
 };
 
 
+// Función para devolver solo los datos públicos del usuario
+// Esto es útil para no exponer información sensible 
+// como la contraseña
+const publicUser = (user) => ({
+    rut: user.rut_usuario,
+    nombre: user.nombre_usuario,
+    correo: user.correo,
+    rol: user.rol.nombre,
+});
 
 // Cambiar en el apartado LOGIN las variables de user,
 // email y id, por usuario, correo y rut_usuario
