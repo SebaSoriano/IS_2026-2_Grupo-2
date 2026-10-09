@@ -1,31 +1,26 @@
-import { crearSchema, texto, entero, decimal, booleanoTexto } from './validadores.js';
+import { z } from 'zod';
 
 // Reglas para las columnas que HOY tiene la tabla "animales".
 // Mientras no exista una columna propia, el estado general se escribe en observaciones_animal.
-const reglasAnimal = {
-  especie_animal:       { validar: (valor) => texto(valor, { min: 2, max: 100 }) },
-  via_ingreso:          { validar: (valor) => texto(valor, { min: 2, max: 100 }) },
-  edad:                 { validar: (valor) => entero(valor, { min: 0, max: 40 }) },         // edad estimada, en años
-  peso_animal:          { validar: (valor) => decimal(valor, { min: 0.01, max: 150 }) },    // en kg
-  observaciones_animal: { validar: (valor) => texto(valor, { max: 1000 }), opcional: true },
-};
+const animalSchema = z.object({
+  especie_animal:       z.string().trim().min(2, 'Debe tener al menos 2 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
+  via_ingreso:          z.string().trim().min(2, 'Debe tener al menos 2 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
+  edad:                 z.number().int('Debe ser un número entero').min(0).max(40),      // edad estimada, en años
+  peso_animal:          z.number().min(0.01).max(150),                                   // en kg
+  observaciones_animal: z.string().trim().max(1000, 'Debe tener como máximo 1000 caracteres').optional(),
+});
 
 // POST /api/animales
-export const createAnimalSchema = crearSchema(reglasAnimal);
+export const createAnimalSchema = animalSchema;
 
-// PUT /api/animales/:id: todos los campos opcionales, pero debe venir al menos uno
-const validarCambios = crearSchema(reglasAnimal, { parcial: true });
-
-export const updateAnimalSchema = (entrada) => {
-  const resultado = validarCambios(entrada);
-  if (resultado.errores.length === 0 && Object.keys(resultado.datos).length === 0) {
-    resultado.errores.push({ campo: 'body', mensaje: 'Debe enviar al menos un campo para modificar' });
-  }
-  return resultado;
-};
+// PUT /api/animales/🆔 todos los campos opcionales, pero debe venir al menos uno
+export const updateAnimalSchema = animalSchema
+  .partial()
+  .refine((datos) => Object.keys(datos).length > 0, 'Debe enviar al menos un campo para modificar');
 
 // GET /api/animales?especie=perro&adoptado=true
-export const filterAnimalSchema = crearSchema({
-  especie:  { validar: (v) => texto(v, { max: 100 }), opcional: true },
-  adoptado: { validar: booleanoTexto, transformar: (v) => v === 'true', opcional: true },
+// en la query todo llega como texto, por eso adoptado se transforma de 'true'/'false' a booleano
+export const filterAnimalSchema = z.object({
+  especie:  z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').optional(),
+  adoptado: z.enum(['true', 'false'], 'Debe ser true o false').transform((valor) => valor === 'true').optional(),
 });
