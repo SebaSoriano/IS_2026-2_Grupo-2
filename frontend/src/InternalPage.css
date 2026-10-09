@@ -96,7 +96,8 @@
   background: #19efa0;
 }
 
-.area-actions--inventario .area-action {
+.area-actions--inventario .area-action,
+.area-actions--animales .area-action {
   width: 164px;
 }
 
@@ -104,7 +105,8 @@
   width: 164px;
 }
 
-.section-area--inventario:not([hidden]) {
+.section-area--inventario:not([hidden]),
+.section-area--animales:not([hidden]) {
   display: grid;
   grid-template-columns: 196px minmax(0, 1fr);
   align-items: start;
@@ -113,7 +115,8 @@
   padding: 30px 16px;
 }
 
-.section-area--inventario .area-actions {
+.section-area--inventario .area-actions,
+.section-area--animales .area-actions {
   padding: 0;
 }
 
@@ -152,7 +155,8 @@
 }
 
 @media (max-width: 760px) {
-  .section-area--inventario:not([hidden]) {
+  .section-area--inventario:not([hidden]),
+  .section-area--animales:not([hidden]) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
