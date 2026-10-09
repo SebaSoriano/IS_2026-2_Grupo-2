@@ -76,7 +76,10 @@ const login = async (req, res) => {
 
     // comprobamos que el usuario esté en la base de datos comparando su email
     // se asigna el usuario encontrado a la variable user, sino queda null
-    const user = await prisma.usuario.findUnique({ where: { rut_usuario } });
+    const user = await prisma.usuario.findUnique({ 
+        where: { rut_usuario },
+        include: { rol: true } // Incluye el rol del usuario en la consulta 
+    });
 
     // si user es false significa que no hay un usuario con el email
     // por ende se muestra un error
@@ -91,13 +94,10 @@ const login = async (req, res) => {
     // al hacer login exitoso, el servidor responde con el id
     // del usuario ingresado y el rut_usuario, para que el 
     // front-end pueda usarlo en la sesión
-    res.status(201).json({
+    res.status(200).json({
         status: "Success",
         data: {
-            user: {
-                id: user.id,
-                rut_usuario: user.rut_usuario,
-            },
+            user: publicUser(user), // se muestra solo la info pública
         },
     });
 };
