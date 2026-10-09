@@ -49,20 +49,27 @@ model Insumo{
 
 
 // Relacion N:N, un usuario puede tener muchos horarios, y un horario puede ser compartido por muchos usuarios
+// Horario estatico con los dias de la semana: el id identifica el dia (1 = Lunes ... 7 = Domingo)
 model Horario{
-  id Int @id @default(autoincrement())
-  fecha DateTime
+  id Int @id
+  dia String @unique @db.VarChar(20)
   turnos Turno[] //el "Muchos" de la relacion
 
 }
 
+// Un usuario puede tener varios turnos en un mismo dia
+// hora_inicio es el bloque de una hora en que llega (ej: "08:00")
+// hora_fin es la hora en que se va, es opcional (si no viene, el turno dura solo ese bloque)
 model Turno {
+  id Int @id @default(autoincrement())
   rut_usuario String
   horario_id Int
+  hora_inicio String @db.VarChar(5)
+  hora_fin String? @db.VarChar(5)
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
   horario Horario @relation(fields: [horario_id], references: [id])
 
-  @@id([rut_usuario, horario_id]) //Clave primaria compuesta
+  @@unique([rut_usuario, horario_id, hora_inicio]) //el mismo usuario no puede repetir el bloque en el mismo dia
 }
 
 model historial_medico {
