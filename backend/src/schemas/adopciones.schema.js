@@ -16,7 +16,7 @@ export const createAdopcionSchema = z.object({
     //Datos del adoptante
     nombre_adoptante: z.string().trim().min(2, 'Debe tener al menos 2 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
     direccion: z.string().trim().min(5, 'Debe tener al menos 5 caracteres').max(200, 'Debe tener como máximo 200 caracteres'),
-    telefono: z.string().regex(/^+?\d{8,15}$/, 'Debe tener entre 8 y 15 dígitos (puede empezar con +)'),
+    telefono: z.string().regex(/^\+?\d{8,15}$/, 'Debe tener entre 8 y 15 dígitos (puede empezar con +)'),
     correo: z.string().regex(/^[^\s@]+@[^\s@]+.[^\s@]+$/, 'Debe ser un correo válido'),
     fecha_nacimiento: fechaNoFutura,
     observaciones_adoptante: z.string().trim().max(500, 'Debe tener como máximo 500 caracteres').optional(),
