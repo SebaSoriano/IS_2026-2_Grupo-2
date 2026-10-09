@@ -104,8 +104,21 @@
   width: 164px;
 }
 
+.section-area--inventario:not([hidden]) {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  box-sizing: border-box;
+  padding: 30px 16px;
+}
+
+.section-area--inventario .area-actions {
+  padding: 0;
+}
+
 .inventory-table-container {
-  padding: 0 16px 30px;
+  min-width: 0;
 }
 
 .inventory-table-scroll {
@@ -184,5 +197,11 @@
 
   .section-area {
     min-height: calc(100vh - 116px);
+  }
+}
+
+@media (max-width: 760px) {
+  .section-area--inventario:not([hidden]) {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
