@@ -1,0 +1,499 @@
+/* ---------- Seccion horario: acciones a la izquierda y tabla semanal a la derecha ---------- */
+
+.schedule {
+  display: flex;
+  align-items: flex-start;
+}
+
+.area-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.schedule-table-container {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px 30px 0;
+}
+
+.schedule-table-scroll {
+  overflow-x: auto;
+  border: 1px solid #d8eeee;
+}
+
+.schedule-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #173d3e;
+}
+
+.schedule-table thead th {
+  padding: 12px 8px;
+  color: #fff;
+  background: #17a3b5;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.schedule-table thead th + th {
+  border-left: 1px solid #45b8c6;
+}
+
+.schedule-table tbody th,
+.schedule-table td {
+  height: 56px;
+  padding: 8px;
+  border: 1px solid #d8eeee;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.schedule-table tbody th {
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* bloques ocupados por un turno (incluye los que quedan entre la llegada y la ida) */
+.schedule-table td.has-turno {
+  background: #effbfa;
+}
+
+.schedule-table__name {
+  display: block;
+  line-height: 1.3;
+}
+
+.schedule-table__name + .schedule-table__name {
+  margin-top: 4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Pop-up centrado ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: #071b1c80;
+}
+
+/* sin overflow para que el reloj y la lista de personas puedan salir del pop-up sin cortarse;
+   si la pantalla es baja, el scroll lo hace el fondo y margin auto lo mantiene centrado */
+.modal {
+  width: 100%;
+  max-width: 520px;
+  margin: auto;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 32px #071b1c59;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-radius: 8px 8px 0 0;
+  background: #3ba5a3;
+}
+
+.modal__header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+}
+
+.modal__close {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  color: #10494b;
+  background: #c3eeee;
+  font: inherit;
+  cursor: pointer;
+}
+
+.modal__close:hover {
+  background: #dcf8f5;
+}
+
+.modal__body {
+  padding: 20px;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.modal__button {
+  min-width: 120px;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  color: #315052;
+  background: #c3eeee;
+  box-shadow: 0 4px 8px #174d4c40;
+  font: inherit;
+  cursor: pointer;
+}
+
+.modal__button:hover {
+  background: #dcf8f5;
+}
+
+.modal__button--primary {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.modal__button--primary:hover {
+  background: #4ff5b8;
+}
+
+.modal__button--danger {
+  color: #fff;
+  background: #c0392b;
+}
+
+.modal__button--danger:hover {
+  background: #a93226;
+}
+
+.modal__button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* ---------- Formulario del turno ---------- */
+
+.turno-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #173d3e;
+}
+
+.turno-form p {
+  margin: 0;
+}
+
+.turno-form__label {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.turno-form__input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+}
+
+.turno-form__input:focus {
+  outline: 2px solid #3ba5a3;
+  outline-offset: 1px;
+}
+
+.turno-form__hours {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.turno-form__summary {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #effbfa;
+}
+
+.turno-form__error {
+  color: #a32121;
+}
+
+/* buscador de personas */
+
+.user-search {
+  position: relative;
+}
+
+.user-search__list,
+.turno-selector__list {
+  margin: 4px 0 0;
+  padding: 4px 0;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  list-style: none;
+  background: #fff;
+}
+
+.user-search__list {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px #174d4c33;
+}
+
+.user-search__option,
+.turno-selector__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.user-search__option small,
+.turno-selector__item small {
+  color: #536d6e;
+}
+
+.user-search__option.is-active,
+.user-search__option:hover,
+.turno-selector__item:hover,
+.turno-selector__item:focus-visible {
+  background: #c3eeee;
+}
+
+.user-search__empty {
+  padding: 8px 12px;
+  color: #536d6e;
+}
+
+/* dias como bloques seleccionables */
+
+.day-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.day-picker__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-picker__option {
+  position: relative;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  box-shadow: 0 2px 4px #174d4c33;
+  cursor: pointer;
+  user-select: none;
+}
+
+.day-picker__option:hover {
+  background: #dcf8f5;
+}
+
+.day-picker__option.is-selected {
+  color: #064c3e;
+  background: #19efa0;
+  font-weight: 700;
+}
+
+.day-picker__option:has(input:focus-visible) {
+  outline: 2px solid #3ba5a3;
+  outline-offset: 2px;
+}
+
+/* el radio queda oculto pero sigue funcionando con teclado */
+.day-picker__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* selector de hora tipo reloj */
+
+.hour-picker {
+  position: relative;
+}
+
+.hour-picker__field {
+  display: flex;
+  gap: 6px;
+}
+
+.hour-picker__value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  color: #173d3e;
+  background: #fff;
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.hour-picker__value.is-empty {
+  color: #536d6e;
+  font-size: 15px;
+}
+
+.hour-picker__clear {
+  width: 40px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  cursor: pointer;
+}
+
+.hour-picker__popover {
+  position: absolute;
+  z-index: 3;
+  top: 100%;
+  left: 0;
+  width: 160px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+  color: #fff;
+  background: #173d3e;
+  box-shadow: 0 12px 24px #071b1c66;
+}
+
+.hour-picker__arrow {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border: 0;
+  color: #9bd6d3;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hour-picker__arrow:hover {
+  color: #fff;
+}
+
+/* 5 horas a la vista (40px cada una), el resto aparece al hacer scroll */
+.hour-picker__list {
+  height: 200px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.hour-picker__list:focus {
+  outline: none;
+}
+
+.hour-picker__option {
+  height: 40px;
+  margin: 0 6px;
+  border-radius: 4px;
+  line-height: 40px;
+  text-align: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.hour-picker__option:hover {
+  background: #2c5f60;
+}
+
+.hour-picker__option.is-selected {
+  color: #064c3e;
+  background: #19efa0;
+  font-weight: 700;
+}
+
+.hour-picker__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #2c5f60;
+}
+
+.hour-picker__actions button {
+  height: 44px;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.hour-picker__actions button:hover {
+  background: #2c5f60;
+}
+
+/* selector de turnos para editar o borrar */
+
+.turno-selector__list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.turno-selector__item {
+  box-sizing: border-box;
+  width: 100%;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+@media (max-width: 600px) {
+  .schedule {
+    flex-direction: column;
+  }
+
+  .area-actions--horario {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .schedule-table-container {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 16px 30px;
+  }
+
+  .turno-form__hours {
+    grid-template-columns: 1fr;
+  }
+}
