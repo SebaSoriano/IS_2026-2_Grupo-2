@@ -140,7 +140,7 @@ export default function InternalPage() {
                 ))}
             </div>
           )}
-          {section.id === 'adopcion' && <AnimalForm />}
+          {section.id === 'animales' && <AnimalForm />}
           {section.id === 'inventario' && (
             <div
               className="inventory-table-container"
