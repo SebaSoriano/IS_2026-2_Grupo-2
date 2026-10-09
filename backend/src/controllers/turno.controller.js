@@ -37,8 +37,8 @@ export const obtenerTurnosPorRutController = async (req, res, next) => {
 
 export const actualizarTurnoController = async (req, res, next) => {
   try {
-    const { rut, horario_id } = req.params;
-    const turno = await actualizarTurno(rut, horario_id, req.body);
+    const { id } = req.params;
+    const turno = await actualizarTurno(id, req.body);
     res.status(200).json(turno);
   } catch (error) {
     next(error);
@@ -47,8 +47,8 @@ export const actualizarTurnoController = async (req, res, next) => {
 
 export const eliminarTurnoController = async (req, res, next) => {
   try {
-    const { rut, horario_id } = req.params;
-    await eliminarTurno(rut, horario_id);
+    const { id } = req.params;
+    await eliminarTurno(id);
     res.status(204).send();
   } catch (error) {
     next(error);
