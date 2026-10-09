@@ -30,3 +30,30 @@ export async function getInsumos() {
 
   return insumos
 }
+
+async function postJson(path, body) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('application/json')) {
+    throw new Error('La API devolvió una respuesta que no es JSON.')
+  }
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    const error = new Error(data.error ?? `Error HTTP ${response.status}`)
+    error.details = data.details ?? []
+    throw error
+  }
+
+  return data
+}
+
+export function crearAnimal(animal) {
+  return postJson('/animales', animal)
+}
