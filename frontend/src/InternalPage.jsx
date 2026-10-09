@@ -15,6 +15,7 @@ export default function InternalPage() {
   const [activeSection, setActiveSection] = useState(
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
+  const [isInventoryCreateOpen, setIsInventoryCreateOpen] = useState(false)
 
   useEffect(() => {
     const syncSectionWithPath = () => {
@@ -98,7 +99,16 @@ export default function InternalPage() {
                   ? inventoryActions
                   : adoptionActions
               ).map((action) => (
-                  <button className="area-action" type="button" key={action}>
+                  <button
+                    className="area-action"
+                    type="button"
+                    key={action}
+                    onClick={
+                      section.id === 'inventario' && action === 'Añadir Registro'
+                        ? () => setIsInventoryCreateOpen(true)
+                        : undefined
+                    }
+                  >
                     {action}
                   </button>
                 ))}
@@ -106,7 +116,10 @@ export default function InternalPage() {
           )}
           {section.id === 'animales' && <AnimalForm />}
           {section.id === 'inventario' && activeSection === 'inventario' && (
-            <InventorySection />
+            <InventorySection
+              isCreateModalOpen={isInventoryCreateOpen}
+              onCloseCreateModal={() => setIsInventoryCreateOpen(false)}
+            />
           )}
         </section>
       ))}

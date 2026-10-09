@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getInsumos } from '../services/api.js'
+import InventoryForm from './InventoryForm.jsx'
 import './InventorySection.css'
 
 function formatDate(value) {
@@ -52,11 +53,15 @@ function SortableHeader({ activeSort, label, onSort, sortKey }) {
   )
 }
 
-export default function InventorySection() {
+export default function InventorySection({
+  isCreateModalOpen,
+  onCloseCreateModal,
+}) {
   const [insumos, setInsumos] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [sort, setSort] = useState({ key: 'id', direction: 'ascending' })
+  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     let isCurrentRequest = true
@@ -108,11 +113,23 @@ export default function InventorySection() {
     }))
   }
 
+  const addCreatedInsumo = (insumo) => {
+    setInsumos((currentInsumos) => [...currentInsumos, insumo])
+    setStatus('success')
+    setError('')
+    setSuccessMessage('El insumo se registró correctamente.')
+  }
+
   return (
     <div
       className="inventory-table-container"
       aria-busy={status === 'loading'}
     >
+      {successMessage && (
+        <p className="inventory-success" role="status">
+          {successMessage}
+        </p>
+      )}
       {status === 'loading' && <p role="status">Cargando insumos...</p>}
       {status === 'error' && (
         <p className="inventory-error" role="alert">
@@ -197,6 +214,11 @@ export default function InventorySection() {
           </table>
         </div>
       )}
+      <InventoryForm
+        isOpen={isCreateModalOpen}
+        onClose={onCloseCreateModal}
+        onCreated={addCreatedInsumo}
+      />
     </div>
   )
 }

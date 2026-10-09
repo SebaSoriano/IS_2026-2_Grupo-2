@@ -1,0 +1,115 @@
+.inventory-dialog {
+  box-sizing: border-box;
+  width: min(560px, calc(100% - 32px));
+  max-height: min(90vh, 760px);
+  padding: 0;
+  border: 1px solid #9bd6d3;
+  border-radius: 10px;
+  color: #173d3e;
+  box-shadow: 0 16px 48px #071b1c40;
+}
+
+.inventory-dialog::backdrop {
+  background: #071b1c80;
+}
+
+.inventory-form {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.inventory-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.inventory-dialog-header h2 {
+  margin: 0;
+  color: #10494b;
+}
+
+.inventory-dialog-close {
+  border: 0;
+  color: #315052;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.inventory-form-field {
+  display: grid;
+  gap: 6px;
+  color: #315052;
+  font-weight: 700;
+}
+
+.inventory-form-field input,
+.inventory-form-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #9bd6d3;
+  border-radius: 5px;
+  color: #173d3e;
+  font: inherit;
+}
+
+.inventory-form-field [aria-invalid='true'] {
+  border-color: #a32121;
+}
+
+.inventory-form-field span {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.inventory-form-error {
+  margin: 0;
+  color: #a32121;
+}
+
+.inventory-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.inventory-form-actions button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 5px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inventory-form-actions button:disabled,
+.inventory-dialog-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.inventory-form-cancel {
+  color: #315052;
+  background: #e5eeee;
+}
+
+.inventory-form-submit {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+@media (max-width: 480px) {
+  .inventory-form {
+    padding: 18px;
+  }
+
+  .inventory-form-actions {
+    flex-direction: column-reverse;
+  }
+}
