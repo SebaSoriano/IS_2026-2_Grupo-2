@@ -14,7 +14,7 @@ export default function PublicPage (){
           <button class="btn-header btn-volun">SE VOLUNTARIO</button>
           <button
             className="btn-header btn-intranet"
-            onClick={() => window.location.assign('/adopcion')}
+            onClick={() => window.location.assign('/login')}
           >
             Acceder a Intranet
           </button>
