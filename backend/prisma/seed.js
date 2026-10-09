@@ -3,10 +3,15 @@
 */
 import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+// bcrypt para guardar las contraseñas hasheadas igual que las compara el login
+import bcrypt from 'bcryptjs';
 
 
 // nueva instancia del cliente de prisma, la otra vive aparte en src/config/prisma.js
 const prisma = new PrismaClient();
+// contraseña de prueba, SOLO para desarrollo
+// todos los usuarios del seed usan esta misma contraseña (el rut del admin es el primero de rutUsuarios)
+const PASSWORD_DE_PRUEBA = 'admin1234';
 
 async function main() {
     console.log('Poblacion de datos iniciada \n -Limpiando datos anteriores.');
@@ -41,6 +46,8 @@ async function main() {
     }
 
     console.log('-Creando horarios');
+        // la contraseña se hashea una sola vez, el 10 son las rondas de salt (igual que en el login)
+    const contrasenaHash = await bcrypt.hash(PASSWORD_DE_PRUEBA, 10);
     const horarios = await Promise.all(
       [1, 2, 3].map((dias) =>
         prisma.horario.create({
@@ -63,7 +70,7 @@ console.log(`Horarios creados: ${horarios.length}`);
                     nombre_usuario: `${nombre} ${apellido}`,
                     correo: faker.internet.email({ firstName: nombre, lastName: apellido }),
                     telefono: '9' + faker.string.numeric(8),
-                    contrasena: faker.word.words(3),
+                    contrasena: contrasenaHash,
                     fecha_nacimiento: faker.date.birthdate({ min: 15, max: 65, mode: 'age' }),
                 },
             });
@@ -71,6 +78,35 @@ console.log(`Horarios creados: ${horarios.length}`);
     );
 
     console.log(`Usuarios creados: ${usuarios.length}`);
+    console.log(`Para iniciar sesión usa el rut ${rutUsuarios[0]} (Admin) y la contraseña ${PASSWORD_DE_PRUEBA}`);
+
+    console.log('-Creando insumos');
+    const fechaBase = new Date();
+    const fechaRelativa = (dias) => {
+        const fecha = new Date(fechaBase);
+        fecha.setUTCDate(fecha.getUTCDate() + dias);
+        return fecha;
+    };
+    const insumos = [
+        { tipo_insumo: 'Alimento seco para perros', dias_ingreso: -6, dias_vencimiento: 266, descripcion: 'Sacos de 15 kg para alimentación diaria de perros adultos', cantidad: 8, rut_usuario: '12123123-2' },
+        { tipo_insumo: 'Alimento seco para gatos', dias_ingreso: -5, dias_vencimiento: 236, descripcion: 'Sacos de 10 kg para gatos adultos', cantidad: 5, rut_usuario: '12123123-2' },
+        { tipo_insumo: 'Alimento húmedo para perros', dias_ingreso: -4, dias_vencimiento: 175, descripcion: 'Latas de 400 g para animales en recuperación o con dieta especial', cantidad: 36, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Arena sanitaria para gatos', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Bolsas de 10 kg para bandejas sanitarias', cantidad: 12, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Gasas estériles', dias_ingreso: -7, dias_vencimiento: 1090, descripcion: 'Paquetes de 100 unidades para curaciones bajo supervisión veterinaria', cantidad: 10, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Guantes de nitrilo', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Cajas de 100 unidades, talla mixta, para manejo e higiene', cantidad: 14, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Suero fisiológico', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '12123123-2' },
+        { tipo_insumo: 'Desinfectante de superficies', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Bidones de 5 litros para limpieza de caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Limpiador enzimático', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Bolsas para residuos', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Rollos de 20 bolsas resistentes para limpieza diaria', cantidad: 25, rut_usuario: '12123123-2' },
+        { tipo_insumo: 'Correas para paseo', dias_ingreso: -5, dias_vencimiento: null, descripcion: 'Unidades de 1.5 m para paseos supervisados', cantidad: 10, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Toallas absorbentes', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Paquetes de 10 unidades para limpieza y cuidado de animales', cantidad: 7, rut_usuario: '44444444-4' },
+    ].map(({ dias_ingreso, dias_vencimiento, ...insumo }) => ({
+        ...insumo,
+        fecha_ingreso: fechaRelativa(dias_ingreso),
+        fecha_vencimiento: dias_vencimiento === null ? null : fechaRelativa(dias_vencimiento),
+    }));
+    const resultadoInsumos = await prisma.insumo.createMany({ data: insumos });
+    console.log(`Insumos creados: ${resultadoInsumos.count}`);
 
 }
 main()
