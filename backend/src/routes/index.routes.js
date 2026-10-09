@@ -3,6 +3,9 @@ import insumosRouter from './insumos.routes.js';
 import animalesRoutes from './animales.routes.js';
 import turnosRoutes from './turnos.routes.js';
 import adopcionesRoutes from './adopciones.routes.js';
+import auth from './authRoutes.js';
+
+import authRoutes from './authRoutes.js';
 
 const router = Router();
 
@@ -15,5 +18,6 @@ router.use('/insumos', insumosRouter);
 router.use('/animales', animalesRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/adopciones', adopcionesRoutes);
+router.use('/auth', authRoutes);
 
 export default router;
