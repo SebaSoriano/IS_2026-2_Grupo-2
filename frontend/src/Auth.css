@@ -1,0 +1,196 @@
+/* Pantalla de login (/login) */
+
+/* Fondo: ocupa toda la pantalla con el patrón de huellas y huesos */
+.auth-page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  /* abajo queda menos espacio porque el perro y el gato cuelgan bajo la tarjeta */
+  padding: 40px 16px 23px;
+  /* el color de abajo se ve mientras carga la imagen */
+  background: #2fb9b6 url('./assets/background.jpg') center / cover no-repeat;
+  /* el perro y el gato se asoman por los lados, esto evita el scroll horizontal */
+  overflow-x: hidden;
+}
+
+/* Tarjeta blanca del centro */
+.auth-card {
+  /* relative para poder ubicar al perro y al gato respecto a la tarjeta */
+  position: relative;
+  box-sizing: border-box;
+  width: min(565px, 100%);
+  /* el espacio de abajo es donde se paran el perro y el gato */
+  padding: 35px 15px 105px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #f8fafc 0%, #f4f1ee 100%);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
+}
+
+/* Recuadro turquesa donde van los campos */
+.auth-panel {
+  box-sizing: border-box;
+  padding: 30px 15px 54px;
+  border-radius: 5px;
+  background: linear-gradient(160deg, #58d3d3 0%, #4fc8c3 55%, #54cbc6 100%);
+  color: #111;
+}
+
+.auth-title {
+  margin: 0;
+  text-align: center;
+  font-size: 42px;
+  line-height: 50px;
+  font-weight: 700;
+}
+
+.auth-label {
+  display: block;
+  /* 20px de padding + 15px del panel dejan el texto alineado con "Recordarme" */
+  padding-left: 20px;
+  margin: 31px 0 6px;
+  font-size: 24px;
+  line-height: 29px;
+  font-weight: 700;
+}
+
+/* Campos de usuario y contraseña */
+.auth-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 68px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #f4f1ee 0%, #f7f9fc 100%);
+  color: #222;
+  font: inherit;
+  font-size: 18px;
+  /* el texto va centrado, igual que el placeholder de la maqueta */
+  text-align: center;
+}
+
+.auth-input::placeholder {
+  color: #aeadab;
+}
+
+/* Casilla "Recordarme" */
+.auth-remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding-left: 20px;
+  margin-top: 31px;
+  font-size: 20px;
+  line-height: 24px;
+  cursor: pointer;
+}
+
+.auth-remember input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #0f7482;
+  cursor: pointer;
+}
+
+/* Botón "Continuar" */
+.auth-submit {
+  display: block;
+  width: 201px;
+  height: 42px;
+  margin: 41px auto 0;
+  border: none;
+  border-radius: 21px;
+  background: linear-gradient(180deg, #55ccc8 0%, #51c9c3 100%);
+  color: #111;
+  font: inherit;
+  font-size: 24px;
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.auth-submit:hover {
+  background: #45bdb8;
+}
+
+/* Contorno visible al navegar con el teclado */
+.auth-input:focus-visible,
+.auth-submit:focus-visible,
+.auth-remember input:focus-visible {
+  outline: 3px solid #0f4f58;
+  outline-offset: 2px;
+}
+
+/* Perro y gato: decoración que cruza el borde de la tarjeta */
+.auth-pet {
+  position: absolute;
+  bottom: -18px;
+  /* sin esto no se podría hacer clic en lo que queda detrás */
+  pointer-events: none;
+  user-select: none;
+}
+
+.auth-pet--perro {
+  left: -40px;
+  height: 180px;
+}
+
+.auth-pet--gato {
+  right: -76px;
+  height: 165px;
+}
+
+/* Pantallas angostas (celulares): todo se achica un poco */
+@media (max-width: 640px) {
+  .auth-card {
+    padding: 24px 12px 96px;
+  }
+
+  .auth-panel {
+    padding: 22px 12px 36px;
+  }
+
+  .auth-title {
+    font-size: 32px;
+    line-height: 40px;
+  }
+
+  .auth-label {
+    padding-left: 12px;
+    margin-top: 22px;
+    font-size: 20px;
+    line-height: 24px;
+  }
+
+  .auth-input {
+    height: 56px;
+    font-size: 16px;
+  }
+
+  .auth-remember {
+    padding-left: 12px;
+    margin-top: 22px;
+    font-size: 18px;
+  }
+
+  .auth-submit {
+    margin-top: 28px;
+    font-size: 22px;
+  }
+
+  /* el perro y el gato se asoman menos para no salirse de la pantalla */
+  .auth-pet--perro {
+    left: -12px;
+    height: 120px;
+  }
+
+  .auth-pet--gato {
+    right: -12px;
+    height: 110px;
+  }
+}
