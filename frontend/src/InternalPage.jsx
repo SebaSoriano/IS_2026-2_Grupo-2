@@ -3,6 +3,7 @@ import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import { scheduleActions } from './data/scheduleActions.js'
+import AnimalForm from './AnimalForm.jsx'
 import { getInsumos } from './services/api.js'
 
 function getSectionFromPath(pathname) {
@@ -199,6 +200,7 @@ export default function InternalPage() {
                 ))}
             </div>
           )}
+          {section.id === 'animales' && <AnimalForm />}
           {section.id === 'inventario' && (
             <div
               className="inventory-table-container"
