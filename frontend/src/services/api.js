@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api'
+export const API_BASE_URL = '/api'
 
 async function getJson(path) {
   const response = await fetch(`${API_BASE_URL}${path}`)

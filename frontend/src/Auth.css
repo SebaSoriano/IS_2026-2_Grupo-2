@@ -31,7 +31,7 @@
 /* Recuadro turquesa donde van los campos */
 .auth-panel {
   box-sizing: border-box;
-  padding: 30px 15px 54px;
+  padding: 30px 15px 8px;
   border-radius: 5px;
   background: linear-gradient(160deg, #58d3d3 0%, #4fc8c3 55%, #54cbc6 100%);
   color: #111;
@@ -105,7 +105,7 @@
   margin: 41px auto 0;
   border: none;
   border-radius: 21px;
-  background: linear-gradient(180deg, #55ccc8 0%, #51c9c3 100%);
+  background-color: #53cbc6;
   color: #111;
   font: inherit;
   font-size: 24px;
@@ -114,8 +114,37 @@
   transition: background-color 0.2s ease;
 }
 
-.auth-submit:hover {
-  background: #45bdb8;
+.auth-submit:hover:not(:disabled) {
+  background-color: #45bdb8;
+}
+
+/* Mientras se espera la respuesta del servidor */
+.auth-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+/* Mensaje de error del login */
+/* ocupa siempre 36px (aunque esté vacío) para que el formulario no cambie de tamaño */
+.auth-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 36px;
+  margin: 10px 15px 0;
+  padding: 0 14px;
+  border-radius: 4px;
+  color: #8a1c1c;
+  font-size: 16px;
+  line-height: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* el fondo claro solo aparece cuando hay un mensaje */
+.auth-error:not(:empty) {
+  background: #fff1f1;
 }
 
 /* Contorno visible al navegar con el teclado */
@@ -152,7 +181,7 @@
   }
 
   .auth-panel {
-    padding: 22px 12px 36px;
+    padding: 22px 12px 8px;
   }
 
   .auth-title {
