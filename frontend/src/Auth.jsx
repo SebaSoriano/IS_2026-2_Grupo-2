@@ -32,6 +32,11 @@ export default function Auth() {
     // casilla de recordarme está desmarcada por defecto
     const [recordarme, setRecordarme] = useState(false);
 
+    // mensaje de error que se muestra bajo el formulario ('' = sin error)
+    const [error, setError] = useState('');
+    // true mientras se espera la respuesta del backend (bloquea el botón)
+    const [loading, setLoading] = useState(false);
+
     // al apretar continuar evita que el navegador
     // recargue la página
     const handleSubmit = async (event) => {
