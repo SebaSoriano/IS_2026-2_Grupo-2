@@ -47,6 +47,11 @@ export const fechaNoFutura = (valor) => {
 export const booleanoTexto = (valor) =>
   valor === 'true' || valor === 'false' ? null : 'Debe ser true o false';
 
+
+// para booleanos que llegan en el body como JSON
+export const booleano = (valor) =>
+  typeof valor === 'boolean' ? null : 'Debe ser true o false';
+
 const recortar = (v) => v.trim();
 
 // Arma un "schema" a partir de un objeto de reglas. Cumple el rol de z.object() en Zod.
