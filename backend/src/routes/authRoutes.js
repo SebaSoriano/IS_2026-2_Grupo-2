@@ -9,6 +9,6 @@ const router = Router();
 // que el body cumpla loginSchema
 router.post("/login", validate(loginSchema), login);
 router.post("/logout", logout);
-router.use("/register", register);
+router.post("/register", register);
 
 export default router;

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
-import { getInsumos } from './services/api.js'
+import AnimalSection from './components/AnimalSection.jsx'
+import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
@@ -13,22 +14,11 @@ function getSectionFromPath(pathname) {
   return sections.find((section) => sectionPath(section) === normalizedPath)?.id
 }
 
-function formatDate(value) {
-  if (!value) return '—'
-
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? 'Fecha no válida'
-    : new Intl.DateTimeFormat('es-CL', { timeZone: 'UTC' }).format(date)
-}
-
 export default function InternalPage() {
   const [activeSection, setActiveSection] = useState(
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
-  const [insumos, setInsumos] = useState([])
-  const [inventoryStatus, setInventoryStatus] = useState('idle')
-  const [inventoryError, setInventoryError] = useState('')
+  const [isInventoryCreateOpen, setIsInventoryCreateOpen] = useState(false)
 
   useEffect(() => {
     const syncSectionWithPath = () => {
@@ -46,30 +36,6 @@ export default function InternalPage() {
     window.addEventListener('popstate', syncSectionWithPath)
     return () => window.removeEventListener('popstate', syncSectionWithPath)
   }, [])
-
-  useEffect(() => {
-    if (activeSection !== 'inventario') return undefined
-
-    let isCurrentRequest = true
-    setInventoryStatus('loading')
-    setInventoryError('')
-
-    getInsumos()
-      .then((data) => {
-        if (!isCurrentRequest) return
-        setInsumos(data)
-        setInventoryStatus('success')
-      })
-      .catch((error) => {
-        if (!isCurrentRequest) return
-        setInventoryError(error.message)
-        setInventoryStatus('error')
-      })
-
-    return () => {
-      isCurrentRequest = false
-    }
-  }, [activeSection])
 
   const navigateToSection = (event, section) => {
     if (
@@ -130,69 +96,29 @@ export default function InternalPage() {
               aria-label={`Acciones de ${section.label.toLowerCase()}`}
             >
               {(section.id === 'inventario' ? inventoryActions : adoptionActions).map((action) => (
-                  <button className="area-action" type="button" key={action}>
+                  <button
+                    className="area-action"
+                    type="button"
+                    key={action}
+                    onClick={
+                      section.id === 'inventario' && action === 'Añadir Registro'
+                        ? () => setIsInventoryCreateOpen(true)
+                        : undefined
+                    }
+                  >
                     {action}
                   </button>
                 ))}
             </div>
           )}
-          {section.id === 'inventario' && (
-            <div
-              className="inventory-table-container"
-              aria-busy={inventoryStatus === 'loading'}
-            >
-              {inventoryStatus === 'loading' && (
-                <p role="status">Cargando insumos...</p>
-              )}
-              {inventoryStatus === 'error' && (
-                <p className="inventory-error" role="alert">
-                  No se pudieron cargar los insumos: {inventoryError}
-                </p>
-              )}
-              {inventoryStatus === 'success' && (
-                <div className="inventory-table-scroll">
-                  <table className="inventory-table">
-                    <caption>Insumos registrados en el inventario</caption>
-                    <thead>
-                      <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Tipo de insumo</th>
-                        <th scope="col">Descripción</th>
-                        <th scope="col">Cantidad</th>
-                        <th scope="col">Fecha de ingreso</th>
-                        <th scope="col">Fecha de vencimiento</th>
-                        <th scope="col">Registrado por</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {insumos.length === 0 ? (
-                        <tr>
-                          <td className="inventory-empty" colSpan="7">
-                            No hay insumos registrados.
-                          </td>
-                        </tr>
-                      ) : (
-                        insumos.map((insumo) => (
-                          <tr key={insumo.id}>
-                            <td>{insumo.id}</td>
-                            <td>{insumo.tipo_insumo}</td>
-                            <td>{insumo.descripcion || '—'}</td>
-                            <td>{insumo.cantidad}</td>
-                            <td>{formatDate(insumo.fecha_ingreso)}</td>
-                            <td>{formatDate(insumo.fecha_vencimiento)}</td>
-                            <td>
-                              {insumo.usuario?.correo ||
-                                insumo.usuario?.rut_usuario ||
-                                '—'}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+          {section.id === 'animales' && activeSection === 'animales' && (
+            <AnimalSection />
+          )}
+          {section.id === 'inventario' && activeSection === 'inventario' && (
+            <InventorySection
+              isCreateModalOpen={isInventoryCreateOpen}
+              onCloseCreateModal={() => setIsInventoryCreateOpen(false)}
+            />
           )}
         </section>
       ))}

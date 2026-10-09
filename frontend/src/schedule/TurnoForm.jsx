@@ -45,7 +45,9 @@ export default function TurnoForm({ dias, turno, textoBoton, onSubmit, onCancel 
         hora_fin: fin == null ? null : formatearHora(fin),
       })
     } catch (err) {
-      setError(err.message)
+      // si el backend rechaza los datos, los mensajes de Zod vienen en err.details
+      const detalles = err.details?.map((detalle) => detalle.mensaje).join('. ')
+      setError(detalles || err.message)
       setGuardando(false)
     }
   }

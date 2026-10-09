@@ -1,64 +1,168 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 
-// Datos públicos del voluntario (nunca la contraseña)
-const usuarioPublico = { select: { rut_usuario: true, nombre_usuario: true } };
 
-// La tabla "animales" no tiene una columna de estado: un animal está adoptado
-// si tiene una fila en "adopciones". Esta función agrega ese dato a la respuesta.
-const marcarAdopcion = ({ adopciones, ...animal }) => ({
-  ...animal,
-  adoptado: adopciones.length > 0,
-  adopcion: adopciones[0] ?? null,
-});
+// Agrega "adoptado" y "adopcion" a un animal
+function marcarAdopcion(animal) {
+  // ¿El animal tiene al menos una adopción guardada?
+  if (animal.adopciones.length > 0) {
+    animal.adoptado = true;
+    animal.adopcion = animal.adopciones[0];
+  } else {
+    animal.adoptado = false;
+    animal.adopcion = null;
+  }
 
-// Listado de todos los animales (disponibles y adoptados), con filtros opcionales
-export const getAllAnimales = async (filtros = {}) => {
+  delete animal.adopciones;
+  return animal;
+}
+
+
+// Lista de animales (con filtros opcionales)
+export async function getAllAnimales(filtros) {
+  // Si no llegaron filtros, usamos un objeto vacío
+  if (filtros === undefined) {
+    filtros = {};
+  }
+  // "where" son las condiciones de búsqueda. Parte vacío = sin condiciones.
   const where = {};
-  if (filtros.especie) {
-    where.especie_animal = { contains: filtros.especie, mode: 'insensitive' };
-  }
-  if (filtros.adoptado !== undefined) {
-    // some: tiene al menos una adopción / none: no tiene ninguna
-    where.adopciones = filtros.adoptado ? { some: {} } : { none: {} };
+
+  // Filtro por especie
+  if (filtros.especie !== undefined) {
+    where.especie_animal = {
+      contains: filtros.especie,
+      mode: 'insensitive',
+    };
   }
 
+  // Filtro por adoptado / no adoptado
+  if (filtros.adoptado === true) {
+    where.adopciones = { some: {} };
+  }
+  if (filtros.adoptado === false) {
+    where.adopciones = { none: {} };
+  }
+
+  // Filtro por edad
+  if (filtros.edad_min !== undefined || filtros.edad_max !== undefined) {
+    where.edad = {};
+    if (filtros.edad_min !== undefined) {
+      where.edad.gte = filtros.edad_min;
+    }
+    if (filtros.edad_max !== undefined) {
+      where.edad.lte = filtros.edad_max;
+    }
+  }
+
+  // Aplicamos el filtro con la constante "where"
   const animales = await prisma.animales.findMany({
-    where,
+    where: where,
     orderBy: { id_animal: 'desc' },
-    include: { adopciones: { select: { fecha_adopcion: true } } },
+    include: {
+      adopciones: {
+        select: { fecha_adopcion: true },
+      },
+    },
   });
-  return animales.map(marcarAdopcion);
-};
 
-// Detalle de un animal: su adopción (con el adoptante) y su historial médico
-export const getAnimalById = async (id) => {
+  // Recorremos la lista y marcamos cada animal como adoptado o no
+  const resultado = [];
+  for (const animal of animales) {
+    resultado.push(marcarAdopcion(animal));
+  }
+
+  return resultado;
+}
+
+//------------------------------------------------------------
+
+// Buscar un animal por su id
+
+export async function getAnimalById(id) {
   const animal = await prisma.animales.findUnique({
     where: { id_animal: id },
     include: {
-      adopciones: { include: { adoptante: true, usuario: usuarioPublico } },
-      historial: { orderBy: { fecha_tratamiento: 'desc' } },
+      adopciones: {
+        include: {
+          adoptante: true,
+          usuario: {
+            select: { rut_usuario: true, nombre_usuario: true },
+          },
+        },
+      },
+      historial: {
+        orderBy: { fecha_tratamiento: 'desc' },
+      },
     },
   });
-  return animal ? marcarAdopcion(animal) : null;
-};
 
-export const createAnimal = (datos) => prisma.animales.create({ data: datos });
+  // Si no existe, devolvemos null y el controller responde 404
+  if (animal === null) {
+    return null;
+  }
 
-// Si el id no existe, Prisma lanza P2025 y error.middleware.js responde 404
-export const updateAnimal = (id, datos) =>
-  prisma.animales.update({ where: { id_animal: id }, data: datos });
+  return marcarAdopcion(animal);
+}
 
-// Solo se puede eliminar un animal sin adopciones ni historial médico,
-// para no perder el registro de lo que pasó con él.
-export const deleteAnimal = async (id) => {
+//------------------------------------------------------------
+
+// Crear un animal
+
+export async function createAnimal(datos) {
+  const animalNuevo = await prisma.animales.create({
+    data: datos,
+  });
+
+  return animalNuevo;
+}
+
+//------------------------------------------------------------
+
+// 4. Modificar un animal
+
+export async function updateAnimal(id, datos) {
+  // Si el id no existe, Prisma lanza un error (P2025)
+  // y error.middleware.js lo convierte en una respuesta 404.
+  const animalModificado = await prisma.animales.update({
+    where: { id_animal: id },
+    data: datos,
+  });
+
+  return animalModificado;
+}
+
+// ------------------------------------------------------------
+
+// 5. Eliminar un animal
+
+export async function deleteAnimal(id) {
+  // Busca al animal y cuenta sus adopciones e historial
   const animal = await prisma.animales.findUnique({
     where: { id_animal: id },
-    include: { _count: { select: { adopciones: true, historial: true } } },
+    include: {
+      _count: {
+        select: { adopciones: true, historial: true },
+      },
+    },
   });
-  if (!animal) throw new HttpError(404, 'Animal no encontrado');
-  if (animal._count.adopciones > 0 || animal._count.historial > 0) {
+
+  // Si no existe, error 404
+  if (animal === null) {
+    throw new HttpError(404, 'Animal no encontrado');
+  }
+
+  // Si tiene adopciones o historial, no se puede borrar
+  const cantidadAdopciones = animal._count.adopciones;
+  const cantidadHistorial = animal._count.historial;
+
+  if (cantidadAdopciones > 0 || cantidadHistorial > 0) {
     throw new HttpError(409, 'No se puede eliminar un animal con adopciones o historial médico');
   }
-  return prisma.animales.delete({ where: { id_animal: id } });
-};
+
+  // Si pasó todas las revisiones, se elimina
+  const animalEliminado = await prisma.animales.delete({
+    where: { id_animal: id },
+  });
+
+  return animalEliminado;
+}
