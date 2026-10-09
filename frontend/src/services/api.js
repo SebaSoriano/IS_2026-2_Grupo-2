@@ -57,3 +57,7 @@ async function postJson(path, body) {
 export function crearAnimal(animal) {
   return postJson('/animales', animal)
 }
+
+export function crearInsumo(insumo) {
+  return postJson('/insumos', insumo)
+}

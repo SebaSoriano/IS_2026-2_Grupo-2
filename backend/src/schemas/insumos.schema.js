@@ -1,35 +1,101 @@
-import { z } from 'zod';
-
-const fecha = (campo) => {
-  const message = `${campo} debe ser una fecha válida en formato de texto`;
-
-  return z.string({ error: message })
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), { message })
-    .transform((value) => new Date(value));
+const fields = {
+  tipo_insumo: {
+    required: true,
+    validate(value) {
+      if (typeof value !== 'string' || value.trim().length === 0) {
+        return 'tipo_insumo debe ser un texto no vacío';
+      }
+      if (value.trim().length > 100) {
+        return 'tipo_insumo no puede superar 100 caracteres';
+      }
+      return null;
+    },
+    transform: (value) => value.trim(),
+  },
+  fecha_ingreso: {
+    required: true,
+    validate: (value) => validateDate(value, 'fecha_ingreso'),
+    transform: (value) => new Date(value),
+  },
+  fecha_vencimiento: {
+    validate: (value) => value === null ? null : validateDate(value, 'fecha_vencimiento'),
+    transform: (value) => value === null ? null : new Date(value),
+  },
+  descripcion: {
+    validate(value) {
+      if (value === null) return null;
+      if (typeof value !== 'string') return 'descripcion debe ser texto o null';
+      if (value.length > 255) return 'descripcion no puede superar 255 caracteres';
+      return null;
+    },
+  },
+  cantidad: {
+    required: true,
+    validate(value) {
+      return Number.isInteger(value) && value >= 0
+        ? null
+        : 'cantidad debe ser un entero mayor o igual a cero';
+    },
+  },
+  rut_usuario: {
+    required: true,
+    validate(value) {
+      return typeof value === 'string' && value.trim().length > 0
+        ? null
+        : 'rut_usuario debe ser un texto no vacío';
+    },
+    transform: (value) => value.trim(),
+  },
 };
 
-export const createInsumoSchema = z.object({
-  tipo_insumo: z.string({ error: 'tipo_insumo debe ser un texto no vacío' })
-    .trim()
-    .min(1, { message: 'tipo_insumo debe ser un texto no vacío' })
-    .max(100, { message: 'tipo_insumo no puede superar 100 caracteres' }),
-  fecha_ingreso: fecha('fecha_ingreso'),
-  fecha_vencimiento: fecha('fecha_vencimiento').nullable().optional(),
-  descripcion: z.custom(
-    (value) => value === null || typeof value === 'string',
-    { message: 'descripcion debe ser texto o null' },
-  ).refine(
-    (value) => typeof value !== 'string' || value.length <= 255,
-    { message: 'descripcion no puede superar 255 caracteres' },
-  ).optional(),
-  cantidad: z.number({ error: 'cantidad debe ser un entero mayor o igual a cero' })
-    .refine(
-      (value) => Number.isInteger(value) && value >= 0,
-      { message: 'cantidad debe ser un entero mayor o igual a cero' },
-    ),
-  rut_usuario: z.string({ error: 'rut_usuario debe ser un texto no vacío' })
-    .trim()
-    .min(1, { message: 'rut_usuario debe ser un texto no vacío' }),
-}).strict();
+function validateDate(value, field) {
+  return typeof value === 'string' && !Number.isNaN(new Date(value).getTime())
+    ? null
+    : `${field} debe ser una fecha válida en formato de texto`;
+}
 
-export const updateInsumoSchema = createInsumoSchema.partial();
+function createSchema(partial) {
+  return (input) => {
+    if (!input || typeof input !== 'object' || Array.isArray(input)) {
+      return {
+        errores: [{ campo: 'body', mensaje: 'El cuerpo debe ser un objeto JSON' }],
+        datos: {},
+      };
+    }
+
+    const errores = [];
+    const datos = {};
+
+    for (const field of Object.keys(input)) {
+      if (!Object.hasOwn(fields, field)) {
+        errores.push({ campo: field, mensaje: `Campo no permitido: ${field}` });
+      }
+    }
+
+    for (const [field, rules] of Object.entries(fields)) {
+      if (!Object.hasOwn(input, field)) {
+        if (rules.required && !partial) {
+          errores.push({ campo: field, mensaje: 'Campo obligatorio' });
+        }
+        continue;
+      }
+
+      const value = input[field];
+      const error = rules.validate(value);
+      if (error) {
+        errores.push({ campo: field, mensaje: error });
+      } else {
+        datos[field] = rules.transform ? rules.transform(value) : value;
+      }
+    }
+
+    if (partial && Object.keys(input).length === 0) {
+      errores.push({ campo: 'body', mensaje: 'Debe enviar al menos un campo para modificar' });
+    }
+
+    return { errores, datos };
+  };
+}
+
+export const createInsumoSchema = createSchema(false);
+export const updateInsumoSchema = createSchema(true);

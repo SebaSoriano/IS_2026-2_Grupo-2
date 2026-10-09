@@ -1,7 +1,7 @@
 @import './InternalPage.css';
 @import './PublicPage.css';
 @import './Auth.css';
-@import './AnimalForm.css';
+@import './components/AnimalForm.css';
 
 body {
   margin: 0;
