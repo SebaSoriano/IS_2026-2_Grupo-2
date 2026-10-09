@@ -3,10 +3,15 @@
 */
 import { PrismaClient } from '@prisma/client';
 import { faker } from '@faker-js/faker';
+// bcrypt para guardar las contraseñas hasheadas igual que las compara el login
+import bcrypt from 'bcryptjs';
 
 
 // nueva instancia del cliente de prisma, la otra vive aparte en src/config/prisma.js
 const prisma = new PrismaClient();
+// contraseña de prueba, SOLO para desarrollo
+// todos los usuarios del seed usan esta misma contraseña (el rut del admin es el primero de rutUsuarios)
+const PASSWORD_DE_PRUEBA = 'admin1234';
 
 async function main() {
     console.log('Poblacion de datos iniciada \n -Limpiando datos anteriores.');
@@ -41,6 +46,8 @@ async function main() {
     }
 
     console.log('-Creando horarios');
+        // la contraseña se hashea una sola vez, el 10 son las rondas de salt (igual que en el login)
+    const contrasenaHash = await bcrypt.hash(PASSWORD_DE_PRUEBA, 10);
     const horarios = await Promise.all(
       [1, 2, 3].map((dias) =>
         prisma.horario.create({
@@ -63,7 +70,7 @@ console.log(`Horarios creados: ${horarios.length}`);
                     nombre_usuario: `${nombre} ${apellido}`,
                     correo: faker.internet.email({ firstName: nombre, lastName: apellido }),
                     telefono: '9' + faker.string.numeric(8),
-                    contrasena: faker.word.words(3),
+                    contrasena: contrasenaHash,
                     fecha_nacimiento: faker.date.birthdate({ min: 15, max: 65, mode: 'age' }),
                 },
             });
@@ -71,6 +78,7 @@ console.log(`Horarios creados: ${horarios.length}`);
     );
 
     console.log(`Usuarios creados: ${usuarios.length}`);
+    console.log(`Para iniciar sesión usa el rut ${rutUsuarios[0]} (Admin) y la contraseña ${PASSWORD_DE_PRUEBA}`);
 
 }
 main()
