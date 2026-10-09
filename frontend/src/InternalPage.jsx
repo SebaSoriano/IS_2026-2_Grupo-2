@@ -26,6 +26,32 @@ export default function InternalPage() {
   const [insumos, setInsumos] = useState([])
   const [inventoryStatus, setInventoryStatus] = useState('idle')
   const [inventoryError, setInventoryError] = useState('')
+  const [inventorySort, setInventorySort] = useState({
+    key: 'id',
+    direction: 'ascending',
+  })
+
+  const sortedInsumos = [...insumos].sort((first, second) => {
+    const firstValue = getInsumoSortValue(first, inventorySort.key)
+    const secondValue = getInsumoSortValue(second, inventorySort.key)
+
+    if (firstValue == null || secondValue == null) {
+      if (firstValue == null && secondValue == null) return 0
+      return firstValue == null ? 1 : -1
+    }
+
+    let result
+    if (typeof firstValue === 'number' && typeof secondValue === 'number') {
+      result = firstValue - secondValue
+    } else {
+      result = String(firstValue).localeCompare(String(secondValue), 'es', {
+        numeric: true,
+        sensitivity: 'base',
+      })
+    }
+
+    return inventorySort.direction === 'ascending' ? result : -result
+  })
 
   useEffect(() => {
     const syncSectionWithPath = () => {
@@ -86,6 +112,40 @@ export default function InternalPage() {
     }
     setActiveSection(sectionId)
   }
+
+  const sortInventoryBy = (key) => {
+    setInventorySort((currentSort) => ({
+      key,
+      direction:
+        currentSort.key === key && currentSort.direction === 'ascending'
+          ? 'descending'
+          : 'ascending',
+    }))
+  }
+
+  const renderSortableHeader = (key, label) => (
+    <th
+      scope="col"
+      aria-sort={
+        inventorySort.key === key ? inventorySort.direction : 'none'
+      }
+    >
+      <button
+        className="inventory-sort-button"
+        type="button"
+        onClick={() => sortInventoryBy(key)}
+      >
+        {label}
+        <span className="inventory-sort-indicator" aria-hidden="true">
+          {inventorySort.key === key
+            ? inventorySort.direction === 'ascending'
+              ? ' ▲'
+              : ' ▼'
+            : ''}
+        </span>
+      </button>
+    </th>
+  )
 
   return (
     <main>
@@ -158,13 +218,16 @@ export default function InternalPage() {
                     <caption>Insumos registrados en el inventario</caption>
                     <thead>
                       <tr>
-                        <th scope="col">ID</th>
-                        <th scope="col">Tipo de insumo</th>
-                        <th scope="col">Descripción</th>
-                        <th scope="col">Cantidad</th>
-                        <th scope="col">Fecha de ingreso</th>
-                        <th scope="col">Fecha de vencimiento</th>
-                        <th scope="col">Registrado por</th>
+                        {renderSortableHeader('id', 'ID')}
+                        {renderSortableHeader('tipo_insumo', 'Tipo de insumo')}
+                        {renderSortableHeader('descripcion', 'Descripción')}
+                        {renderSortableHeader('cantidad', 'Cantidad')}
+                        {renderSortableHeader('fecha_ingreso', 'Fecha de ingreso')}
+                        {renderSortableHeader(
+                          'fecha_vencimiento',
+                          'Fecha de vencimiento',
+                        )}
+                        {renderSortableHeader('usuario', 'Registrado por')}
                       </tr>
                     </thead>
                     <tbody>
@@ -175,7 +238,7 @@ export default function InternalPage() {
                           </td>
                         </tr>
                       ) : (
-                        insumos.map((insumo) => (
+                        sortedInsumos.map((insumo) => (
                           <tr key={insumo.id}>
                             <td>{insumo.id}</td>
                             <td>{insumo.tipo_insumo}</td>
@@ -201,4 +264,19 @@ export default function InternalPage() {
       ))}
     </main>
   )
+}
+
+function getInsumoSortValue(insumo, key) {
+  if (key === 'usuario') {
+    return insumo.usuario?.correo || insumo.usuario?.rut_usuario || null
+  }
+
+  const value = insumo[key]
+  if (key === 'fecha_ingreso' || key === 'fecha_vencimiento') {
+    if (!value) return null
+    const timestamp = new Date(value).getTime()
+    return Number.isNaN(timestamp) ? null : timestamp
+  }
+
+  return value ?? null
 }
