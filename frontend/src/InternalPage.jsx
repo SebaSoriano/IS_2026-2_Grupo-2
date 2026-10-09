@@ -3,7 +3,7 @@ import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import { scheduleActions } from './data/scheduleActions.js'
-import AnimalForm from './components/AnimalForm.jsx'
+import AnimalSection from './components/AnimalSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 
 function getSectionFromPath(pathname) {
@@ -114,7 +114,9 @@ export default function InternalPage() {
                 ))}
             </div>
           )}
-          {section.id === 'animales' && <AnimalForm />}
+          {section.id === 'animales' && activeSection === 'animales' && (
+            <AnimalSection />
+          )}
           {section.id === 'inventario' && activeSection === 'inventario' && (
             <InventorySection
               isCreateModalOpen={isInventoryCreateOpen}
