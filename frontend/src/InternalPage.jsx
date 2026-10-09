@@ -3,6 +3,7 @@ import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import { scheduleActions } from './data/scheduleActions.js'
+import AnimalForm from './AnimalForm.jsx'
 
 function getSectionFromPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/'
@@ -102,6 +103,7 @@ export default function InternalPage() {
                 ))}
             </div>
           )}
+          {section.id === 'adopcion' && <AnimalForm />}
         </section>
       ))}
     </main>
