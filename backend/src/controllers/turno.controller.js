@@ -13,10 +13,13 @@ export const crearTurnoController = async (req, res, next) => {
 };
 
 
-export const obtenerTurnosController = async (req, res) => {
-  const turnos = await obtenerTurnos(req, res);
-  res.status(200).json(turnos);
-
+export const obtenerTurnosController = async (req, res, next) => {
+  try {
+    const turnos = await obtenerTurnos();
+    res.status(200).json(turnos);
+  } catch (error) {
+    next(error);
+  }
 };
 
 // el rut ya llega validado por Zod, si el usuario no existe el service lanza un 404
