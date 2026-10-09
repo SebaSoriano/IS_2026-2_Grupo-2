@@ -72,3 +72,28 @@
 .inventory-success {
   color: #176b3a;
 }
+
+.inventory-search {
+  display: grid;
+  max-width: 420px;
+  gap: 6px;
+  margin-bottom: 12px;
+  color: #315052;
+  font-weight: 700;
+}
+
+.inventory-search input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  color: #173d3e;
+  font: inherit;
+}
+
+.inventory-search input:focus-visible {
+  outline: 2px solid #19a99f;
+  outline-offset: 2px;
+}

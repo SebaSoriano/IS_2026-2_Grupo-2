@@ -27,6 +27,15 @@ function getInsumoSortValue(insumo, key) {
   return value ?? null
 }
 
+function normalizeSearchValue(value) {
+  if (value == null) return ''
+
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es')
+}
+
 function SortableHeader({ activeSort, label, onSort, sortKey }) {
   return (
     <th
@@ -61,6 +70,7 @@ export default function InventorySection({
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [sort, setSort] = useState({ key: 'id', direction: 'ascending' })
+  const [search, setSearch] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
@@ -83,7 +93,29 @@ export default function InventorySection({
     }
   }, [])
 
-  const sortedInsumos = [...insumos].sort((first, second) => {
+  const normalizedQuery = normalizeSearchValue(search.trim())
+  const filteredInsumos = insumos.filter((insumo) => {
+    if (!normalizedQuery) return true
+
+    const searchableValues = [
+      insumo.id,
+      insumo.tipo_insumo,
+      insumo.descripcion,
+      insumo.cantidad,
+      insumo.fecha_ingreso,
+      insumo.fecha_vencimiento,
+      insumo.fecha_ingreso ? formatDate(insumo.fecha_ingreso) : null,
+      insumo.fecha_vencimiento ? formatDate(insumo.fecha_vencimiento) : null,
+      insumo.usuario?.correo,
+      insumo.usuario?.rut_usuario,
+    ]
+
+    return searchableValues.some((value) =>
+      normalizeSearchValue(value).includes(normalizedQuery),
+    )
+  })
+
+  const sortedInsumos = [...filteredInsumos].sort((first, second) => {
     const firstValue = getInsumoSortValue(first, sort.key)
     const secondValue = getInsumoSortValue(second, sort.key)
 
@@ -137,82 +169,99 @@ export default function InventorySection({
         </p>
       )}
       {status === 'success' && (
-        <div className="inventory-table-scroll">
-          <table className="inventory-table">
-            <caption>Insumos registrados en el inventario</caption>
-            <thead>
-              <tr>
-                <SortableHeader
-                  activeSort={sort}
-                  label="ID"
-                  onSort={sortBy}
-                  sortKey="id"
-                />
-                <SortableHeader
-                  activeSort={sort}
-                  label="Tipo de insumo"
-                  onSort={sortBy}
-                  sortKey="tipo_insumo"
-                />
-                <SortableHeader
-                  activeSort={sort}
-                  label="Descripción"
-                  onSort={sortBy}
-                  sortKey="descripcion"
-                />
-                <SortableHeader
-                  activeSort={sort}
-                  label="Cantidad"
-                  onSort={sortBy}
-                  sortKey="cantidad"
-                />
-                <SortableHeader
-                  activeSort={sort}
-                  label="Fecha de ingreso"
-                  onSort={sortBy}
-                  sortKey="fecha_ingreso"
-                />
-                <SortableHeader
-                  activeSort={sort}
-                  label="Fecha de vencimiento"
-                  onSort={sortBy}
-                  sortKey="fecha_vencimiento"
-                />
-                <SortableHeader
-                  activeSort={sort}
-                  label="Registrado por"
-                  onSort={sortBy}
-                  sortKey="usuario"
-                />
-              </tr>
-            </thead>
-            <tbody>
-              {insumos.length === 0 ? (
+        <>
+          <label className="inventory-search">
+            <span>Buscar insumos</span>
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por nombre, descripción, fecha..."
+            />
+          </label>
+          <div className="inventory-table-scroll">
+            <table className="inventory-table">
+              <caption>Insumos registrados en el inventario</caption>
+              <thead>
                 <tr>
-                  <td className="inventory-empty" colSpan="7">
-                    No hay insumos registrados.
-                  </td>
+                  <SortableHeader
+                    activeSort={sort}
+                    label="ID"
+                    onSort={sortBy}
+                    sortKey="id"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Tipo de insumo"
+                    onSort={sortBy}
+                    sortKey="tipo_insumo"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Descripción"
+                    onSort={sortBy}
+                    sortKey="descripcion"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Cantidad"
+                    onSort={sortBy}
+                    sortKey="cantidad"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Fecha de ingreso"
+                    onSort={sortBy}
+                    sortKey="fecha_ingreso"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Fecha de vencimiento"
+                    onSort={sortBy}
+                    sortKey="fecha_vencimiento"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Registrado por"
+                    onSort={sortBy}
+                    sortKey="usuario"
+                  />
                 </tr>
-              ) : (
-                sortedInsumos.map((insumo) => (
-                  <tr key={insumo.id}>
-                    <td>{insumo.id}</td>
-                    <td>{insumo.tipo_insumo}</td>
-                    <td>{insumo.descripcion || '—'}</td>
-                    <td>{insumo.cantidad}</td>
-                    <td>{formatDate(insumo.fecha_ingreso)}</td>
-                    <td>{formatDate(insumo.fecha_vencimiento)}</td>
-                    <td>
-                      {insumo.usuario?.correo ||
-                        insumo.usuario?.rut_usuario ||
-                        '—'}
+              </thead>
+              <tbody>
+                {insumos.length === 0 ? (
+                  <tr>
+                    <td className="inventory-empty" colSpan="7">
+                      No hay insumos registrados.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : sortedInsumos.length === 0 ? (
+                  <tr>
+                    <td className="inventory-empty" colSpan="7">
+                      No se encontraron insumos para “{search}”.
+                    </td>
+                  </tr>
+                ) : (
+                  sortedInsumos.map((insumo) => (
+                    <tr key={insumo.id}>
+                      <td>{insumo.id}</td>
+                      <td>{insumo.tipo_insumo}</td>
+                      <td>{insumo.descripcion || '—'}</td>
+                      <td>{insumo.cantidad}</td>
+                      <td>{formatDate(insumo.fecha_ingreso)}</td>
+                      <td>{formatDate(insumo.fecha_vencimiento)}</td>
+                      <td>
+                        {insumo.usuario?.correo ||
+                          insumo.usuario?.rut_usuario ||
+                          '—'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
       <InventoryForm
         isOpen={isCreateModalOpen}
