@@ -3,56 +3,18 @@ import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import { scheduleActions } from './data/scheduleActions.js'
-import AnimalForm from './AnimalForm.jsx'
-import { getInsumos } from './services/api.js'
+import AnimalForm from './components/AnimalForm.jsx'
+import InventorySection from './components/InventorySection.jsx'
 
 function getSectionFromPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/'
   return sections.find((section) => `/${section.id}` === normalizedPath)?.id
 }
 
-function formatDate(value) {
-  if (!value) return '—'
-
-  const date = new Date(value)
-  return Number.isNaN(date.getTime())
-    ? 'Fecha no válida'
-    : new Intl.DateTimeFormat('es-CL', { timeZone: 'UTC' }).format(date)
-}
-
 export default function InternalPage() {
   const [activeSection, setActiveSection] = useState(
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
-  const [insumos, setInsumos] = useState([])
-  const [inventoryStatus, setInventoryStatus] = useState('idle')
-  const [inventoryError, setInventoryError] = useState('')
-  const [inventorySort, setInventorySort] = useState({
-    key: 'id',
-    direction: 'ascending',
-  })
-
-  const sortedInsumos = [...insumos].sort((first, second) => {
-    const firstValue = getInsumoSortValue(first, inventorySort.key)
-    const secondValue = getInsumoSortValue(second, inventorySort.key)
-
-    if (firstValue == null || secondValue == null) {
-      if (firstValue == null && secondValue == null) return 0
-      return firstValue == null ? 1 : -1
-    }
-
-    let result
-    if (typeof firstValue === 'number' && typeof secondValue === 'number') {
-      result = firstValue - secondValue
-    } else {
-      result = String(firstValue).localeCompare(String(secondValue), 'es', {
-        numeric: true,
-        sensitivity: 'base',
-      })
-    }
-
-    return inventorySort.direction === 'ascending' ? result : -result
-  })
 
   useEffect(() => {
     const syncSectionWithPath = () => {
@@ -70,30 +32,6 @@ export default function InternalPage() {
     window.addEventListener('popstate', syncSectionWithPath)
     return () => window.removeEventListener('popstate', syncSectionWithPath)
   }, [])
-
-  useEffect(() => {
-    if (activeSection !== 'inventario') return undefined
-
-    let isCurrentRequest = true
-    setInventoryStatus('loading')
-    setInventoryError('')
-
-    getInsumos()
-      .then((data) => {
-        if (!isCurrentRequest) return
-        setInsumos(data)
-        setInventoryStatus('success')
-      })
-      .catch((error) => {
-        if (!isCurrentRequest) return
-        setInventoryError(error.message)
-        setInventoryStatus('error')
-      })
-
-    return () => {
-      isCurrentRequest = false
-    }
-  }, [activeSection])
 
   const navigateToSection = (event, sectionId) => {
     if (
@@ -113,40 +51,6 @@ export default function InternalPage() {
     }
     setActiveSection(sectionId)
   }
-
-  const sortInventoryBy = (key) => {
-    setInventorySort((currentSort) => ({
-      key,
-      direction:
-        currentSort.key === key && currentSort.direction === 'ascending'
-          ? 'descending'
-          : 'ascending',
-    }))
-  }
-
-  const renderSortableHeader = (key, label) => (
-    <th
-      scope="col"
-      aria-sort={
-        inventorySort.key === key ? inventorySort.direction : 'none'
-      }
-    >
-      <button
-        className="inventory-sort-button"
-        type="button"
-        onClick={() => sortInventoryBy(key)}
-      >
-        {label}
-        <span className="inventory-sort-indicator" aria-hidden="true">
-          {inventorySort.key === key
-            ? inventorySort.direction === 'ascending'
-              ? ' ▲'
-              : ' ▼'
-            : ''}
-        </span>
-      </button>
-    </th>
-  )
 
   return (
     <main>
@@ -201,84 +105,11 @@ export default function InternalPage() {
             </div>
           )}
           {section.id === 'animales' && <AnimalForm />}
-          {section.id === 'inventario' && (
-            <div
-              className="inventory-table-container"
-              aria-busy={inventoryStatus === 'loading'}
-            >
-              {inventoryStatus === 'loading' && (
-                <p role="status">Cargando insumos...</p>
-              )}
-              {inventoryStatus === 'error' && (
-                <p className="inventory-error" role="alert">
-                  No se pudieron cargar los insumos: {inventoryError}
-                </p>
-              )}
-              {inventoryStatus === 'success' && (
-                <div className="inventory-table-scroll">
-                  <table className="inventory-table">
-                    <caption>Insumos registrados en el inventario</caption>
-                    <thead>
-                      <tr>
-                        {renderSortableHeader('id', 'ID')}
-                        {renderSortableHeader('tipo_insumo', 'Tipo de insumo')}
-                        {renderSortableHeader('descripcion', 'Descripción')}
-                        {renderSortableHeader('cantidad', 'Cantidad')}
-                        {renderSortableHeader('fecha_ingreso', 'Fecha de ingreso')}
-                        {renderSortableHeader(
-                          'fecha_vencimiento',
-                          'Fecha de vencimiento',
-                        )}
-                        {renderSortableHeader('usuario', 'Registrado por')}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {insumos.length === 0 ? (
-                        <tr>
-                          <td className="inventory-empty" colSpan="7">
-                            No hay insumos registrados.
-                          </td>
-                        </tr>
-                      ) : (
-                        sortedInsumos.map((insumo) => (
-                          <tr key={insumo.id}>
-                            <td>{insumo.id}</td>
-                            <td>{insumo.tipo_insumo}</td>
-                            <td>{insumo.descripcion || '—'}</td>
-                            <td>{insumo.cantidad}</td>
-                            <td>{formatDate(insumo.fecha_ingreso)}</td>
-                            <td>{formatDate(insumo.fecha_vencimiento)}</td>
-                            <td>
-                              {insumo.usuario?.correo ||
-                                insumo.usuario?.rut_usuario ||
-                                '—'}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+          {section.id === 'inventario' && activeSection === 'inventario' && (
+            <InventorySection />
           )}
         </section>
       ))}
     </main>
   )
-}
-
-function getInsumoSortValue(insumo, key) {
-  if (key === 'usuario') {
-    return insumo.usuario?.correo || insumo.usuario?.rut_usuario || null
-  }
-
-  const value = insumo[key]
-  if (key === 'fecha_ingreso' || key === 'fecha_vencimiento') {
-    if (!value) return null
-    const timestamp = new Date(value).getTime()
-    return Number.isNaN(timestamp) ? null : timestamp
-  }
-
-  return value ?? null
 }

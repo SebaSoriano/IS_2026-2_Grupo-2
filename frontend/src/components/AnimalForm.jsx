@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { crearAnimal } from './services/api.js'
+import { crearAnimal } from '../services/api.js'
 
 // Parte el formulario vacío
 const formularioVacio = {
