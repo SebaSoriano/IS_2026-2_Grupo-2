@@ -6,7 +6,6 @@ import perroImg from './assets/login/perro.webp';
 import gatoImg from './assets/login/gato.webp';
 
 
-
 // deja el rut como lo espera el backend: 12345678-9 (sin puntos, con guion, K mayúscula)
 // acepta lo que escriba la persona: "12.345.678-9", "123456789", "12345678-k"
 function limpiarRut(valor) {
