@@ -1,0 +1,75 @@
+.animal-table-container {
+  min-width: 0;
+}
+
+.animal-table-scroll {
+  overflow-x: auto;
+  border: 1px solid #c3eeee;
+  border-radius: 8px;
+}
+
+.animal-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #173d3e;
+  text-align: left;
+}
+
+.animal-table caption {
+  padding: 12px;
+  color: #173d3e;
+  font-weight: 700;
+  text-align: left;
+}
+
+.animal-table th,
+.animal-table td {
+  padding: 12px;
+  border-bottom: 1px solid #d8eeee;
+  vertical-align: top;
+}
+
+.animal-table th {
+  background: #c3eeee;
+  white-space: nowrap;
+}
+
+.animal-table tbody tr {
+  cursor: pointer;
+}
+
+.animal-table tbody tr:hover {
+  background: #f0fbfa;
+}
+
+.animal-table tbody tr.is-selected {
+  background: #dcf8f5;
+}
+
+.animal-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.animal-table-empty {
+  color: #536d6e;
+  text-align: center;
+}
+
+.animal-message {
+  margin: 0 0 12px;
+}
+
+.animal-message--exito {
+  color: #176b3a;
+}
+
+.animal-message--error {
+  color: #a32121;
+}
+
+.animal-actions-help {
+  width: 164px;
+  margin: 0;
+  color: #536d6e;
+  font-size: 0.875rem;
+}
