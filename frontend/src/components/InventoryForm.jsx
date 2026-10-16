@@ -20,6 +20,13 @@ const EMPTY_FORM = {
   rut_usuario: '',
 }
 
+function getTodayDateString() {
+  const today = new Date()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${today.getFullYear()}-${month}-${day}`
+}
+
 function formFromInsumo(insumo) {
   const dateForInput = (value) =>
     value ? new Date(value).toISOString().slice(0, 10) : ''
@@ -42,9 +49,17 @@ export default function InventoryForm({
   onUpdated,
 }) {
   const isEditing = insumo != null
+  const originalExpirationDate = isEditing
+    ? formFromInsumo(insumo).fecha_vencimiento
+    : ''
   const [form, setForm] = useState(() =>
     isEditing ? formFromInsumo(insumo) : EMPTY_FORM,
   )
+  const todayDateString = getTodayDateString()
+  const unchangedPastExpiration =
+    isEditing &&
+    form.fecha_vencimiento === originalExpirationDate &&
+    originalExpirationDate < todayDateString
   const [formErrors, setFormErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -85,6 +100,10 @@ export default function InventoryForm({
       descripcion: form.descripcion.trim() || null,
       cantidad: Number(form.cantidad),
       rut_usuario: form.rut_usuario.trim(),
+    }
+
+    if (unchangedPastExpiration) {
+      delete payload.fecha_vencimiento
     }
 
     try {
@@ -209,6 +228,7 @@ export default function InventoryForm({
           <input
             name="fecha_vencimiento"
             type="date"
+            min={unchangedPastExpiration ? undefined : todayDateString}
             value={form.fecha_vencimiento}
             onChange={updateFormField}
             aria-invalid={Boolean(formErrors.fecha_vencimiento)}
