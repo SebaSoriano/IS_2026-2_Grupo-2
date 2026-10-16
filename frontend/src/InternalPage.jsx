@@ -5,6 +5,7 @@ import { sections } from './data/sections.js'
 import AnimalSection from './components/AnimalSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
+import VolunteerSection from './components/VolunteerSection.jsx'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
 const sectionPath = (section) => section.path ?? `/${section.id}`
@@ -119,6 +120,9 @@ export default function InternalPage() {
           )}
           {section.id === 'animales' && activeSection === 'animales' && (
             <AnimalSection />
+          )}
+          {section.id === 'voluntarios' && activeSection === 'voluntarios' && (
+            <VolunteerSection />
           )}
           {section.id === 'inventario' && activeSection === 'inventario' && (
             <InventorySection
