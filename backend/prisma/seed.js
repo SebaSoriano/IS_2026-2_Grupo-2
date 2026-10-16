@@ -16,6 +16,7 @@ const PASSWORD_DE_PRUEBA = 'admin1234';
 async function main() {
     console.log('Poblacion de datos iniciada \n -Limpiando datos anteriores.');
     await prisma.turno.deleteMany();
+    await prisma.asistencia.deleteMany();
     await prisma.adopciones.deleteMany();
     await prisma.donaciones.deleteMany();
     await prisma.historial_medico.deleteMany();
