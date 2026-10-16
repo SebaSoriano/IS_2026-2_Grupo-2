@@ -3,7 +3,7 @@ import { actualizarHistorial, crearHistorial, getAnimales } from '../services/ap
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
 import './AnimalForm.css'
 
-// Valores iniciales del formulario
+// valores iniciales del formulario
 const formularioVacio = {
   id_animal: '',
   tratamiento: '',

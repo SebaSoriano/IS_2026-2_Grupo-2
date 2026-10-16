@@ -3,6 +3,7 @@ import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import AnimalSection from './components/AnimalSection.jsx'
+import HistorialSection from './components/HistorialSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
 
@@ -141,8 +142,8 @@ export default function InternalPage() {
                 ))}
             </div>
           )}
-          {section.id === 'animales' && activeSection === 'animales' && (
-            <AnimalSection />
+          {section.id === 'historial-medico' && activeSection === 'historial-medico' && (
+            <HistorialSection />
           )}
           {section.id === 'inventario' && activeSection === 'inventario' && (
             <InventorySection
@@ -160,3 +161,4 @@ export default function InternalPage() {
     </main>
   )
 }
+
