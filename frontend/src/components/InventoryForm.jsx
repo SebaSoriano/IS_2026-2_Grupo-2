@@ -148,6 +148,7 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
             name="cantidad"
             type="number"
             min="0"
+            max="99"
             step="1"
             value={form.cantidad}
             onChange={updateFormField}

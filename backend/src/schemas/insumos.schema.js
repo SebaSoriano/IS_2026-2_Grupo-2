@@ -24,8 +24,9 @@ const insumoSchema = z.object({
     .nullable()
     .optional(),
   cantidad: z.number()
-    .int('cantidad debe ser un entero mayor o igual a cero')
-    .min(0, 'cantidad debe ser un entero mayor o igual a cero'),
+    .int('cantidad debe ser un entero entre 0 y 99')
+    .min(0, 'cantidad debe ser un entero entre 0 y 99')
+    .max(99, 'cantidad debe ser un entero entre 0 y 99'),
   rut_usuario: z.string()
     .trim()
     .min(1, 'rut_usuario debe ser un texto no vacío'),
