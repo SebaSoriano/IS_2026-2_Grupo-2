@@ -477,6 +477,238 @@
   text-align: left;
 }
 
+/* ---------- Asistencia: mes, semanas y dias arriba; staff a la izquierda ---------- */
+
+/* boton de la vista activa (Asistencia) igual que el link activo del menu */
+.area-action.is-active {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.attendance {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attendance p {
+  margin: 0;
+}
+
+.attendance-table-scroll {
+  overflow-x: auto;
+  border: 1px solid #d8eeee;
+}
+
+.attendance-table {
+  min-width: 100%;
+  border-collapse: collapse;
+  color: #173d3e;
+}
+
+.attendance-table th,
+.attendance-table td {
+  border: 1px solid #d8eeee;
+  text-align: center;
+}
+
+.attendance-table__mes {
+  padding: 8px;
+  color: #fff;
+  background: #17a3b5;
+  font-size: 22px;
+}
+
+.month-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.month-picker span {
+  min-width: 200px;
+}
+
+.month-picker button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.month-picker button:hover {
+  background: #19efa0;
+}
+
+.attendance-table__semana {
+  padding: 6px 4px;
+  color: #fff;
+  background: #3ba5a3;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.attendance-table__semana + .attendance-table__semana {
+  border-left: 2px solid #9bd6d3;
+}
+
+.attendance-table__dia {
+  min-width: 36px;
+  padding: 4px 2px;
+  color: #10494b;
+  background: #c3eeee;
+  font-size: 12px;
+}
+
+.attendance-table__dia span {
+  display: block;
+}
+
+.attendance-table__dia span + span {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.attendance-table__dia.is-hoy {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+/* linea mas marcada donde empieza cada semana (lunes) */
+.attendance-table .inicio-semana {
+  border-left: 2px solid #9bd6d3;
+}
+
+/* RUT y nombre quedan fijos a la izquierda al hacer scroll horizontal */
+.attendance-table .attendance-table__rut,
+.attendance-table .attendance-table__nombre {
+  position: sticky;
+  z-index: 1;
+  padding: 8px 12px;
+  background: #fff;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.attendance-table__rut {
+  left: 0;
+  min-width: 96px;
+}
+
+.attendance-table__nombre {
+  left: 120px;
+  min-width: 160px;
+  font-weight: 400;
+  box-shadow: 2px 0 0 #d8eeee;
+}
+
+.attendance-table thead .attendance-table__rut,
+.attendance-table thead .attendance-table__nombre {
+  z-index: 2;
+  color: #fff;
+  background: #17a3b5;
+  font-weight: 700;
+}
+
+.attendance-table__mensaje {
+  padding: 16px;
+  color: #536d6e;
+}
+
+.attendance-cell {
+  height: 40px;
+  padding: 0;
+}
+
+.attendance-cell button {
+  display: block;
+  width: 100%;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.attendance-cell button:disabled {
+  cursor: wait;
+}
+
+.attendance-cell.is-turno {
+  background: #fff;
+}
+
+.attendance-cell.is-turno button:hover,
+.attendance-cell.is-turno button:focus-visible {
+  background: #c3eeee;
+}
+
+.attendance-cell.is-presente {
+  background: #d9fbe9;
+}
+
+.attendance-cell.is-presente button {
+  color: #0b8a57;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.attendance-cell.is-presente button:hover {
+  background: #b9f5d6;
+}
+
+.attendance-cell.is-turno-futuro {
+  background: #f7fcfc;
+}
+
+/* sin turno: rayado gris para que se note que ese dia no se puede marcar */
+.attendance-cell.is-sin-turno,
+.attendance-legend__muestra.is-sin-turno {
+  background: repeating-linear-gradient(135deg, #eef2f2 0 4px, #dfe7e7 4px 8px);
+}
+
+.attendance-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #536d6e;
+  font-size: 14px;
+}
+
+.attendance-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.attendance-legend__muestra {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #d8eeee;
+  font-weight: 700;
+}
+
+.attendance-legend__muestra.is-presente {
+  color: #0b8a57;
+  background: #d9fbe9;
+}
+
+.attendance-legend__muestra.is-turno {
+  background: #fff;
+}
+
 @media (max-width: 600px) {
   .schedule {
     flex-direction: column;
