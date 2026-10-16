@@ -1,101 +1,61 @@
-const fields = {
-  tipo_insumo: {
-    required: true,
-    validate(value) {
-      if (typeof value !== 'string' || value.trim().length === 0) {
-        return 'tipo_insumo debe ser un texto no vacío';
-      }
-      if (value.trim().length > 100) {
-        return 'tipo_insumo no puede superar 100 caracteres';
-      }
-      return null;
-    },
-    transform: (value) => value.trim(),
-  },
-  fecha_ingreso: {
-    required: true,
-    validate: (value) => validateDate(value, 'fecha_ingreso'),
-    transform: (value) => new Date(value),
-  },
-  fecha_vencimiento: {
-    validate: (value) => value === null ? null : validateDate(value, 'fecha_vencimiento'),
-    transform: (value) => value === null ? null : new Date(value),
-  },
-  descripcion: {
-    validate(value) {
-      if (value === null) return null;
-      if (typeof value !== 'string') return 'descripcion debe ser texto o null';
-      if (value.length > 255) return 'descripcion no puede superar 255 caracteres';
-      return null;
-    },
-  },
-  cantidad: {
-    required: true,
-    validate(value) {
-      return Number.isInteger(value) && value >= 0
-        ? null
-        : 'cantidad debe ser un entero mayor o igual a cero';
-    },
-  },
-  rut_usuario: {
-    required: true,
-    validate(value) {
-      return typeof value === 'string' && value.trim().length > 0
-        ? null
-        : 'rut_usuario debe ser un texto no vacío';
-    },
-    transform: (value) => value.trim(),
-  },
-};
+import { z } from 'zod';
 
-function validateDate(value, field) {
-  return typeof value === 'string' && !Number.isNaN(new Date(value).getTime())
-    ? null
-    : `${field} debe ser una fecha válida en formato de texto`;
+const fecha = z.string()
+  .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Debe ser una fecha válida')
+  .transform((value) => new Date(value));
+
+function getTodayDateString() {
+  const today = new Date();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${today.getFullYear()}-${month}-${day}`;
 }
 
-function createSchema(partial) {
-  return (input) => {
-    if (!input || typeof input !== 'object' || Array.isArray(input)) {
-      return {
-        errores: [{ campo: 'body', mensaje: 'El cuerpo debe ser un objeto JSON' }],
-        datos: {},
-      };
-    }
+function isValidDateOnly(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
 
-    const errores = [];
-    const datos = {};
-
-    for (const field of Object.keys(input)) {
-      if (!Object.hasOwn(fields, field)) {
-        errores.push({ campo: field, mensaje: `Campo no permitido: ${field}` });
-      }
-    }
-
-    for (const [field, rules] of Object.entries(fields)) {
-      if (!Object.hasOwn(input, field)) {
-        if (rules.required && !partial) {
-          errores.push({ campo: field, mensaje: 'Campo obligatorio' });
-        }
-        continue;
-      }
-
-      const value = input[field];
-      const error = rules.validate(value);
-      if (error) {
-        errores.push({ campo: field, mensaje: error });
-      } else {
-        datos[field] = rules.transform ? rules.transform(value) : value;
-      }
-    }
-
-    if (partial && Object.keys(input).length === 0) {
-      errores.push({ campo: 'body', mensaje: 'Debe enviar al menos un campo para modificar' });
-    }
-
-    return { errores, datos };
-  };
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
 }
 
-export const createInsumoSchema = createSchema(false);
-export const updateInsumoSchema = createSchema(true);
+const fechaVencimiento = z.string()
+  .refine(isValidDateOnly, 'Debe ser una fecha válida')
+  .pipe(z.string().refine(
+    (value) => value >= getTodayDateString(),
+    'La fecha de vencimiento no puede ser anterior al día actual',
+  ))
+  .transform((value) => new Date(value));
+
+const tipoInsumo = z.string()
+  .trim()
+  .pipe(z.enum([
+    'Alimentación',
+    'Higiene y aseo',
+    'Salud',
+    'Limpieza',
+    'Accesorios y juguetes',
+    'Otros',
+  ], 'tipo_insumo debe ser uno de los tipos permitidos'));
+
+const insumoSchema = z.object({
+  tipo_insumo: tipoInsumo,
+  fecha_ingreso: fecha,
+  fecha_vencimiento: fechaVencimiento.nullable().optional(),
+  descripcion: z.string()
+    .max(255, 'descripcion no puede superar 255 caracteres')
+    .nullable()
+    .optional(),
+  cantidad: z.number()
+    .int('cantidad debe ser un entero entre 0 y 99')
+    .min(0, 'cantidad debe ser un entero entre 0 y 99')
+    .max(99, 'cantidad debe ser un entero entre 0 y 99'),
+  rut_usuario: z.string()
+    .trim()
+    .min(1, 'rut_usuario debe ser un texto no vacío'),
+}).strict();
+
+export const createInsumoSchema = insumoSchema;
+export const updateInsumoSchema = insumoSchema
+  .partial()
+  .strict()
+  .refine((data) => Object.keys(data).length > 0, 'Debe enviar al menos un campo para modificar');
