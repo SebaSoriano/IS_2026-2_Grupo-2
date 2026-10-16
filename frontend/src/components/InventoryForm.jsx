@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { crearInsumo } from '../services/api.js'
+import { actualizarInsumo, crearInsumo } from '../services/api.js'
 import './InventoryForm.css'
 
 const TIPOS_INSUMO = [
@@ -20,8 +20,31 @@ const EMPTY_FORM = {
   rut_usuario: '',
 }
 
-export default function InventoryForm({ isOpen, onClose, onCreated }) {
-  const [form, setForm] = useState(EMPTY_FORM)
+function formFromInsumo(insumo) {
+  const dateForInput = (value) =>
+    value ? new Date(value).toISOString().slice(0, 10) : ''
+
+  return {
+    tipo_insumo: insumo.tipo_insumo ?? '',
+    fecha_ingreso: dateForInput(insumo.fecha_ingreso),
+    fecha_vencimiento: dateForInput(insumo.fecha_vencimiento),
+    descripcion: insumo.descripcion ?? '',
+    cantidad: String(insumo.cantidad ?? ''),
+    rut_usuario: insumo.usuario?.rut_usuario ?? insumo.rut_usuario ?? '',
+  }
+}
+
+export default function InventoryForm({
+  isOpen,
+  insumo = null,
+  onClose,
+  onCreated,
+  onUpdated,
+}) {
+  const isEditing = insumo != null
+  const [form, setForm] = useState(() =>
+    isEditing ? formFromInsumo(insumo) : EMPTY_FORM,
+  )
   const [formErrors, setFormErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -46,9 +69,6 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
 
   const closeForm = () => {
     if (isSubmitting) return
-    setForm(EMPTY_FORM)
-    setFormErrors({})
-    setFormError('')
     onClose()
   }
 
@@ -68,9 +88,14 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
     }
 
     try {
-      const insumoCreado = await crearInsumo(payload)
-      onCreated(insumoCreado)
-      setForm(EMPTY_FORM)
+      const insumoGuardado = isEditing
+        ? await actualizarInsumo(insumo.id, payload)
+        : await crearInsumo(payload)
+      if (isEditing) {
+        onUpdated(insumoGuardado)
+      } else {
+        onCreated(insumoGuardado)
+      }
       onClose()
     } catch (submitError) {
       const errorsByField = {}
@@ -103,7 +128,9 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
     >
       <form className="inventory-form" onSubmit={submitInsumo}>
         <div className="inventory-dialog-header">
-          <h2 id="inventory-dialog-title">Registrar insumo</h2>
+          <h2 id="inventory-dialog-title">
+            {isEditing ? `Modificar insumo ${insumo.id}` : 'Registrar insumo'}
+          </h2>
           <button
             className="inventory-dialog-close"
             type="button"
@@ -244,7 +271,13 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Registrando...' : 'Registrar insumo'}
+            {isSubmitting
+              ? isEditing
+                ? 'Guardando...'
+                : 'Registrando...'
+              : isEditing
+                ? 'Guardar cambios'
+                : 'Registrar insumo'}
           </button>
         </div>
       </form>

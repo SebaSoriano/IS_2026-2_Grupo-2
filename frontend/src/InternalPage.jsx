@@ -23,6 +23,7 @@ export default function InternalPage() {
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
   const [isInventoryCreateOpen, setIsInventoryCreateOpen] = useState(false)
+  const [isInventoryEditOpen, setIsInventoryEditOpen] = useState(false)
   const [selectedInventoryCount, setSelectedInventoryCount] = useState(0)
 
   useEffect(() => {
@@ -120,9 +121,13 @@ export default function InternalPage() {
                         (action === 'Eliminar Registro' && selectedInventoryCount === 0))
                     }
                     onClick={
-                      section.id === 'inventario' && action === 'Añadir Registro'
-                        ? () => setIsInventoryCreateOpen(true)
-                        : undefined
+                      section.id !== 'inventario'
+                        ? undefined
+                        : action === 'Añadir Registro'
+                          ? () => setIsInventoryCreateOpen(true)
+                          : action === 'Modificar Registro'
+                            ? () => setIsInventoryEditOpen(true)
+                            : undefined
                     }
                   >
                     {action}
@@ -137,6 +142,8 @@ export default function InternalPage() {
             <InventorySection
               isCreateModalOpen={isInventoryCreateOpen}
               onCloseCreateModal={() => setIsInventoryCreateOpen(false)}
+              isEditModalOpen={isInventoryEditOpen}
+              onCloseEditModal={() => setIsInventoryEditOpen(false)}
               onSelectionCountChange={setSelectedInventoryCount}
             />
           )}

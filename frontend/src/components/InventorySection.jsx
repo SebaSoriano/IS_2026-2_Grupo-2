@@ -65,6 +65,8 @@ function SortableHeader({ activeSort, label, onSort, sortKey }) {
 export default function InventorySection({
   isCreateModalOpen,
   onCloseCreateModal,
+  isEditModalOpen,
+  onCloseEditModal,
   onSelectionCountChange,
 }) {
   const [insumos, setInsumos] = useState([])
@@ -163,11 +165,28 @@ export default function InventorySection({
     })
   }
 
+  const selectedInsumo =
+    selectedIds.size === 1
+      ? insumos.find((insumo) => selectedIds.has(insumo.id)) ?? null
+      : null
+  const isEditingModalOpen = isEditModalOpen && selectedInsumo != null
+
   const addCreatedInsumo = (insumo) => {
     setInsumos((currentInsumos) => [...currentInsumos, insumo])
     setStatus('success')
     setError('')
     setSuccessMessage('El insumo se registró correctamente.')
+  }
+
+  const updateInsumo = (insumoActualizado) => {
+    setInsumos((currentInsumos) =>
+      currentInsumos.map((insumo) =>
+        insumo.id === insumoActualizado.id ? insumoActualizado : insumo,
+      ),
+    )
+    setStatus('success')
+    setError('')
+    setSuccessMessage('El insumo se modificó correctamente.')
   }
 
   return (
@@ -292,11 +311,20 @@ export default function InventorySection({
           </div>
         </>
       )}
-      <InventoryForm
-        isOpen={isCreateModalOpen}
-        onClose={onCloseCreateModal}
-        onCreated={addCreatedInsumo}
-      />
+      {(isCreateModalOpen || isEditingModalOpen) && (
+        <InventoryForm
+          key={
+            isEditingModalOpen
+              ? `edit-${selectedInsumo.id}`
+              : 'create'
+          }
+          isOpen
+          insumo={isEditingModalOpen ? selectedInsumo : null}
+          onClose={isEditingModalOpen ? onCloseEditModal : onCloseCreateModal}
+          onCreated={addCreatedInsumo}
+          onUpdated={updateInsumo}
+        />
+      )}
     </div>
   )
 }

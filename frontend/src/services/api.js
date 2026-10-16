@@ -113,6 +113,10 @@ export function crearInsumo(insumo) {
   return postJson('/insumos', insumo)
 }
 
+export function actualizarInsumo(id, insumo) {
+  return sendJson('PUT', `/insumos/${id}`, insumo)
+}
+
 // horario de una semana (lunes "AAAA-MM-DD"): los 7 dias (1 = Lunes ... 7 = Domingo) con su fecha y sus turnos
 export async function getHorarios(semana) {
   const horarios = await getJson(`/horarios?semana=${semana}`)
