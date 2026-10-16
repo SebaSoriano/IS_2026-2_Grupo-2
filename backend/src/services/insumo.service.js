@@ -6,7 +6,7 @@ import prisma from '../config/prisma.js';
 // estandarizacion de lo que se mostrar publicamente del usuario, esto para evitar volver a escribir las mismas lineas de codigo
 // nunca incluir la contrasena
 const usuarioPublico = {
-  select: { rut_usuario: true, correo: true },
+  select: { rut_usuario: true, nombre_usuario: true, correo: true },
 };
 
 //obtener todos los insumos incluyendo el usuario que registro el insumo
@@ -46,4 +46,3 @@ export async function updateInsumo(id, data) {
 export async function deleteInsumo(id) {
   return prisma.insumo.delete({ where: { id } });
 }
-

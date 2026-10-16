@@ -14,7 +14,7 @@ function formatDate(value) {
 
 function getInsumoSortValue(insumo, key) {
   if (key === 'usuario') {
-    return insumo.usuario?.correo || insumo.usuario?.rut_usuario || null
+    return insumo.usuario?.nombre_usuario || null
   }
 
   const value = insumo[key]
@@ -130,6 +130,7 @@ export default function InventorySection({
       insumo.fecha_vencimiento,
       insumo.fecha_ingreso ? formatDate(insumo.fecha_ingreso) : null,
       insumo.fecha_vencimiento ? formatDate(insumo.fecha_vencimiento) : null,
+      insumo.usuario?.nombre_usuario,
       insumo.usuario?.correo,
       insumo.usuario?.rut_usuario,
     ]
@@ -374,11 +375,7 @@ export default function InventorySection({
                       <td>{insumo.cantidad}</td>
                       <td>{formatDate(insumo.fecha_ingreso)}</td>
                       <td>{formatDate(insumo.fecha_vencimiento)}</td>
-                      <td>
-                        {insumo.usuario?.correo ||
-                          insumo.usuario?.rut_usuario ||
-                          '—'}
-                      </td>
+                      <td>{insumo.usuario?.nombre_usuario || '—'}</td>
                     </tr>
                   ))
                 )}
