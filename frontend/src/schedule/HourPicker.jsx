@@ -4,7 +4,7 @@ import { formatearHora } from './horas.js'
 const ALTO_OPCION = 40
 
 // selector tipo reloj: una columna de horas con scroll, la elegida queda resaltada
-// se confirma con ✓ o se descarta con ✕ (o Escape)
+// se confirma con tick o se descarta con x (o Escape)
 export default function HourPicker({ label, value, options, onChange, placeholder, onClear }) {
   const [abierto, setAbierto] = useState(false)
   const [marcada, setMarcada] = useState(value ?? options[0])

@@ -1,17 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { scheduleActions } from '../data/scheduleActions.js'
 import { actualizarTurno, crearTurno, eliminarTurno, getHorarios } from '../services/api.js'
+import AttendanceSection from './AttendanceSection.jsx'
 import Modal from './Modal.jsx'
 import TurnoForm from './TurnoForm.jsx'
 import TurnoSelector from './TurnoSelector.jsx'
 import { bloquesDelDia, formatearHora, horasDelTurno } from './horas.js'
 
-// por ahora solo estas acciones abren un pop-up (Asistencia y Exportar quedan pendientes)
+// estas acciones abren un pop-up; Asistencia cambia la vista y Exportar queda pendiente
 const MODAL_POR_ACCION = {
   'Añadir turno': 'crear',
   'Editar turno': 'editar',
   'Borrar turno': 'borrar',
 }
+
+const RUTA_HORARIO = '/intranet/horario'
+const RUTA_ASISTENCIA = '/intranet/horario/asistencia'
+
+// la vista sale de la URL: /intranet/horario/asistencia muestra la asistencia, si no el horario
+const vistaDesdeRuta = () =>
+  window.location.pathname.replace(/\/+$/, '') === RUTA_ASISTENCIA ? 'asistencia' : 'horario'
 
 export default function ScheduleSection() {
   const [horarios, setHorarios] = useState([])
@@ -22,6 +30,22 @@ export default function ScheduleSection() {
   const [turnoElegido, setTurnoElegido] = useState(null)
   const [errorBorrar, setErrorBorrar] = useState('')
   const [borrando, setBorrando] = useState(false)
+  const [vista, setVista] = useState(vistaDesdeRuta)
+  // cuenta los cambios de turnos para que la asistencia recargue los dias con turno
+  const [cambiosTurnos, setCambiosTurnos] = useState(0)
+
+  // con los botones atras/adelante del navegador (o el link de Horario) la vista sigue a la URL
+  useEffect(() => {
+    const sincronizarVista = () => setVista(vistaDesdeRuta())
+    window.addEventListener('popstate', sincronizarVista)
+    return () => window.removeEventListener('popstate', sincronizarVista)
+  }, [])
+
+  const alternarAsistencia = () => {
+    const ruta = vista === 'asistencia' ? RUTA_HORARIO : RUTA_ASISTENCIA
+    window.history.pushState(null, '', ruta)
+    setVista(vistaDesdeRuta())
+  }
 
   const cargarHorarios = useCallback(() => {
     return getHorarios()
@@ -60,6 +84,7 @@ export default function ScheduleSection() {
   const guardarYRecargar = async (peticion) => {
     await peticion
     await cargarHorarios()
+    setCambiosTurnos((cambios) => cambios + 1)
     cerrarModal()
   }
 
@@ -80,10 +105,17 @@ export default function ScheduleSection() {
       <div className="area-actions area-actions--horario" role="group" aria-label="Acciones de horario">
         {scheduleActions.map((action) => (
           <button
-            className="area-action"
+            className={`area-action${action === 'Asistencia' && vista === 'asistencia' ? ' is-active' : ''}`}
             type="button"
             key={action}
-            onClick={MODAL_POR_ACCION[action] ? () => abrirModal(MODAL_POR_ACCION[action]) : undefined}
+            onClick={
+              action === 'Asistencia'
+                ? alternarAsistencia
+                : MODAL_POR_ACCION[action]
+                  ? () => abrirModal(MODAL_POR_ACCION[action])
+                  : undefined
+            }
+            aria-pressed={action === 'Asistencia' ? vista === 'asistencia' : undefined}
             disabled={MODAL_POR_ACCION[action] && estado !== 'success'}
           >
             {action}
@@ -91,7 +123,13 @@ export default function ScheduleSection() {
         ))}
       </div>
 
-      <div className="schedule-table-container" aria-busy={estado === 'loading'}>
+      {vista === 'asistencia' && (
+        <div className="schedule-table-container">
+          <AttendanceSection cambiosTurnos={cambiosTurnos} />
+        </div>
+      )}
+
+      <div className="schedule-table-container" aria-busy={estado === 'loading'} hidden={vista === 'asistencia'}>
         {estado === 'loading' && <p role="status">Cargando horario...</p>}
         {estado === 'error' && (
           <p className="inventory-error" role="alert">

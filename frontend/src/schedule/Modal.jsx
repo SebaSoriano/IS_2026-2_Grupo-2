@@ -1,6 +1,6 @@
 import { useId } from 'react'
 
-// pop-up centrado sobre un fondo oscuro; se cierra con ✕, con Escape o haciendo click fuera
+// pop-up centrado sobre un fondo oscuro; se cierra con la x, con Escape o haciendo click fuera
 export default function Modal({ title, onClose, children }) {
   const titleId = useId()
 
