@@ -3,6 +3,7 @@ import { obtenerTurnos } from '../services/turno.service.js';
 import { obtenerTurnosPorRut } from '../services/turno.service.js';
 import { actualizarTurno } from '../services/turno.service.js';
 import { eliminarTurno } from '../services/turno.service.js';
+import { marcarAsistenciaTurno } from '../services/turno.service.js';
 
 
 export const crearTurnoController = async (req, res, next) => {
@@ -39,6 +40,17 @@ export const actualizarTurnoController = async (req, res, next) => {
   try {
     const { id } = req.params;
     const turno = await actualizarTurno(id, req.body);
+    res.status(200).json(turno);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// marca o desmarca que el usuario llego a la hora a su turno
+export const marcarAsistenciaTurnoController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const turno = await marcarAsistenciaTurno(id, req.body);
     res.status(200).json(turno);
   } catch (error) {
     next(error);

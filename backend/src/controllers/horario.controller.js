@@ -1,9 +1,11 @@
 import { obtenerHorarios } from '../services/horario.service.js';
 import { buscarUsuariosPorNombre } from '../services/usuario.service.js';
 
+// la semana ya llega validada por Zod en req.validateQuery (si no viene, se usa la semana actual)
 export const obtenerHorariosController = async (req, res, next) => {
   try {
-    const horarios = await obtenerHorarios();
+    const { semana } = req.validateQuery;
+    const horarios = await obtenerHorarios(semana);
     res.status(200).json(horarios);
   } catch (error) {
     next(error);
