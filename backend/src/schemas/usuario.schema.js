@@ -9,6 +9,13 @@ export const rutParamSchema = z.object({
   rut,
 });
 
+// Valida la busqueda de usuarios por nombre que hace el pop-up de turnos mientras se escribe.
+// El texto llega en la URL despues del "?" como nombre=texto, ej: /api/horarios/usuarios?nombre=luk
+// trim quita los espacios de los extremos y se exige al menos un caracter para no traer a todos los usuarios
+export const buscarUsuarioQuerySchema = z.object({
+  nombre: z.string().trim().min(1, 'Debe escribir al menos un caracter').max(100),
+});
+
 // Fecha "AAAA-MM-DD" (o ISO completa) que no sea futura; se entrega convertida a Date
 const fechaPasada = z.string()
   .refine((valor) => !Number.isNaN(Date.parse(valor)), { message: 'Debe ser una fecha válida', abort: true })
@@ -28,10 +35,3 @@ export const updateUsuarioSchema = z.object({
 })
   .partial()
   .refine((datos) => Object.keys(datos).length > 0, 'Debe enviar al menos un campo para modificar');
-
-// Valida la busqueda de usuarios por nombre que hace el pop-up de turnos mientras se escribe.
-// El texto llega en la URL despues del "?" como nombre=texto, ej: /api/horarios/usuarios?nombre=luk
-// trim quita los espacios de los extremos y se exige al menos un caracter para no traer a todos los usuarios
-export const buscarUsuarioQuerySchema = z.object({
-  nombre: z.string().trim().min(1, 'Debe escribir al menos un caracter').max(100),
-});
