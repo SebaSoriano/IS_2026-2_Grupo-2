@@ -48,6 +48,7 @@
 }
 
 .inventory-form-field input,
+.inventory-form-field select,
 .inventory-form-field textarea {
   box-sizing: border-box;
   width: 100%;

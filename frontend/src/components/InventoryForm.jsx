@@ -2,6 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { crearInsumo } from '../services/api.js'
 import './InventoryForm.css'
 
+const TIPOS_INSUMO = [
+  'Alimentación',
+  'Higiene y aseo',
+  'Salud',
+  'Limpieza',
+  'Accesorios y juguetes',
+  'Otros',
+]
+
 const EMPTY_FORM = {
   tipo_insumo: '',
   fecha_ingreso: '',
@@ -114,14 +123,18 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
 
         <label className="inventory-form-field">
           Tipo de insumo
-          <input
+          <select
             name="tipo_insumo"
             value={form.tipo_insumo}
             onChange={updateFormField}
-            maxLength={100}
             required
             aria-invalid={Boolean(formErrors.tipo_insumo)}
-          />
+          >
+            <option value="" disabled>Selecciona un tipo</option>
+            {TIPOS_INSUMO.map((tipo) => (
+              <option key={tipo} value={tipo}>{tipo}</option>
+            ))}
+          </select>
           {formErrors.tipo_insumo && (
             <span className="inventory-form-error">
               {formErrors.tipo_insumo}
