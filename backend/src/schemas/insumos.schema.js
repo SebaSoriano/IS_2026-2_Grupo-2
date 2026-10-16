@@ -4,11 +4,19 @@ const fecha = z.string()
   .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Debe ser una fecha válida')
   .transform((value) => new Date(value));
 
+const tipoInsumo = z.string()
+  .trim()
+  .pipe(z.enum([
+    'Alimentación',
+    'Higiene y aseo',
+    'Salud',
+    'Limpieza',
+    'Accesorios y juguetes',
+    'Otros',
+  ], 'tipo_insumo debe ser uno de los tipos permitidos'));
+
 const insumoSchema = z.object({
-  tipo_insumo: z.string()
-    .trim()
-    .min(1, 'tipo_insumo debe ser un texto no vacío')
-    .max(100, 'tipo_insumo no puede superar 100 caracteres'),
+  tipo_insumo: tipoInsumo,
   fecha_ingreso: fecha,
   fecha_vencimiento: fecha.nullable().optional(),
   descripcion: z.string()
