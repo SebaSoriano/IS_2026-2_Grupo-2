@@ -22,6 +22,7 @@ model Usuario {
     turnos        Turno[] //el "Muchos" de la relacion
     donaciones    donaciones[] //el "Muchos" de la relacion
     adopciones  adopciones[]
+    asistencias Asistencia[] //el "Muchos" de la relacion
     rol_id Int
     rol Rol @relation(fields: [rol_id], references: [id])
 }
@@ -70,6 +71,17 @@ model Turno {
   horario Horario @relation(fields: [horario_id], references: [id])
 
   @@unique([rut_usuario, horario_id, hora_inicio]) //el mismo usuario no puede repetir el bloque en el mismo dia
+}
+
+// Relacion 1:N, un usuario puede tener muchas asistencias, pero una asistencia es de un solo usuario
+// si existe el registro, el usuario llego a la hora ese dia (por ahora no se guarda tarde ni ausente)
+model Asistencia {
+  id Int @id @default(autoincrement())
+  rut_usuario String
+  fecha DateTime @db.Date //solo el dia, sin hora
+  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+
+  @@unique([rut_usuario, fecha]) //una sola asistencia por usuario al dia
 }
 
 model historial_medico {
