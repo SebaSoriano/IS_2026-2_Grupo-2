@@ -22,7 +22,6 @@ model Usuario {
     turnos        Turno[] //el "Muchos" de la relacion
     donaciones    donaciones[] //el "Muchos" de la relacion
     adopciones  adopciones[]
-    asistencias Asistencia[] //el "Muchos" de la relacion
     rol_id Int
     rol Rol @relation(fields: [rol_id], references: [id])
 }
@@ -58,30 +57,24 @@ model Horario{
 
 }
 
+// Un turno es de una fecha puntual: el voluntario se anota para ese dia, no se repite cada semana
 // Un usuario puede tener varios turnos en un mismo dia
+// horario_id es el dia de la semana de la fecha (lo calcula el backend), sirve para agrupar en el horario semanal
 // hora_inicio es el bloque de una hora en que llega (ej: "08:00")
 // hora_fin es la hora en que se va, es opcional (si no viene, el turno dura solo ese bloque)
+// llego_a_la_hora es la asistencia del turno (por ahora no se guarda tarde ni ausente)
 model Turno {
   id Int @id @default(autoincrement())
   rut_usuario String
+  fecha DateTime @db.Date //solo el dia, sin hora
   horario_id Int
   hora_inicio String @db.VarChar(5)
   hora_fin String? @db.VarChar(5)
+  llego_a_la_hora Boolean @default(false)
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
   horario Horario @relation(fields: [horario_id], references: [id])
 
-  @@unique([rut_usuario, horario_id, hora_inicio]) //el mismo usuario no puede repetir el bloque en el mismo dia
-}
-
-// Relacion 1:N, un usuario puede tener muchas asistencias, pero una asistencia es de un solo usuario
-// si existe el registro, el usuario llego a la hora ese dia (por ahora no se guarda tarde ni ausente)
-model Asistencia {
-  id Int @id @default(autoincrement())
-  rut_usuario String
-  fecha DateTime @db.Date //solo el dia, sin hora
-  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
-
-  @@unique([rut_usuario, fecha]) //una sola asistencia por usuario al dia
+  @@unique([rut_usuario, fecha, hora_inicio]) //el mismo usuario no puede repetir el bloque en la misma fecha
 }
 
 model historial_medico {
