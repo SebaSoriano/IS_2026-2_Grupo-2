@@ -165,7 +165,7 @@ export function marcarAsistenciaTurno(id, llego_a_la_hora) {
   return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
 }
 
-<<<<<<< HEAD
+
 // ---------- Historial medico ----------
 export function getHistoriales(filtros = {}) {
   const parametros = new URLSearchParams()
@@ -190,7 +190,7 @@ export function actualizarHistorial(id, registro) {
 
 export function eliminarHistorial(id) {
   return sendJson('DELETE', `/historial/${id}`)
-=======
+
 export async function getUsuarios() {
   const usuarios = await getJson('/usuarios')
 
@@ -214,5 +214,4 @@ export function actualizarUsuario(rut, datos) {
 
 export function eliminarUsuario(rut) {
   return sendJson('DELETE', `/usuarios/${rut}`)
->>>>>>> dd009eab81dd4550cad2e304e6c18ea00a683be9
 }
