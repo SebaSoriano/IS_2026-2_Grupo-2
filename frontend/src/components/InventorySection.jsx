@@ -12,6 +12,22 @@ function formatDate(value) {
     : new Intl.DateTimeFormat('es-CL', { timeZone: 'UTC' }).format(date)
 }
 
+function isExpired(insumo) {
+  if (!insumo.fecha_vencimiento) return false
+
+  const expirationDate = new Date(insumo.fecha_vencimiento)
+  if (Number.isNaN(expirationDate.getTime())) return false
+
+  const today = new Date()
+  const todayDateString = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-')
+
+  return expirationDate.toISOString().slice(0, 10) < todayDateString
+}
+
 function getInsumoSortValue(insumo, key) {
   if (key === 'usuario') {
     return insumo.usuario?.nombre_usuario || null
@@ -360,7 +376,10 @@ export default function InventorySection({
                   </tr>
                 ) : (
                   sortedInsumos.map((insumo) => (
-                    <tr key={insumo.id}>
+                    <tr
+                      className={isExpired(insumo) ? 'inventory-row--expired' : ''}
+                      key={insumo.id}
+                    >
                       <td>
                         <input
                           type="checkbox"
