@@ -113,9 +113,9 @@ export function crearInsumo(insumo) {
   return postJson('/insumos', insumo)
 }
 
-// horario semanal: los 7 dias (1 = Lunes ... 7 = Domingo) con sus turnos
-export async function getHorarios() {
-  const horarios = await getJson('/horarios')
+// horario de una semana (lunes "AAAA-MM-DD"): los 7 dias (1 = Lunes ... 7 = Domingo) con su fecha y sus turnos
+export async function getHorarios(semana) {
+  const horarios = await getJson(`/horarios?semana=${semana}`)
 
   if (!Array.isArray(horarios)) {
     throw new Error('La respuesta de la API de horario no es válida.')
@@ -141,7 +141,7 @@ export function eliminarTurno(id) {
   return sendJson('DELETE', `/turnos/${id}`)
 }
 
-// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus dias de turno y sus asistencias marcadas
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes (cada uno dice si llego a la hora)
 export async function getAsistencias(mes) {
   const usuarios = await getJson(`/asistencias?mes=${mes}`)
 
@@ -152,11 +152,7 @@ export async function getAsistencias(mes) {
   return usuarios
 }
 
-// marca que el usuario llego a la hora ese dia ("AAAA-MM-DD")
-export function marcarAsistencia(rut_usuario, fecha) {
-  return postJson('/asistencias', { rut_usuario, fecha })
-}
-
-export function desmarcarAsistencia(id) {
-  return sendJson('DELETE', `/asistencias/${id}`)
+// marca (true) o desmarca (false) que el usuario llego a la hora a un turno
+export function marcarAsistenciaTurno(id, llego_a_la_hora) {
+  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
 }
