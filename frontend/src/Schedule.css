@@ -79,6 +79,74 @@
   white-space: nowrap;
 }
 
+/* selector de semana sobre la tabla */
+.schedule-week {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.week-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 320px;
+  padding: 6px;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  font-weight: 700;
+}
+
+.week-picker span {
+  flex: 1;
+  text-align: center;
+}
+
+.week-picker button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.week-picker button:hover:not(:disabled) {
+  background: #19efa0;
+}
+
+.week-picker button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* numero del dia bajo el nombre, ej: Lunes 12 */
+.schedule-table__fecha {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.schedule-table thead th.is-hoy {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+/* dias que ya pasaron: se ven mas apagados */
+.schedule-table td.is-pasado {
+  color: #6f8a8b;
+  background: #f7f9f9;
+}
+
+.schedule-table td.is-pasado.has-turno {
+  background: #eef5f5;
+}
+
 /* ---------- Pop-up centrado ---------- */
 
 .modal-backdrop {
@@ -316,6 +384,19 @@
 
 .day-picker__option:hover {
   background: #dcf8f5;
+}
+
+.day-picker__option small {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* dias que ya pasaron: no se pueden elegir */
+.day-picker__option.is-disabled {
+  color: #8aa3a4;
+  background: #eef2f2;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 .day-picker__option.is-selected {
@@ -663,6 +744,30 @@
   background: #b9f5d6;
 }
 
+.attendance-cell.is-parcial {
+  background: #effcf5;
+}
+
+.attendance-cell.is-parcial button:hover {
+  background: #d9fbe9;
+}
+
+/* conteo a/b cuando la persona tiene 2 o mas turnos ese dia */
+.attendance-cell__conteo {
+  color: #10494b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.attendance-cell.is-presente .attendance-cell__conteo {
+  color: #0b8a57;
+}
+
+.attendance-cell.is-turno-futuro .attendance-cell__conteo {
+  color: #8aa3a4;
+  font-weight: 400;
+}
+
 .attendance-cell.is-turno-futuro {
   background: #f7fcfc;
 }
@@ -705,8 +810,53 @@
   background: #d9fbe9;
 }
 
+.attendance-legend__muestra.is-parcial {
+  width: auto;
+  padding: 0 4px;
+  color: #10494b;
+  background: #effcf5;
+  font-size: 12px;
+}
+
 .attendance-legend__muestra.is-turno {
   background: #fff;
+}
+
+/* lista de turnos del dia en el pop-up de asistencia */
+.attendance-turnos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attendance-turnos label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.attendance-turnos label:hover {
+  background: #effbfa;
+}
+
+.attendance-turnos label.is-presente {
+  border-color: #19efa0;
+  color: #0b8a57;
+  background: #d9fbe9;
+  font-weight: 700;
+}
+
+.attendance-turnos input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0b8a57;
 }
 
 @media (max-width: 600px) {
@@ -727,5 +877,10 @@
 
   .turno-form__hours {
     grid-template-columns: 1fr;
+  }
+
+  .week-picker {
+    min-width: 0;
+    width: 100%;
   }
 }
