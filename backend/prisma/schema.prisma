@@ -45,6 +45,8 @@ model Insumo{
   cantidad Int
   rut_usuario String
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+  id_donacion Int?
+  donacion    donaciones? @relation(fields: [id_donacion], references: [id_donacion])
 }
 
 
@@ -102,15 +104,51 @@ model animales {
   adopciones adopciones[]
 }
 
-model donaciones {
-  id_donacion Int @id @default(autoincrement())
-  tipo_donacion String @db.VarChar(100)
-  monto_donacion Int?
-  fecha_donacion DateTime
-  
-  rut_usuario String 
-  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
+enum TipoDonacion {
+  monetaria
+  insumos
 }
+
+enum OrigenDonacion {
+  presencial
+  web
+}
+
+enum EstadoDonacion {
+  pendiente
+  agendada
+  confirmada
+}
+
+enum MetodoPago {
+  efectivo
+  transferencia
+}
+
+model donaciones {
+  id_donacion         Int            @id @default(autoincrement())
+  tipo_donacion       TipoDonacion
+  origen              OrigenDonacion
+  estado              EstadoDonacion
+
+  monto_donacion      Int?
+  metodo_pago         MetodoPago?
+  comprobante_url     String?        @db.VarChar(255)
+  descripcion_insumos String?        @db.VarChar(500)
+
+  fecha_donacion      DateTime
+  fecha_agendada      DateTime?
+  fecha_confirmacion  DateTime?
+
+  donante_nombre      String?        @db.VarChar(100)
+  donante_correo      String?        @db.VarChar(100)
+  donante_telefono    String?        @db.VarChar(15)
+
+  rut_usuario         String?
+  usuario             Usuario?       @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
+
+  insumos             Insumo[]
+  }
 
 model adoptante {
   id_adoptante              Int         @id @default(autoincrement())
