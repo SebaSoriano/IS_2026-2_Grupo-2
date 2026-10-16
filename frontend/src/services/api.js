@@ -190,6 +190,7 @@ export function actualizarHistorial(id, registro) {
 
 export function eliminarHistorial(id) {
   return sendJson('DELETE', `/historial/${id}`)
+}
 
 export async function getUsuarios() {
   const usuarios = await getJson('/usuarios')
@@ -213,5 +214,4 @@ export function actualizarUsuario(rut, datos) {
 }
 
 export function eliminarUsuario(rut) {
-  return sendJson('DELETE', `/usuarios/${rut}`)
-}
+  return sendJson('DELETE', `/usuarios/${rut}`)}
