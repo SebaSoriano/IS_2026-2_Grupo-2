@@ -85,20 +85,36 @@ async function main() {
     console.log('-Creando turnos');
     // bloques de una hora entre las 08:00 y las 20:00, ej: 8 -> "08:00"
     const hora = (h) => `${String(h).padStart(2, '0')}:00`;
+    // los turnos son de una fecha puntual: se crean desde 3 semanas atras hasta 3 semanas adelante
+    const hoy = new Date();
+    const hoyUTC = Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const UN_DIA = 24 * 60 * 60 * 1000;
     const turnos = [];
-    for (const rut_usuario of rutUsuarios) {
-        for (let horario_id = 1; horario_id <= dias.length; horario_id++) {
-            // cada usuario tiene turno mas o menos la mitad de los dias
-            if (!faker.datatype.boolean()) continue;
+    for (let dia = -21; dia <= 21; dia++) {
+        const fecha = new Date(hoyUTC + dia * UN_DIA);
+        // horario_id es el dia de la semana de la fecha (1 = Lunes ... 7 = Domingo)
+        const horario_id = fecha.getUTCDay() || 7;
+        for (const rut_usuario of rutUsuarios) {
+            // cada usuario se anota mas o menos un tercio de los dias
+            if (faker.number.int({ min: 1, max: 3 }) !== 1) continue;
 
-            const inicio = faker.number.int({ min: 8, max: 17 });
-            turnos.push({
-                rut_usuario,
-                horario_id,
-                hora_inicio: hora(inicio),
-                // a veces se registra solo la llegada (hora_fin null)
-                hora_fin: faker.datatype.boolean() ? hora(inicio + faker.number.int({ min: 1, max: 3 })) : null,
-            });
+            // a veces se anota en dos turnos el mismo dia (uno en la mañana y otro en la tarde, sin cruzarse)
+            const bloques = faker.datatype.boolean({ probability: 0.25 })
+                ? [faker.number.int({ min: 8, max: 10 }), faker.number.int({ min: 14, max: 17 })]
+                : [faker.number.int({ min: 8, max: 17 })];
+
+            for (const inicio of bloques) {
+                turnos.push({
+                    rut_usuario,
+                    fecha,
+                    horario_id,
+                    hora_inicio: hora(inicio),
+                    // a veces se registra solo la llegada (hora_fin null)
+                    hora_fin: faker.datatype.boolean() ? hora(inicio + faker.number.int({ min: 1, max: 2 })) : null,
+                    // solo los turnos que ya pasaron pueden tener asistencia
+                    llego_a_la_hora: dia <= 0 && faker.datatype.boolean({ probability: 0.7 }),
+                });
+            }
         }
     }
     const resultadoTurnos = await prisma.turno.createMany({ data: turnos });

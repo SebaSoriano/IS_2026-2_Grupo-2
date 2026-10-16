@@ -2,13 +2,20 @@ import { useEffect, useState } from 'react'
 import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
-import { scheduleActions } from './data/scheduleActions.js'
 import AnimalSection from './components/AnimalSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
+import ScheduleSection from './schedule/ScheduleSection.jsx'
 
+// cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
+const sectionPath = (section) => section.path ?? `/${section.id}`
+
+// tambien reconoce subrutas, ej: /intranet/horario/asistencia sigue siendo la seccion horario
 function getSectionFromPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/'
-  return sections.find((section) => `/${section.id}` === normalizedPath)?.id
+  return sections.find((section) => {
+    const path = sectionPath(section)
+    return normalizedPath === path || normalizedPath.startsWith(`${path}/`)
+  })?.id
 }
 
 export default function InternalPage() {
@@ -34,7 +41,7 @@ export default function InternalPage() {
     return () => window.removeEventListener('popstate', syncSectionWithPath)
   }, [])
 
-  const navigateToSection = (event, sectionId) => {
+  const navigateToSection = (event, section) => {
     if (
       event.button !== 0 ||
       event.metaKey ||
@@ -46,11 +53,13 @@ export default function InternalPage() {
     }
 
     event.preventDefault()
-    const path = `/${sectionId}`
+    const path = sectionPath(section)
     if (window.location.pathname !== path) {
       window.history.pushState(null, '', path)
+      // avisa del cambio de URL a las secciones que tienen vistas propias (ej: horario/asistencia)
+      window.dispatchEvent(new PopStateEvent('popstate'))
     }
-    setActiveSection(sectionId)
+    setActiveSection(section.id)
   }
 
   return (
@@ -67,9 +76,9 @@ export default function InternalPage() {
           {sections.map((section) => (
             <a
               className={`nav-link${activeSection === section.id ? ' is-active' : ''}`}
-              href={`/${section.id}`}
+              href={sectionPath(section)}
               aria-current={activeSection === section.id ? 'page' : undefined}
-              onClick={(event) => navigateToSection(event, section.id)}
+              onClick={(event) => navigateToSection(event, section)}
               key={section.id}
             >
               {section.label}
@@ -85,20 +94,14 @@ export default function InternalPage() {
           hidden={activeSection !== section.id}
           key={section.id}
         >
-          {(section.id === 'horario' ||
-            section.id === 'inventario' ||
-            section.id === 'adopcion') && (
+          {section.id === 'horario' && activeSection === 'horario' && <ScheduleSection />}
+          {(section.id === 'inventario' || section.id === 'adopcion') && (
             <div
               className={`area-actions area-actions--${section.id}`}
               role="group"
               aria-label={`Acciones de ${section.label.toLowerCase()}`}
             >
-              {(section.id === 'horario'
-                ? scheduleActions
-                : section.id === 'inventario'
-                  ? inventoryActions
-                  : adoptionActions
-              ).map((action) => (
+              {(section.id === 'inventario' ? inventoryActions : adoptionActions).map((action) => (
                   <button
                     className="area-action"
                     type="button"

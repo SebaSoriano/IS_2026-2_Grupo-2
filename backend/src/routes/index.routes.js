@@ -3,6 +3,7 @@ import insumosRouter from './insumos.routes.js';
 import animalesRoutes from './animales.routes.js';
 import turnosRoutes from './turnos.routes.js';
 import horariosRoutes from './horarios.routes.js';
+import asistenciasRoutes from './asistencias.routes.js';
 import adopcionesRoutes from './adopciones.routes.js';
 import auth from './authRoutes.js';
 
@@ -19,6 +20,7 @@ router.use('/insumos', insumosRouter);
 router.use('/animales', animalesRoutes);
 router.use('/turnos', turnosRoutes);
 router.use('/horarios', horariosRoutes);
+router.use('/asistencias', asistenciasRoutes);
 router.use('/adopciones', adopcionesRoutes);
 router.use('/auth', authRoutes);
 

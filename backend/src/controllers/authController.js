@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs"; // npm install bcrypt
 
 // crear cuenta
 const register = async (req, res) => {
-    // TODO
     const { 
         rut_usuario, 
         nombre_usuario,
@@ -103,6 +102,9 @@ const login = async (req, res) => {
 };
 
 // cerrar sesión
+// ESTO VIENE DEL VIDEO DEL CURSO
+// JWT NO ESTA IMPLEMENTADO
+// AUN NO HAY FORMA DE CERRAR SESION
 const logout = async (req, res) => {
     res.cookie("jwt", "", {
         httpOnly: true,

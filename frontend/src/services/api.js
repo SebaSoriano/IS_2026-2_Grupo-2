@@ -112,3 +112,47 @@ export function crearAnimal(animal) {
 export function crearInsumo(insumo) {
   return postJson('/insumos', insumo)
 }
+
+// horario de una semana (lunes "AAAA-MM-DD"): los 7 dias (1 = Lunes ... 7 = Domingo) con su fecha y sus turnos
+export async function getHorarios(semana) {
+  const horarios = await getJson(`/horarios?semana=${semana}`)
+
+  if (!Array.isArray(horarios)) {
+    throw new Error('La respuesta de la API de horario no es válida.')
+  }
+
+  return horarios
+}
+
+// usuarios cuyo nombre contiene el texto escrito, sin importar mayusculas
+export function buscarUsuarios(nombre) {
+  return getJson(`/horarios/usuarios?nombre=${encodeURIComponent(nombre)}`)
+}
+
+export function crearTurno(turno) {
+  return postJson('/turnos', turno)
+}
+
+export function actualizarTurno(id, turno) {
+  return sendJson('PUT', `/turnos/${id}`, turno)
+}
+
+export function eliminarTurno(id) {
+  return sendJson('DELETE', `/turnos/${id}`)
+}
+
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes (cada uno dice si llego a la hora)
+export async function getAsistencias(mes) {
+  const usuarios = await getJson(`/asistencias?mes=${mes}`)
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de asistencia no es válida.')
+  }
+
+  return usuarios
+}
+
+// marca (true) o desmarca (false) que el usuario llego a la hora a un turno
+export function marcarAsistenciaTurno(id, llego_a_la_hora) {
+  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
+}
