@@ -9,9 +9,13 @@ import ScheduleSection from './schedule/ScheduleSection.jsx'
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
 const sectionPath = (section) => section.path ?? `/${section.id}`
 
+// tambien reconoce subrutas, ej: /intranet/horario/asistencia sigue siendo la seccion horario
 function getSectionFromPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/'
-  return sections.find((section) => sectionPath(section) === normalizedPath)?.id
+  return sections.find((section) => {
+    const path = sectionPath(section)
+    return normalizedPath === path || normalizedPath.startsWith(`${path}/`)
+  })?.id
 }
 
 export default function InternalPage() {
@@ -52,6 +56,8 @@ export default function InternalPage() {
     const path = sectionPath(section)
     if (window.location.pathname !== path) {
       window.history.pushState(null, '', path)
+      // avisa del cambio de URL a las secciones que tienen vistas propias (ej: horario/asistencia)
+      window.dispatchEvent(new PopStateEvent('popstate'))
     }
     setActiveSection(section.id)
   }
