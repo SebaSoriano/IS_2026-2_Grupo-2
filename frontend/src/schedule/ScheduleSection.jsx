@@ -5,6 +5,8 @@ import AttendanceSection from './AttendanceSection.jsx'
 import Modal from './Modal.jsx'
 import TurnoForm from './TurnoForm.jsx'
 import TurnoSelector from './TurnoSelector.jsx'
+import WeekPicker from './WeekPicker.jsx'
+import { diaDeHoy, lunesDe, semanaActual } from './calendario.js'
 import { bloquesDelDia, formatearHora, horasDelTurno } from './horas.js'
 
 // estas acciones abren un pop-up; Asistencia cambia la vista y Exportar queda pendiente
@@ -31,6 +33,8 @@ export default function ScheduleSection() {
   const [errorBorrar, setErrorBorrar] = useState('')
   const [borrando, setBorrando] = useState(false)
   const [vista, setVista] = useState(vistaDesdeRuta)
+  // semana que se ve en la tabla ("AAAA-MM-DD" de su lunes), parte en la semana actual
+  const [semana, setSemana] = useState(semanaActual)
   // cuenta los cambios de turnos para que la asistencia recargue los dias con turno
   const [cambiosTurnos, setCambiosTurnos] = useState(0)
 
@@ -48,7 +52,7 @@ export default function ScheduleSection() {
   }
 
   const cargarHorarios = useCallback(() => {
-    return getHorarios()
+    return getHorarios(semana)
       .then((data) => {
         setHorarios(data)
         setEstado('success')
@@ -57,17 +61,27 @@ export default function ScheduleSection() {
         setErrorCarga(error.message)
         setEstado('error')
       })
-  }, [])
+  }, [semana])
 
   useEffect(() => {
     cargarHorarios()
   }, [cargarHorarios])
 
+  const cambiarSemana = (nuevaSemana) => {
+    setEstado('loading')
+    setSemana(nuevaSemana)
+  }
+
   const dias = horarios.map(({ id, dia }) => ({ id, dia }))
-  // todos los turnos de la semana con el nombre de su dia, para el selector de editar y borrar
-  const turnos = horarios.flatMap((horario) =>
-    horario.turnos.map((turno) => ({ ...turno, dia: horario.dia })),
+  // turnos de la semana con su dia y fecha (ej: "Jueves 15") para el selector de editar y borrar
+  // los de dias que ya pasaron quedan fuera porque no se pueden editar ni borrar
+  const hoy = diaDeHoy()
+  const turnosEditables = horarios.flatMap((horario) =>
+    horario.turnos
+      .filter((turno) => turno.fecha.slice(0, 10) >= hoy)
+      .map((turno) => ({ ...turno, dia: `${horario.dia} ${Number(turno.fecha.slice(8, 10))}` })),
   )
+  const sinTurnosEditables = 'No hay turnos de hoy en adelante en esta semana. Los turnos de días que ya pasaron no se pueden editar ni borrar.'
 
   const abrirModal = (tipo) => {
     setTurnoElegido(null)
@@ -80,10 +94,12 @@ export default function ScheduleSection() {
     setTurnoElegido(null)
   }
 
-  // despues de guardar se recarga el horario para ver el turno en la tabla
+  // despues de guardar se muestra la semana del turno (si es otra) o se recarga la actual
   const guardarYRecargar = async (peticion) => {
-    await peticion
-    await cargarHorarios()
+    const resultado = await peticion
+    const semanaDelTurno = resultado?.fecha ? lunesDe(resultado.fecha.slice(0, 10)) : semana
+    if (semanaDelTurno !== semana) cambiarSemana(semanaDelTurno)
+    else await cargarHorarios()
     setCambiosTurnos((cambios) => cambios + 1)
     cerrarModal()
   }
@@ -130,6 +146,9 @@ export default function ScheduleSection() {
       )}
 
       <div className="schedule-table-container" aria-busy={estado === 'loading'} hidden={vista === 'asistencia'}>
+        <div className="schedule-week">
+          <WeekPicker lunes={semana} onChange={cambiarSemana} />
+        </div>
         {estado === 'loading' && <p role="status">Cargando horario...</p>}
         {estado === 'error' && (
           <p className="inventory-error" role="alert">
@@ -161,7 +180,7 @@ export default function ScheduleSection() {
               onSubmit={(turno) => guardarYRecargar(actualizarTurno(turnoElegido.id, turno))}
             />
           ) : (
-            <TurnoSelector turnos={turnos} onSelect={setTurnoElegido} />
+            <TurnoSelector turnos={turnosEditables} onSelect={setTurnoElegido} mensajeVacio={sinTurnosEditables} />
           )}
         </Modal>
       )}
@@ -192,7 +211,7 @@ export default function ScheduleSection() {
               </div>
             </div>
           ) : (
-            <TurnoSelector turnos={turnos} onSelect={setTurnoElegido} />
+            <TurnoSelector turnos={turnosEditables} onSelect={setTurnoElegido} mensajeVacio={sinTurnosEditables} />
           )}
         </Modal>
       )}
@@ -200,9 +219,13 @@ export default function ScheduleSection() {
   )
 }
 
-// tabla semanal: una fila por bloque de una hora y una columna por dia
+// tabla semanal: una fila por bloque de una hora y una columna por dia de la semana elegida
 // un turno aparece en todos los bloques entre su hora de llegada y su hora de ida
+// los dias que ya pasaron se ven mas apagados
 function ScheduleTable({ horarios }) {
+  const hoy = diaDeHoy()
+  const esPasado = (horario) => horario.fecha.slice(0, 10) < hoy
+
   // para cada dia: hora -> nombres de quienes tienen turno en ese bloque
   const ocupacion = horarios.map((horario) => {
     const porHora = {}
@@ -222,7 +245,10 @@ function ScheduleTable({ horarios }) {
           <tr>
             <th scope="col">Hora</th>
             {horarios.map((horario) => (
-              <th scope="col" key={horario.id}>{horario.dia}</th>
+              <th scope="col" key={horario.id} className={horario.fecha.slice(0, 10) === hoy ? 'is-hoy' : undefined}>
+                {horario.dia}
+                <span className="schedule-table__fecha">{Number(horario.fecha.slice(8, 10))}</span>
+              </th>
             ))}
           </tr>
         </thead>
@@ -237,7 +263,10 @@ function ScheduleTable({ horarios }) {
               {horarios.map((horario, i) => {
                 const turnosDelBloque = ocupacion[i][h] ?? []
                 return (
-                  <td className={turnosDelBloque.length > 0 ? 'has-turno' : undefined} key={horario.id}>
+                  <td
+                    className={[turnosDelBloque.length > 0 && 'has-turno', esPasado(horario) && 'is-pasado'].filter(Boolean).join(' ') || undefined}
+                    key={horario.id}
+                  >
                     {turnosDelBloque.map((turno) => (
                       <span className="schedule-table__name" key={turno.id}>
                         {turno.usuario.nombre_usuario}

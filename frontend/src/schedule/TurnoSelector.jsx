@@ -7,8 +7,9 @@ const normalizar = (texto) =>
 const describirHoras = (turno) =>
   turno.hora_fin ? `${turno.hora_inicio} a ${turno.hora_fin}` : `${turno.hora_inicio} (sin hora de ida)`
 
-// lista de todos los turnos para elegir cual editar o borrar, con un filtro por nombre o dia
-export default function TurnoSelector({ turnos, onSelect }) {
+// lista de turnos para elegir cual editar o borrar, con un filtro por nombre o dia
+// mensajeVacio se muestra cuando no hay turnos que se puedan elegir
+export default function TurnoSelector({ turnos, onSelect, mensajeVacio = 'No hay turnos que coincidan' }) {
   const [filtro, setFiltro] = useState('')
 
   const visibles = turnos.filter((turno) =>
@@ -29,7 +30,9 @@ export default function TurnoSelector({ turnos, onSelect }) {
         autoFocus
       />
       <ul className="turno-selector__list">
-        {visibles.length === 0 && <li className="user-search__empty">No hay turnos que coincidan</li>}
+        {visibles.length === 0 && (
+          <li className="user-search__empty">{turnos.length === 0 ? mensajeVacio : 'No hay turnos que coincidan'}</li>
+        )}
         {visibles.map((turno) => (
           <li key={turno.id}>
             <button type="button" className="turno-selector__item" onClick={() => onSelect(turno)}>

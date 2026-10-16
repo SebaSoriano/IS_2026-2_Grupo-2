@@ -57,3 +57,53 @@ export function semanasDelMes(dias) {
   }
   return semanas
 }
+
+// ---------- semanas (de lunes a domingo); una semana se identifica por la fecha de su lunes ----------
+
+const NOMBRES_MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+// "2026-10-15" -> Date local de ese dia
+const fechaLocal = (texto) => {
+  const [anio, mes, dia] = texto.split('-').map(Number)
+  return new Date(anio, mes - 1, dia)
+}
+
+// Date local -> "2026-10-15"
+const textoDeFecha = (fecha) =>
+  `${fecha.getFullYear()}-${dosDigitos(fecha.getMonth() + 1)}-${dosDigitos(fecha.getDate())}`
+
+// suma (o resta) dias a una fecha, ej: sumarDias("2026-10-31", 1) -> "2026-11-01"
+export function sumarDias(texto, dias) {
+  const fecha = fechaLocal(texto)
+  fecha.setDate(fecha.getDate() + dias)
+  return textoDeFecha(fecha)
+}
+
+// lunes de la semana de una fecha, ej: lunesDe("2026-10-15") -> "2026-10-12"
+export function lunesDe(texto) {
+  const diaSemana = fechaLocal(texto).getDay() || 7
+  return sumarDias(texto, 1 - diaSemana)
+}
+
+// lunes de la semana actual del sistema; por defecto el horario y el pop-up de turnos parten en esta semana
+export const semanaActual = () => lunesDe(diaDeHoy())
+
+// fecha de un dia de la semana (1 = Lunes ... 7 = Domingo) a partir del lunes de esa semana
+export const fechaDelDia = (lunes, diaSemana) => sumarDias(lunes, diaSemana - 1)
+
+// "2026-10-12" -> "Semana 3 de octubre · 12 al 18"
+// el numero de semana se cuenta dentro del mes del lunes, igual que en la tabla de asistencia
+// si la semana cruza de mes se muestran los dos, ej: "Semana 5 de septiembre · 28 sep al 4 oct"
+export function describirSemana(lunes) {
+  const domingo = sumarDias(lunes, 6)
+  const mes = lunes.slice(0, 7)
+  const numero = semanasDelMes(diasDelMes(mes)).findIndex((semana) => semana.some((dia) => dia.fecha === lunes)) + 1
+  const nombreMes = NOMBRES_MESES[Number(mes.slice(5)) - 1].toLowerCase()
+
+  const [diaLunes, diaDomingo] = [Number(lunes.slice(8)), Number(domingo.slice(8))]
+  const rango = domingo.slice(0, 7) === mes
+    ? `${diaLunes} al ${diaDomingo}`
+    : `${diaLunes} ${NOMBRES_MESES_CORTOS[Number(mes.slice(5)) - 1]} al ${diaDomingo} ${NOMBRES_MESES_CORTOS[Number(domingo.slice(5, 7)) - 1]}`
+
+  return `Semana ${numero} de ${nombreMes} · ${rango}`
+}
