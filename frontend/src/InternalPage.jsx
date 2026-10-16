@@ -2,28 +2,44 @@ import { useEffect, useState } from 'react'
 import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
-import { scheduleActions } from './data/scheduleActions.js'
+import AnimalSection from './components/AnimalSection.jsx'
+import InventorySection from './components/InventorySection.jsx'
+import ScheduleSection from './schedule/ScheduleSection.jsx'
 
+// cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
+const sectionPath = (section) => section.path ?? `/${section.id}`
+
+// tambien reconoce subrutas, ej: /intranet/horario/asistencia sigue siendo la seccion horario
 function getSectionFromPath(pathname) {
   const normalizedPath = pathname.replace(/\/+$/, '') || '/'
-  return sections.find((section) => `/${section.id}` === normalizedPath)?.id
+  return sections.find((section) => {
+    const path = sectionPath(section)
+    return normalizedPath === path || normalizedPath.startsWith(`${path}/`)
+  })?.id
 }
 
 export default function InternalPage() {
   const [activeSection, setActiveSection] = useState(
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
+  const [isInventoryCreateOpen, setIsInventoryCreateOpen] = useState(false)
+  const [isInventoryEditOpen, setIsInventoryEditOpen] = useState(false)
+  const [selectedInventoryCount, setSelectedInventoryCount] = useState(0)
 
   useEffect(() => {
     const syncSectionWithPath = () => {
       const sectionId = getSectionFromPath(window.location.pathname)
       if (sectionId) {
         setActiveSection(sectionId)
+        if (sectionId !== 'inventario') {
+          setSelectedInventoryCount(0)
+        }
         return
       }
 
       window.history.replaceState(null, '', '/adopcion')
       setActiveSection('adopcion')
+      setSelectedInventoryCount(0)
     }
 
     syncSectionWithPath()
@@ -31,7 +47,7 @@ export default function InternalPage() {
     return () => window.removeEventListener('popstate', syncSectionWithPath)
   }, [])
 
-  const navigateToSection = (event, sectionId) => {
+  const navigateToSection = (event, section) => {
     if (
       event.button !== 0 ||
       event.metaKey ||
@@ -43,11 +59,16 @@ export default function InternalPage() {
     }
 
     event.preventDefault()
-    const path = `/${sectionId}`
+    const path = sectionPath(section)
     if (window.location.pathname !== path) {
       window.history.pushState(null, '', path)
+      // avisa del cambio de URL a las secciones que tienen vistas propias (ej: horario/asistencia)
+      window.dispatchEvent(new PopStateEvent('popstate'))
     }
-    setActiveSection(sectionId)
+    setActiveSection(section.id)
+    if (section.id !== 'inventario') {
+      setSelectedInventoryCount(0)
+    }
   }
 
   return (
@@ -64,9 +85,9 @@ export default function InternalPage() {
           {sections.map((section) => (
             <a
               className={`nav-link${activeSection === section.id ? ' is-active' : ''}`}
-              href={`/${section.id}`}
+              href={sectionPath(section)}
               aria-current={activeSection === section.id ? 'page' : undefined}
-              onClick={(event) => navigateToSection(event, section.id)}
+              onClick={(event) => navigateToSection(event, section)}
               key={section.id}
             >
               {section.label}
@@ -82,25 +103,49 @@ export default function InternalPage() {
           hidden={activeSection !== section.id}
           key={section.id}
         >
-          {(section.id === 'horario' ||
-            section.id === 'inventario' ||
-            section.id === 'adopcion') && (
+          {section.id === 'horario' && activeSection === 'horario' && <ScheduleSection />}
+          {(section.id === 'inventario' || section.id === 'adopcion') && (
             <div
               className={`area-actions area-actions--${section.id}`}
               role="group"
               aria-label={`Acciones de ${section.label.toLowerCase()}`}
             >
-              {(section.id === 'horario'
-                ? scheduleActions
-                : section.id === 'inventario'
-                  ? inventoryActions
-                  : adoptionActions
-              ).map((action) => (
-                  <button className="area-action" type="button" key={action}>
+              {(section.id === 'inventario' ? inventoryActions : adoptionActions).map((action) => (
+                  <button
+                    className="area-action"
+                    type="button"
+                    key={action}
+                    disabled={
+                      section.id === 'inventario' &&
+                      ((action === 'Modificar Registro' && selectedInventoryCount !== 1) ||
+                        (action === 'Eliminar Registro' && selectedInventoryCount === 0))
+                    }
+                    onClick={
+                      section.id !== 'inventario'
+                        ? undefined
+                        : action === 'Añadir Registro'
+                          ? () => setIsInventoryCreateOpen(true)
+                          : action === 'Modificar Registro'
+                            ? () => setIsInventoryEditOpen(true)
+                            : undefined
+                    }
+                  >
                     {action}
                   </button>
                 ))}
             </div>
+          )}
+          {section.id === 'animales' && activeSection === 'animales' && (
+            <AnimalSection />
+          )}
+          {section.id === 'inventario' && activeSection === 'inventario' && (
+            <InventorySection
+              isCreateModalOpen={isInventoryCreateOpen}
+              onCloseCreateModal={() => setIsInventoryCreateOpen(false)}
+              isEditModalOpen={isInventoryEditOpen}
+              onCloseEditModal={() => setIsInventoryEditOpen(false)}
+              onSelectionCountChange={setSelectedInventoryCount}
+            />
           )}
         </section>
       ))}

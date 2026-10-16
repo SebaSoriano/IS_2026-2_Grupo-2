@@ -1,0 +1,886 @@
+/* ---------- Seccion horario: acciones a la izquierda y tabla semanal a la derecha ---------- */
+
+.schedule {
+  display: flex;
+  align-items: flex-start;
+}
+
+.area-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.schedule-table-container {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 16px 30px 0;
+}
+
+.schedule-table-scroll {
+  overflow-x: auto;
+  border: 1px solid #d8eeee;
+}
+
+.schedule-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #173d3e;
+}
+
+.schedule-table thead th {
+  padding: 12px 8px;
+  color: #fff;
+  background: #17a3b5;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.schedule-table thead th + th {
+  border-left: 1px solid #45b8c6;
+}
+
+.schedule-table tbody th,
+.schedule-table td {
+  height: 56px;
+  padding: 8px;
+  border: 1px solid #d8eeee;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.schedule-table tbody th {
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+/* bloques ocupados por un turno (incluye los que quedan entre la llegada y la ida) */
+.schedule-table td.has-turno {
+  background: #effbfa;
+}
+
+.schedule-table__name {
+  display: block;
+  line-height: 1.3;
+}
+
+.schedule-table__name + .schedule-table__name {
+  margin-top: 4px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* selector de semana sobre la tabla */
+.schedule-week {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.week-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 320px;
+  padding: 6px;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  font-weight: 700;
+}
+
+.week-picker span {
+  flex: 1;
+  text-align: center;
+}
+
+.week-picker button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.week-picker button:hover:not(:disabled) {
+  background: #19efa0;
+}
+
+.week-picker button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* numero del dia bajo el nombre, ej: Lunes 12 */
+.schedule-table__fecha {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.schedule-table thead th.is-hoy {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+/* dias que ya pasaron: se ven mas apagados */
+.schedule-table td.is-pasado {
+  color: #6f8a8b;
+  background: #f7f9f9;
+}
+
+.schedule-table td.is-pasado.has-turno {
+  background: #eef5f5;
+}
+
+/* ---------- Pop-up centrado ---------- */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  background: #071b1c80;
+}
+
+/* sin overflow para que el reloj y la lista de personas puedan salir del pop-up sin cortarse;
+   si la pantalla es baja, el scroll lo hace el fondo y margin auto lo mantiene centrado */
+.modal {
+  width: 100%;
+  max-width: 520px;
+  margin: auto;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 12px 32px #071b1c59;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-radius: 8px 8px 0 0;
+  background: #3ba5a3;
+}
+
+.modal__header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+}
+
+.modal__close {
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 4px;
+  color: #10494b;
+  background: #c3eeee;
+  font: inherit;
+  cursor: pointer;
+}
+
+.modal__close:hover {
+  background: #dcf8f5;
+}
+
+.modal__body {
+  padding: 20px;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.modal__button {
+  min-width: 120px;
+  height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  color: #315052;
+  background: #c3eeee;
+  box-shadow: 0 4px 8px #174d4c40;
+  font: inherit;
+  cursor: pointer;
+}
+
+.modal__button:hover {
+  background: #dcf8f5;
+}
+
+.modal__button--primary {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.modal__button--primary:hover {
+  background: #4ff5b8;
+}
+
+.modal__button--danger {
+  color: #fff;
+  background: #c0392b;
+}
+
+.modal__button--danger:hover {
+  background: #a93226;
+}
+
+.modal__button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* ---------- Formulario del turno ---------- */
+
+.turno-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: #173d3e;
+}
+
+.turno-form p {
+  margin: 0;
+}
+
+.turno-form__label {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.turno-form__input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+}
+
+.turno-form__input:focus {
+  outline: 2px solid #3ba5a3;
+  outline-offset: 1px;
+}
+
+.turno-form__hours {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.turno-form__summary {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #effbfa;
+}
+
+.turno-form__error {
+  color: #a32121;
+}
+
+/* buscador de personas */
+
+.user-search {
+  position: relative;
+}
+
+.user-search__list,
+.turno-selector__list {
+  margin: 4px 0 0;
+  padding: 4px 0;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  list-style: none;
+  background: #fff;
+}
+
+.user-search__list {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 8px 16px #174d4c33;
+}
+
+.user-search__option,
+.turno-selector__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.user-search__option small,
+.turno-selector__item small {
+  color: #536d6e;
+}
+
+.user-search__option.is-active,
+.user-search__option:hover,
+.turno-selector__item:hover,
+.turno-selector__item:focus-visible {
+  background: #c3eeee;
+}
+
+.user-search__empty {
+  padding: 8px 12px;
+  color: #536d6e;
+}
+
+/* dias como bloques seleccionables */
+
+.day-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.day-picker__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.day-picker__option {
+  position: relative;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  box-shadow: 0 2px 4px #174d4c33;
+  cursor: pointer;
+  user-select: none;
+}
+
+.day-picker__option:hover {
+  background: #dcf8f5;
+}
+
+.day-picker__option small {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* dias que ya pasaron: no se pueden elegir */
+.day-picker__option.is-disabled {
+  color: #8aa3a4;
+  background: #eef2f2;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.day-picker__option.is-selected {
+  color: #064c3e;
+  background: #19efa0;
+  font-weight: 700;
+}
+
+.day-picker__option:has(input:focus-visible) {
+  outline: 2px solid #3ba5a3;
+  outline-offset: 2px;
+}
+
+/* el radio queda oculto pero sigue funcionando con teclado */
+.day-picker__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* selector de hora tipo reloj */
+
+.hour-picker {
+  position: relative;
+}
+
+.hour-picker__field {
+  display: flex;
+  gap: 6px;
+}
+
+.hour-picker__value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  color: #173d3e;
+  background: #fff;
+  font: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.hour-picker__value.is-empty {
+  color: #536d6e;
+  font-size: 15px;
+}
+
+.hour-picker__clear {
+  width: 40px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  cursor: pointer;
+}
+
+.hour-picker__popover {
+  position: absolute;
+  z-index: 3;
+  top: 100%;
+  left: 0;
+  width: 160px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 8px;
+  color: #fff;
+  background: #173d3e;
+  box-shadow: 0 12px 24px #071b1c66;
+}
+
+.hour-picker__arrow {
+  display: block;
+  width: 100%;
+  height: 28px;
+  border: 0;
+  color: #9bd6d3;
+  background: transparent;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hour-picker__arrow:hover {
+  color: #fff;
+}
+
+/* 5 horas a la vista (40px cada una), el resto aparece al hacer scroll */
+.hour-picker__list {
+  height: 200px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.hour-picker__list:focus {
+  outline: none;
+}
+
+.hour-picker__option {
+  height: 40px;
+  margin: 0 6px;
+  border-radius: 4px;
+  line-height: 40px;
+  text-align: center;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.hour-picker__option:hover {
+  background: #2c5f60;
+}
+
+.hour-picker__option.is-selected {
+  color: #064c3e;
+  background: #19efa0;
+  font-weight: 700;
+}
+
+.hour-picker__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid #2c5f60;
+}
+
+.hour-picker__actions button {
+  height: 44px;
+  border: 0;
+  color: #fff;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.hour-picker__actions button:hover {
+  background: #2c5f60;
+}
+
+/* selector de turnos para editar o borrar */
+
+.turno-selector__list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.turno-selector__item {
+  box-sizing: border-box;
+  width: 100%;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+}
+
+/* ---------- Asistencia: mes, semanas y dias arriba; staff a la izquierda ---------- */
+
+/* boton de la vista activa (Asistencia) igual que el link activo del menu */
+.area-action.is-active {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.attendance {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attendance p {
+  margin: 0;
+}
+
+.attendance-table-scroll {
+  overflow-x: auto;
+  border: 1px solid #d8eeee;
+}
+
+.attendance-table {
+  min-width: 100%;
+  border-collapse: collapse;
+  color: #173d3e;
+}
+
+.attendance-table th,
+.attendance-table td {
+  border: 1px solid #d8eeee;
+  text-align: center;
+}
+
+.attendance-table__mes {
+  padding: 8px;
+  color: #fff;
+  background: #17a3b5;
+  font-size: 22px;
+}
+
+.month-picker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.month-picker span {
+  min-width: 200px;
+}
+
+.month-picker button {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.month-picker button:hover {
+  background: #19efa0;
+}
+
+.attendance-table__semana {
+  padding: 6px 4px;
+  color: #fff;
+  background: #3ba5a3;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.attendance-table__semana + .attendance-table__semana {
+  border-left: 2px solid #9bd6d3;
+}
+
+.attendance-table__dia {
+  min-width: 36px;
+  padding: 4px 2px;
+  color: #10494b;
+  background: #c3eeee;
+  font-size: 12px;
+}
+
+.attendance-table__dia span {
+  display: block;
+}
+
+.attendance-table__dia span + span {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.attendance-table__dia.is-hoy {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+/* linea mas marcada donde empieza cada semana (lunes) */
+.attendance-table .inicio-semana {
+  border-left: 2px solid #9bd6d3;
+}
+
+/* RUT y nombre quedan fijos a la izquierda al hacer scroll horizontal */
+.attendance-table .attendance-table__rut,
+.attendance-table .attendance-table__nombre {
+  position: sticky;
+  z-index: 1;
+  padding: 8px 12px;
+  background: #fff;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.attendance-table__rut {
+  left: 0;
+  min-width: 96px;
+}
+
+.attendance-table__nombre {
+  left: 120px;
+  min-width: 160px;
+  font-weight: 400;
+  box-shadow: 2px 0 0 #d8eeee;
+}
+
+.attendance-table thead .attendance-table__rut,
+.attendance-table thead .attendance-table__nombre {
+  z-index: 2;
+  color: #fff;
+  background: #17a3b5;
+  font-weight: 700;
+}
+
+.attendance-table__mensaje {
+  padding: 16px;
+  color: #536d6e;
+}
+
+.attendance-cell {
+  height: 40px;
+  padding: 0;
+}
+
+.attendance-cell button {
+  display: block;
+  width: 100%;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.attendance-cell button:disabled {
+  cursor: wait;
+}
+
+.attendance-cell.is-turno {
+  background: #fff;
+}
+
+.attendance-cell.is-turno button:hover,
+.attendance-cell.is-turno button:focus-visible {
+  background: #c3eeee;
+}
+
+.attendance-cell.is-presente {
+  background: #d9fbe9;
+}
+
+.attendance-cell.is-presente button {
+  color: #0b8a57;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.attendance-cell.is-presente button:hover {
+  background: #b9f5d6;
+}
+
+.attendance-cell.is-parcial {
+  background: #effcf5;
+}
+
+.attendance-cell.is-parcial button:hover {
+  background: #d9fbe9;
+}
+
+/* conteo a/b cuando la persona tiene 2 o mas turnos ese dia */
+.attendance-cell__conteo {
+  color: #10494b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.attendance-cell.is-presente .attendance-cell__conteo {
+  color: #0b8a57;
+}
+
+.attendance-cell.is-turno-futuro .attendance-cell__conteo {
+  color: #8aa3a4;
+  font-weight: 400;
+}
+
+.attendance-cell.is-turno-futuro {
+  background: #f7fcfc;
+}
+
+/* sin turno: rayado gris para que se note que ese dia no se puede marcar */
+.attendance-cell.is-sin-turno,
+.attendance-legend__muestra.is-sin-turno {
+  background: repeating-linear-gradient(135deg, #eef2f2 0 4px, #dfe7e7 4px 8px);
+}
+
+.attendance-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #536d6e;
+  font-size: 14px;
+}
+
+.attendance-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.attendance-legend__muestra {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #d8eeee;
+  font-weight: 700;
+}
+
+.attendance-legend__muestra.is-presente {
+  color: #0b8a57;
+  background: #d9fbe9;
+}
+
+.attendance-legend__muestra.is-parcial {
+  width: auto;
+  padding: 0 4px;
+  color: #10494b;
+  background: #effcf5;
+  font-size: 12px;
+}
+
+.attendance-legend__muestra.is-turno {
+  background: #fff;
+}
+
+/* lista de turnos del dia en el pop-up de asistencia */
+.attendance-turnos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attendance-turnos label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.attendance-turnos label:hover {
+  background: #effbfa;
+}
+
+.attendance-turnos label.is-presente {
+  border-color: #19efa0;
+  color: #0b8a57;
+  background: #d9fbe9;
+  font-weight: 700;
+}
+
+.attendance-turnos input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0b8a57;
+}
+
+@media (max-width: 600px) {
+  .schedule {
+    flex-direction: column;
+  }
+
+  .area-actions--horario {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .schedule-table-container {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 16px 30px;
+  }
+
+  .turno-form__hours {
+    grid-template-columns: 1fr;
+  }
+
+  .week-picker {
+    min-width: 0;
+    width: 100%;
+  }
+}

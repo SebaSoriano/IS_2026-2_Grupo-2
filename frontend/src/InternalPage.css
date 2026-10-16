@@ -96,12 +96,35 @@
   background: #19efa0;
 }
 
-.area-actions--inventario .area-action {
+.area-action:disabled {
+  color: #788b8b;
+  background: #e1e8e8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.area-actions--inventario .area-action,
+.area-actions--animales .area-action {
   width: 164px;
 }
 
 .area-actions--adopcion .area-action {
   width: 164px;
+}
+
+.section-area--inventario:not([hidden]),
+.section-area--animales:not([hidden]) {
+  display: grid;
+  grid-template-columns: 196px minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  box-sizing: border-box;
+  padding: 30px 16px;
+}
+
+.section-area--inventario .area-actions,
+.section-area--animales .area-actions {
+  padding: 0;
 }
 
 @media (max-width: 600px) {
@@ -135,5 +158,12 @@
 
   .section-area {
     min-height: calc(100vh - 116px);
+  }
+}
+
+@media (max-width: 760px) {
+  .section-area--inventario:not([hidden]),
+  .section-area--animales:not([hidden]) {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
