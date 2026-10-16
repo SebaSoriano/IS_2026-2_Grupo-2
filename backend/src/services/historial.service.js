@@ -3,6 +3,7 @@ import { HttpError } from '../middlewares/error.middleware.js';
 
 // datos del animal que se adjuntan a cada registro médico.
 const animalResumen = { select: { id_animal: true, nombre_animal: true, especie_animal: true } };
+const conInsumos = (registro) => registro && { ...registro, insumos: [] };
 
 // traduce los filtros que llegan desde la URL al algo que entiende Prisma.
 const construirFiltros = (filtros) => {
@@ -48,17 +49,19 @@ export const getHistoriales = async (filtros) => {
     }),
   ]);
 
-  return { total, pagina, limite, registros };
+  return { total, pagina, limite, registros: registros.map(conInsumos) };
 };
 
 
 // Detalle de un registro médico. Si no existe, findUnique devuelve null
 // y responde 404.
-export const getHistorialById = (id) =>
-  prisma.historial_medico.findUnique({
+export const getHistorialById = async (id) => {
+  const registro = await prisma.historial_medico.findUnique({
     where: { id_historial: id },
     include: { animal: animalResumen },
   });
+  return conInsumos(registro);
+};
 
 // revisa que el animal exista antes de asociarle un registro médico.
 const verificarAnimal = async (id_animal) => {
@@ -69,20 +72,22 @@ const verificarAnimal = async (id_animal) => {
 // crea un registro médico. Los datos ya vienen validados por historial.schema.js
 export const createHistorial = async (datos) => {
   await verificarAnimal(datos.id_animal);
-  return prisma.historial_medico.create({
+  const registro = await prisma.historial_medico.create({
     data: datos,
     include: { animal: animalResumen },
   });
+  return conInsumos(registro);
 };
 
 // edita un registro médico. Solo se revisa el animal si se está cambiando.
 export const updateHistorial = async (id, datos) => {
   if (datos.id_animal) await verificarAnimal(datos.id_animal);
-  return prisma.historial_medico.update({
+  const registro = await prisma.historial_medico.update({
     where: { id_historial: id },
     data: datos,
     include: { animal: animalResumen },
   });
+  return conInsumos(registro);
 };
 
 // elimina un registro médico
