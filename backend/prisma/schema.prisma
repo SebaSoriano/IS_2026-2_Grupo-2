@@ -142,3 +142,26 @@ model Rol {
   nombre String @unique @db.VarChar(50)
   usuarios Usuario []
 }
+enum EstadoPostulacion {
+  pendiente
+  aprobada
+  rechazada
+}
+
+model postulante {
+  id_postulante          Int               @id @default(autoincrement())
+
+  // Datos personales
+  rut_postulante         String            @db.VarChar(12)
+  nombre_postulante      String            @db.VarChar(100)
+  correo                 String            @db.VarChar(100)
+  telefono               String            @db.VarChar(15)
+  
+  // Sobre la postulación
+  profesion             String            @db.VarChar(1000)
+
+  // Seguimiento
+  estado                 EstadoPostulacion @default(pendiente)
+  fecha_postulacion      DateTime          @default(now())
+  fecha_revision         DateTime?
+}
