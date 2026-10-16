@@ -165,6 +165,7 @@ export function marcarAsistenciaTurno(id, llego_a_la_hora) {
   return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
 }
 
+<<<<<<< HEAD
 // ---------- Historial medico ----------
 export function getHistoriales(filtros = {}) {
   const parametros = new URLSearchParams()
@@ -189,4 +190,29 @@ export function actualizarHistorial(id, registro) {
 
 export function eliminarHistorial(id) {
   return sendJson('DELETE', `/historial/${id}`)
+=======
+export async function getUsuarios() {
+  const usuarios = await getJson('/usuarios')
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de voluntarios no es válida.')
+  }
+
+  return usuarios
+}
+
+// Crear usa la ruta de registro que ya existe.
+// Esa ruta responde { status, data: { user } }, por eso se devuelve respuesta.data.user
+export async function crearUsuario(usuario) {
+  const respuesta = await postJson('/auth/register', usuario)
+  return respuesta.data.user
+}
+
+export function actualizarUsuario(rut, datos) {
+  return sendJson('PUT', `/usuarios/${rut}`, datos)
+}
+
+export function eliminarUsuario(rut) {
+  return sendJson('DELETE', `/usuarios/${rut}`)
+>>>>>>> dd009eab81dd4550cad2e304e6c18ea00a683be9
 }

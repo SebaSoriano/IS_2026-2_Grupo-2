@@ -5,4 +5,5 @@ export const sections = [
   { label: 'Historial Médico', id: 'historial-medico' },
   { label: 'Inventario', id: 'inventario' },
   { label: 'Donaciones', id: 'donaciones' },
+  { label: 'Voluntarios', id: 'voluntarios' },
 ]
