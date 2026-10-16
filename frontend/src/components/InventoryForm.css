@@ -48,6 +48,7 @@
 }
 
 .inventory-form-field input,
+.inventory-form-field select,
 .inventory-form-field textarea {
   box-sizing: border-box;
   width: 100%;
@@ -102,6 +103,11 @@
 .inventory-form-submit {
   color: #064c3e;
   background: #19efa0;
+}
+
+.inventory-form-delete {
+  color: #fff;
+  background: #a32121;
 }
 
 @media (max-width: 480px) {

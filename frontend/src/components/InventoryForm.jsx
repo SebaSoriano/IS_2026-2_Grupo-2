@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
-import { crearInsumo } from '../services/api.js'
+import { actualizarInsumo, crearInsumo } from '../services/api.js'
 import './InventoryForm.css'
+
+const TIPOS_INSUMO = [
+  'Alimentación',
+  'Higiene y aseo',
+  'Salud',
+  'Limpieza',
+  'Accesorios y juguetes',
+  'Otros',
+]
 
 const EMPTY_FORM = {
   tipo_insumo: '',
@@ -11,8 +20,46 @@ const EMPTY_FORM = {
   rut_usuario: '',
 }
 
-export default function InventoryForm({ isOpen, onClose, onCreated }) {
-  const [form, setForm] = useState(EMPTY_FORM)
+function getTodayDateString() {
+  const today = new Date()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${today.getFullYear()}-${month}-${day}`
+}
+
+function formFromInsumo(insumo) {
+  const dateForInput = (value) =>
+    value ? new Date(value).toISOString().slice(0, 10) : ''
+
+  return {
+    tipo_insumo: insumo.tipo_insumo ?? '',
+    fecha_ingreso: dateForInput(insumo.fecha_ingreso),
+    fecha_vencimiento: dateForInput(insumo.fecha_vencimiento),
+    descripcion: insumo.descripcion ?? '',
+    cantidad: String(insumo.cantidad ?? ''),
+    rut_usuario: insumo.usuario?.rut_usuario ?? insumo.rut_usuario ?? '',
+  }
+}
+
+export default function InventoryForm({
+  isOpen,
+  insumo = null,
+  onClose,
+  onCreated,
+  onUpdated,
+}) {
+  const isEditing = insumo != null
+  const originalExpirationDate = isEditing
+    ? formFromInsumo(insumo).fecha_vencimiento
+    : ''
+  const [form, setForm] = useState(() =>
+    isEditing ? formFromInsumo(insumo) : EMPTY_FORM,
+  )
+  const todayDateString = getTodayDateString()
+  const unchangedPastExpiration =
+    isEditing &&
+    form.fecha_vencimiento === originalExpirationDate &&
+    originalExpirationDate < todayDateString
   const [formErrors, setFormErrors] = useState({})
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -37,9 +84,6 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
 
   const closeForm = () => {
     if (isSubmitting) return
-    setForm(EMPTY_FORM)
-    setFormErrors({})
-    setFormError('')
     onClose()
   }
 
@@ -58,10 +102,19 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
       rut_usuario: form.rut_usuario.trim(),
     }
 
+    if (unchangedPastExpiration) {
+      delete payload.fecha_vencimiento
+    }
+
     try {
-      const insumoCreado = await crearInsumo(payload)
-      onCreated(insumoCreado)
-      setForm(EMPTY_FORM)
+      const insumoGuardado = isEditing
+        ? await actualizarInsumo(insumo.id, payload)
+        : await crearInsumo(payload)
+      if (isEditing) {
+        onUpdated(insumoGuardado)
+      } else {
+        onCreated(insumoGuardado)
+      }
       onClose()
     } catch (submitError) {
       const errorsByField = {}
@@ -94,7 +147,9 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
     >
       <form className="inventory-form" onSubmit={submitInsumo}>
         <div className="inventory-dialog-header">
-          <h2 id="inventory-dialog-title">Registrar insumo</h2>
+          <h2 id="inventory-dialog-title">
+            {isEditing ? `Modificar insumo ${insumo.id}` : 'Registrar insumo'}
+          </h2>
           <button
             className="inventory-dialog-close"
             type="button"
@@ -114,14 +169,18 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
 
         <label className="inventory-form-field">
           Tipo de insumo
-          <input
+          <select
             name="tipo_insumo"
             value={form.tipo_insumo}
             onChange={updateFormField}
-            maxLength={100}
             required
             aria-invalid={Boolean(formErrors.tipo_insumo)}
-          />
+          >
+            <option value="" disabled>Selecciona un tipo</option>
+            {TIPOS_INSUMO.map((tipo) => (
+              <option key={tipo} value={tipo}>{tipo}</option>
+            ))}
+          </select>
           {formErrors.tipo_insumo && (
             <span className="inventory-form-error">
               {formErrors.tipo_insumo}
@@ -135,6 +194,7 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
             name="cantidad"
             type="number"
             min="0"
+            max="99"
             step="1"
             value={form.cantidad}
             onChange={updateFormField}
@@ -168,6 +228,7 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
           <input
             name="fecha_vencimiento"
             type="date"
+            min={unchangedPastExpiration ? undefined : todayDateString}
             value={form.fecha_vencimiento}
             onChange={updateFormField}
             aria-invalid={Boolean(formErrors.fecha_vencimiento)}
@@ -230,7 +291,13 @@ export default function InventoryForm({ isOpen, onClose, onCreated }) {
             type="submit"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Registrando...' : 'Registrar insumo'}
+            {isSubmitting
+              ? isEditing
+                ? 'Guardando...'
+                : 'Registrando...'
+              : isEditing
+                ? 'Guardar cambios'
+                : 'Registrar insumo'}
           </button>
         </div>
       </form>
