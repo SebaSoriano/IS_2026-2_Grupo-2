@@ -156,3 +156,29 @@ export async function getAsistencias(mes) {
 export function marcarAsistenciaTurno(id, llego_a_la_hora) {
   return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
 }
+
+// ---------- Historial medico ----------
+export function getHistoriales(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  return getJson(query ? `/historial?${query}` : '/historial')
+}
+
+export function crearHistorial(registro) {
+  return postJson('/historial', registro)
+}
+
+export function actualizarHistorial(id, registro) {
+  return sendJson('PUT', `/historial/${id}`, registro)
+}
+
+export function eliminarHistorial(id) {
+  return sendJson('DELETE', `/historial/${id}`)
+}
