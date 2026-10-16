@@ -23,17 +23,22 @@ export default function InternalPage() {
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
   const [isInventoryCreateOpen, setIsInventoryCreateOpen] = useState(false)
+  const [selectedInventoryCount, setSelectedInventoryCount] = useState(0)
 
   useEffect(() => {
     const syncSectionWithPath = () => {
       const sectionId = getSectionFromPath(window.location.pathname)
       if (sectionId) {
         setActiveSection(sectionId)
+        if (sectionId !== 'inventario') {
+          setSelectedInventoryCount(0)
+        }
         return
       }
 
       window.history.replaceState(null, '', '/adopcion')
       setActiveSection('adopcion')
+      setSelectedInventoryCount(0)
     }
 
     syncSectionWithPath()
@@ -60,6 +65,9 @@ export default function InternalPage() {
       window.dispatchEvent(new PopStateEvent('popstate'))
     }
     setActiveSection(section.id)
+    if (section.id !== 'inventario') {
+      setSelectedInventoryCount(0)
+    }
   }
 
   return (
@@ -106,6 +114,11 @@ export default function InternalPage() {
                     className="area-action"
                     type="button"
                     key={action}
+                    disabled={
+                      section.id === 'inventario' &&
+                      ((action === 'Modificar Registro' && selectedInventoryCount !== 1) ||
+                        (action === 'Eliminar Registro' && selectedInventoryCount === 0))
+                    }
                     onClick={
                       section.id === 'inventario' && action === 'Añadir Registro'
                         ? () => setIsInventoryCreateOpen(true)
@@ -124,6 +137,7 @@ export default function InternalPage() {
             <InventorySection
               isCreateModalOpen={isInventoryCreateOpen}
               onCloseCreateModal={() => setIsInventoryCreateOpen(false)}
+              onSelectionCountChange={setSelectedInventoryCount}
             />
           )}
         </section>

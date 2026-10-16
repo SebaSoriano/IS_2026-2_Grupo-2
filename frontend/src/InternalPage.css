@@ -96,6 +96,13 @@
   background: #19efa0;
 }
 
+.area-action:disabled {
+  color: #788b8b;
+  background: #e1e8e8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
 .area-actions--inventario .area-action,
 .area-actions--animales .area-action {
   width: 164px;

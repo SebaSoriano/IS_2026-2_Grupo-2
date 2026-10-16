@@ -65,6 +65,7 @@ function SortableHeader({ activeSort, label, onSort, sortKey }) {
 export default function InventorySection({
   isCreateModalOpen,
   onCloseCreateModal,
+  onSelectionCountChange,
 }) {
   const [insumos, setInsumos] = useState([])
   const [status, setStatus] = useState('loading')
@@ -72,6 +73,11 @@ export default function InventorySection({
   const [sort, setSort] = useState({ key: 'id', direction: 'ascending' })
   const [search, setSearch] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
+
+  useEffect(() => {
+    onSelectionCountChange(selectedIds.size)
+  }, [onSelectionCountChange, selectedIds])
 
   useEffect(() => {
     let isCurrentRequest = true
@@ -145,6 +151,18 @@ export default function InventorySection({
     }))
   }
 
+  const toggleSelection = (id) => {
+    setSelectedIds((currentIds) => {
+      const nextIds = new Set(currentIds)
+      if (nextIds.has(id)) {
+        nextIds.delete(id)
+      } else {
+        nextIds.add(id)
+      }
+      return nextIds
+    })
+  }
+
   const addCreatedInsumo = (insumo) => {
     setInsumos((currentInsumos) => [...currentInsumos, insumo])
     setStatus('success')
@@ -184,6 +202,9 @@ export default function InventorySection({
               <caption>Insumos registrados en el inventario</caption>
               <thead>
                 <tr>
+                  <th scope="col">
+                    <span className="visually-hidden">Seleccionar registro</span>
+                  </th>
                   <SortableHeader
                     activeSort={sort}
                     label="ID"
@@ -231,19 +252,27 @@ export default function InventorySection({
               <tbody>
                 {insumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="7">
+                    <td className="inventory-empty" colSpan="8">
                       No hay insumos registrados.
                     </td>
                   </tr>
                 ) : sortedInsumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="7">
+                    <td className="inventory-empty" colSpan="8">
                       No se encontraron insumos para “{search}”.
                     </td>
                   </tr>
                 ) : (
                   sortedInsumos.map((insumo) => (
                     <tr key={insumo.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(insumo.id)}
+                          onChange={() => toggleSelection(insumo.id)}
+                          aria-label={`Seleccionar insumo ${insumo.id}`}
+                        />
+                      </td>
                       <td>{insumo.id}</td>
                       <td>{insumo.tipo_insumo}</td>
                       <td>{insumo.descripcion || '—'}</td>
