@@ -1,4 +1,5 @@
 import prisma from '../config/prisma.js';
+import { HttpError } from '../middlewares/error.middleware.js';
 
 // datos del animal que se adjuntan a cada registro médico.
 const animalResumen = { select: { id_animal: true, nombre_animal: true, especie_animal: true } };
@@ -49,3 +50,41 @@ export const getHistoriales = async (filtros) => {
 
   return { total, pagina, limite, registros };
 };
+
+
+// Detalle de un registro médico. Si no existe, findUnique devuelve null
+// y responde 404.
+export const getHistorialById = (id) =>
+  prisma.historial_medico.findUnique({
+    where: { id_historial: id },
+    include: { animal: animalResumen },
+  });
+
+// revisa que el animal exista antes de asociarle un registro médico.
+const verificarAnimal = async (id_animal) => {
+  const animal = await prisma.animales.findUnique({ where: { id_animal } });
+  if (!animal) throw new HttpError(400, 'El animal indicado no existe');
+};
+
+// crea un registro médico. Los datos ya vienen validados por historial.schema.js
+export const createHistorial = async (datos) => {
+  await verificarAnimal(datos.id_animal);
+  return prisma.historial_medico.create({
+    data: datos,
+    include: { animal: animalResumen },
+  });
+};
+
+// edita un registro médico. Solo se revisa el animal si se está cambiando.
+export const updateHistorial = async (id, datos) => {
+  if (datos.id_animal) await verificarAnimal(datos.id_animal);
+  return prisma.historial_medico.update({
+    where: { id_historial: id },
+    data: datos,
+    include: { animal: animalResumen },
+  });
+};
+
+// elimina un registro médico
+export const deleteHistorial = (id) =>
+  prisma.historial_medico.delete({ where: { id_historial: id } });
