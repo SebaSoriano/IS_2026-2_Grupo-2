@@ -140,3 +140,23 @@ export function actualizarTurno(id, turno) {
 export function eliminarTurno(id) {
   return sendJson('DELETE', `/turnos/${id}`)
 }
+
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus dias de turno y sus asistencias marcadas
+export async function getAsistencias(mes) {
+  const usuarios = await getJson(`/asistencias?mes=${mes}`)
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de asistencia no es válida.')
+  }
+
+  return usuarios
+}
+
+// marca que el usuario llego a la hora ese dia ("AAAA-MM-DD")
+export function marcarAsistencia(rut_usuario, fecha) {
+  return postJson('/asistencias', { rut_usuario, fecha })
+}
+
+export function desmarcarAsistencia(id) {
+  return sendJson('DELETE', `/asistencias/${id}`)
+}
