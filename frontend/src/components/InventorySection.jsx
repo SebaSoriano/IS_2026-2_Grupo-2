@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { getInsumos } from '../services/api.js'
+import { useEffect, useRef, useState } from 'react'
+import { eliminarInsumo, getInsumos } from '../services/api.js'
 import InventoryForm from './InventoryForm.jsx'
 import './InventorySection.css'
 
@@ -67,6 +67,8 @@ export default function InventorySection({
   onCloseCreateModal,
   isEditModalOpen,
   onCloseEditModal,
+  isDeleteModalOpen,
+  onCloseDeleteModal,
   onSelectionCountChange,
 }) {
   const [insumos, setInsumos] = useState([])
@@ -75,7 +77,10 @@ export default function InventorySection({
   const [sort, setSort] = useState({ key: 'id', direction: 'ascending' })
   const [search, setSearch] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [actionError, setActionError] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
+  const deleteDialogRef = useRef(null)
 
   useEffect(() => {
     onSelectionCountChange(selectedIds.size)
@@ -100,6 +105,17 @@ export default function InventorySection({
       isCurrentRequest = false
     }
   }, [])
+
+  useEffect(() => {
+    const dialog = deleteDialogRef.current
+    if (!dialog) return
+
+    if (isDeleteModalOpen && !dialog.open) {
+      dialog.showModal()
+    } else if (!isDeleteModalOpen && dialog.open) {
+      dialog.close()
+    }
+  }, [isDeleteModalOpen])
 
   const normalizedQuery = normalizeSearchValue(search.trim())
   const filteredInsumos = insumos.filter((insumo) => {
@@ -189,6 +205,61 @@ export default function InventorySection({
     setSuccessMessage('El insumo se modificó correctamente.')
   }
 
+  const closeDeleteDialog = () => {
+    if (isDeleting) return
+    onCloseDeleteModal()
+  }
+
+  const deleteSelectedInsumos = async () => {
+    const idsToDelete = [...selectedIds]
+    if (idsToDelete.length === 0 || isDeleting) return
+
+    setIsDeleting(true)
+    setActionError('')
+    setSuccessMessage('')
+
+    try {
+      const results = await Promise.allSettled(
+        idsToDelete.map((id) => eliminarInsumo(id)),
+      )
+      const deletedIds = idsToDelete.filter(
+        (_, index) => results[index].status === 'fulfilled',
+      )
+      const failedResults = results.filter(
+        (result) => result.status === 'rejected',
+      )
+
+      if (deletedIds.length > 0) {
+        const deletedIdSet = new Set(deletedIds)
+        setInsumos((currentInsumos) =>
+          currentInsumos.filter((insumo) => !deletedIdSet.has(insumo.id)),
+        )
+        setSelectedIds((currentIds) =>
+          new Set([...currentIds].filter((id) => !deletedIdSet.has(id))),
+        )
+        setSuccessMessage(
+          deletedIds.length === 1
+            ? 'El insumo se eliminó correctamente.'
+            : `Se eliminaron ${deletedIds.length} insumos correctamente.`,
+        )
+      }
+
+      if (failedResults.length > 0) {
+        const errorMessages = [
+          ...new Set(failedResults.map((result) => result.reason.message)),
+        ]
+        setActionError(
+          `No se pudieron eliminar ${failedResults.length} ${
+            failedResults.length === 1 ? 'insumo' : 'insumos'
+          }: ${errorMessages.join(' ')}`,
+        )
+      }
+    } finally {
+      setIsDeleting(false)
+      onCloseDeleteModal()
+    }
+  }
+
   return (
     <div
       className="inventory-table-container"
@@ -197,6 +268,11 @@ export default function InventorySection({
       {successMessage && (
         <p className="inventory-success" role="status">
           {successMessage}
+        </p>
+      )}
+      {actionError && (
+        <p className="inventory-error" role="alert">
+          {actionError}
         </p>
       )}
       {status === 'loading' && <p role="status">Cargando insumos...</p>}
@@ -325,6 +401,57 @@ export default function InventorySection({
           onUpdated={updateInsumo}
         />
       )}
+      <dialog
+        className="inventory-dialog"
+        ref={deleteDialogRef}
+        aria-labelledby="inventory-delete-title"
+        aria-describedby="inventory-delete-description"
+        onCancel={(event) => {
+          event.preventDefault()
+          closeDeleteDialog()
+        }}
+        onClose={() => {
+          if (isDeleteModalOpen) onCloseDeleteModal()
+        }}
+      >
+        <div className="inventory-form">
+          <div className="inventory-dialog-header">
+            <h2 id="inventory-delete-title">Eliminar registros</h2>
+            <button
+              className="inventory-dialog-close"
+              type="button"
+              aria-label="Cerrar"
+              onClick={closeDeleteDialog}
+              disabled={isDeleting}
+            >
+              ×
+            </button>
+          </div>
+          <p id="inventory-delete-description">
+            ¿Seguro que deseas eliminar {selectedIds.size === 1
+              ? 'el registro seleccionado'
+              : `los ${selectedIds.size} registros seleccionados`}? Esta acción no se puede deshacer.
+          </p>
+          <div className="inventory-form-actions">
+            <button
+              className="inventory-form-cancel"
+              type="button"
+              onClick={closeDeleteDialog}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </button>
+            <button
+              className="inventory-form-delete"
+              type="button"
+              onClick={deleteSelectedInsumos}
+              disabled={isDeleting || selectedIds.size === 0}
+            >
+              {isDeleting ? 'Eliminando...' : 'Eliminar'}
+            </button>
+          </div>
+        </div>
+      </dialog>
     </div>
   )
 }

@@ -24,6 +24,7 @@ export default function InternalPage() {
   )
   const [isInventoryCreateOpen, setIsInventoryCreateOpen] = useState(false)
   const [isInventoryEditOpen, setIsInventoryEditOpen] = useState(false)
+  const [isInventoryDeleteOpen, setIsInventoryDeleteOpen] = useState(false)
   const [selectedInventoryCount, setSelectedInventoryCount] = useState(0)
 
   useEffect(() => {
@@ -33,6 +34,7 @@ export default function InternalPage() {
         setActiveSection(sectionId)
         if (sectionId !== 'inventario') {
           setSelectedInventoryCount(0)
+          setIsInventoryDeleteOpen(false)
         }
         return
       }
@@ -40,6 +42,7 @@ export default function InternalPage() {
       window.history.replaceState(null, '', '/adopcion')
       setActiveSection('adopcion')
       setSelectedInventoryCount(0)
+      setIsInventoryDeleteOpen(false)
     }
 
     syncSectionWithPath()
@@ -68,6 +71,7 @@ export default function InternalPage() {
     setActiveSection(section.id)
     if (section.id !== 'inventario') {
       setSelectedInventoryCount(0)
+      setIsInventoryDeleteOpen(false)
     }
   }
 
@@ -127,6 +131,8 @@ export default function InternalPage() {
                           ? () => setIsInventoryCreateOpen(true)
                           : action === 'Modificar Registro'
                             ? () => setIsInventoryEditOpen(true)
+                            : action === 'Eliminar Registro'
+                              ? () => setIsInventoryDeleteOpen(true)
                             : undefined
                     }
                   >
@@ -144,6 +150,8 @@ export default function InternalPage() {
               onCloseCreateModal={() => setIsInventoryCreateOpen(false)}
               isEditModalOpen={isInventoryEditOpen}
               onCloseEditModal={() => setIsInventoryEditOpen(false)}
+              isDeleteModalOpen={isInventoryDeleteOpen}
+              onCloseDeleteModal={() => setIsInventoryDeleteOpen(false)}
               onSelectionCountChange={setSelectedInventoryCount}
             />
           )}
