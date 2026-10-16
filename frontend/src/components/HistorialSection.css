@@ -1,0 +1,181 @@
+/* Contenedor de la derecha: buscador arriba, mensajes y tabla abajo */
+.historial-contenido {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ---------- Buscador ---------- */
+
+/* flex-wrap hace que los campos bajen a otra línea cuando no caben (pantallas angostas) */
+.historial-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #3ba5a3;
+  border-radius: 8px;
+}
+
+.historial-filtros__campo {
+  display: grid;
+  gap: 4px;
+  color: #315052;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.historial-filtros__campo input {
+  box-sizing: border-box;
+  width: 160px;
+  padding: 7px 9px;
+  border: 1px solid #9bd6d3;
+  border-radius: 5px;
+  color: #173d3e;
+  font: inherit;
+  font-weight: 400;
+}
+
+.historial-filtros__campo input:disabled {
+  background: #f1f5f5;
+  cursor: not-allowed;
+}
+
+.historial-filtros__acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.historial-filtros__acciones button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 5px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.historial-filtros__buscar {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.historial-filtros__limpiar {
+  color: #315052;
+  background: #e5eeee;
+  font-size: 1.25rem;
+}
+
+/* ---------- Tabla ---------- */
+
+.historial-tabla-scroll {
+  overflow-x: auto;
+  border: 1px solid #c3eeee;
+  border-radius: 8px;
+}
+
+.historial-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  color: #173d3e;
+  text-align: left;
+}
+
+.historial-tabla caption {
+  padding: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.historial-tabla th,
+.historial-tabla td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #d8eeee;
+  vertical-align: middle;
+}
+
+/* Encabezado oscuro como en el diseño */
+.historial-tabla th {
+  color: #fff;
+  background: #1f5f61;
+  white-space: nowrap;
+}
+
+.historial-tabla tbody tr {
+  cursor: pointer;
+}
+
+.historial-tabla tbody tr:hover {
+  background: #f0fbfa;
+}
+
+.historial-tabla tbody tr.is-selected {
+  background: #dcf8f5;
+}
+
+/* La fecha se muestra como una "pastilla" gris */
+.historial-tabla__fecha {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #e3e6e6;
+  white-space: nowrap;
+}
+
+.historial-tabla__insumos {
+  color: #6b8080;
+  font-style: italic;
+}
+
+.historial-tabla__vacia {
+  color: #536d6e;
+  text-align: center;
+}
+
+/* ---------- Paginación y mensajes ---------- */
+
+.historial-paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  color: #315052;
+}
+
+.historial-paginacion button {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 5px;
+  color: #315052;
+  background: #c3eeee;
+  font: inherit;
+  cursor: pointer;
+}
+
+.historial-paginacion button:disabled {
+  color: #788b8b;
+  background: #e1e8e8;
+  cursor: not-allowed;
+}
+
+.historial-mensaje {
+  margin: 0;
+}
+
+.historial-mensaje--exito {
+  color: #176b3a;
+}
+
+.historial-mensaje--error {
+  color: #a32121;
+}
+
+.historial-ayuda {
+  width: 164px;
+  margin: 0;
+  color: #536d6e;
+  font-size: 0.875rem;
+}
