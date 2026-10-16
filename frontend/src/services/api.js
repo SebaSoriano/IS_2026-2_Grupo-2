@@ -156,3 +156,28 @@ export async function getAsistencias(mes) {
 export function marcarAsistenciaTurno(id, llego_a_la_hora) {
   return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
 }
+
+export async function getUsuarios() {
+  const usuarios = await getJson('/usuarios')
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de voluntarios no es válida.')
+  }
+
+  return usuarios
+}
+
+// Crear usa la ruta de registro que ya existe.
+// Esa ruta responde { status, data: { user } }, por eso se devuelve respuesta.data.user
+export async function crearUsuario(usuario) {
+  const respuesta = await postJson('/auth/register', usuario)
+  return respuesta.data.user
+}
+
+export function actualizarUsuario(rut, datos) {
+  return sendJson('PUT', `/usuarios/${rut}`, datos)
+}
+
+export function eliminarUsuario(rut) {
+  return sendJson('DELETE', `/usuarios/${rut}`)
+}
