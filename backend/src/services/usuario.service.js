@@ -10,13 +10,10 @@ export const obtenerUsuarioPorRut = (rut) => {
     });
 };
 
-// service para buscar usuarios cuyo nombre contenga el texto escrito
-// mode 'insensitive' hace que no importen las mayusculas ("luk" encuentra a "Lukas")
-export const buscarUsuariosPorNombre = (nombre) => {
+// service para listar todos los usuarios, ordenados por nombre para mostrarlos en el selector de turnos
+export const listarUsuarios = () => {
     return prisma.usuario.findMany({
-        where: { nombre_usuario: { contains: nombre, mode: 'insensitive' } },
         select: usuarioPublico.select,
         orderBy: { nombre_usuario: 'asc' },
-        take: 10,
     });
 };
