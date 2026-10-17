@@ -124,9 +124,9 @@ export async function getHorarios(semana) {
   return horarios
 }
 
-// usuarios cuyo nombre contiene el texto escrito, sin importar mayusculas
-export function buscarUsuarios(nombre) {
-  return getJson(`/horarios/usuarios?nombre=${encodeURIComponent(nombre)}`)
+// todos los usuarios ordenados por nombre, para elegir a quien se le asigna un turno
+export function getUsuarios() {
+  return getJson('/horarios/usuarios')
 }
 
 export function crearTurno(turno) {
