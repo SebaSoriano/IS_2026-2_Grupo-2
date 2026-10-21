@@ -133,9 +133,9 @@ export async function getHorarios(semana) {
 }
 
 // todos los usuarios ordenados por nombre, para elegir a quien se le asigna un turno
-export function getUsuarios() {
-  return getJson('/horarios/usuarios')
-}
+//export function getUsuarios() {
+//  return getJson('/horarios/usuarios')
+//}
 
 export function crearTurno(turno) {
   return postJson('/turnos', turno)
