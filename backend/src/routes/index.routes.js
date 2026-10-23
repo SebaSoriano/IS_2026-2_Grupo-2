@@ -24,6 +24,6 @@ router.use('/horarios', horariosRoutes);
 router.use('/asistencias', asistenciasRoutes);
 router.use('/adopciones', adopcionesRoutes);
 router.use('/auth', authRoutes);
-router.use('/donaciones', )
+router.use('/donaciones', donacionesRoutes);
 
 export default router;

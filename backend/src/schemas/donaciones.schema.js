@@ -62,3 +62,47 @@ export const createDonacionWebSchema = z
   })
   .strict()
   .superRefine(reglasPorTipo);
+
+  import { tipoInsumo } from './insumos.schema.js';
+
+// Los insumos recibidos se agregan al registro de insumos
+const insumoDonado = z.object({
+  tipo_insumo: tipoInsumo,
+  cantidad: z.number().int('Debe ser entero').min(1, 'Mínimo 1').max(99, 'Máximo 99'),
+  descripcion: z.string().trim().max(255).optional(),
+  fecha_vencimiento: z.coerce.date().optional(),
+}).strict();
+
+const listaInsumos = z.array(insumoDonado).min(1, 'Indica al menos un insumo').max(30).optional();
+
+// POST /api/donaciones: agrega esta línea dentro del z.object, junto a rut_usuario
+//   insumos: listaInsumos,
+
+// GET /api/donaciones?estado=&tipo_donacion=&origen=
+export const filtrosDonacionSchema = z.object({
+  estado: z.enum(ESTADOS_DONACION).optional(),
+  tipo_donacion: z.enum(TIPOS_DONACION).optional(),
+  origen: z.enum(ORIGENES_DONACION).optional(),
+}).strict();
+
+// PATCH /api/donaciones/:id (el tipo no se puede cambiar: si se equivocó, se borra y se registra de nuevo)
+const { tipo_donacion, ...camposEditables } = camposDonacion;
+export const updateDonacionSchema = z.object({
+  ...camposEditables,
+  fecha_donacion: z.coerce.date().refine((f) => f <= new Date(), 'La fecha no puede ser futura'),
+  donante_nombre: z.string().trim().min(1).max(100),
+  donante_correo: z.email('Correo inválido').max(100),
+  donante_telefono: z.string().trim().regex(/^\+?\d{8,14}$/, 'Teléfono inválido'),
+}).partial().strict()
+  .refine((d) => Object.keys(d).length > 0, 'Debe enviar al menos un campo para modificar');
+
+// PATCH /api/donaciones/:id/agendar
+export const agendarDonacionSchema = z.object({
+  fecha_agendada: z.coerce.date().refine((f) => f > new Date(), 'La fecha agendada debe ser futura'),
+}).strict();
+
+// PATCH /api/donaciones/:id/confirmar
+export const confirmarDonacionSchema = z.object({
+  rut_usuario: rut,        // voluntario que recibe la donación
+  insumos: listaInsumos,   // obligatorio si la donación es de insumos (lo revisa el service)
+}).strict();
