@@ -578,7 +578,7 @@
 
 .attendance-table-scroll {
   overflow-x: auto;
-  border: 1px solid #d8eeee;
+  border: 1px solid #b3d4d4;
 }
 
 .attendance-table {
@@ -589,7 +589,7 @@
 
 .attendance-table th,
 .attendance-table td {
-  border: 1px solid #d8eeee;
+  border: 1px solid #b3d4d4;
   text-align: center;
 }
 
@@ -636,7 +636,7 @@
 }
 
 .attendance-table__semana + .attendance-table__semana {
-  border-left: 2px solid #9bd6d3;
+  border-left: 2px solid #5fb4b1;
 }
 
 .attendance-table__dia {
@@ -663,7 +663,7 @@
 
 /* linea mas marcada donde empieza cada semana (lunes) */
 .attendance-table .inicio-semana {
-  border-left: 2px solid #9bd6d3;
+  border-left: 2px solid #5fb4b1;
 }
 
 /* RUT y nombre quedan fijos a la izquierda al hacer scroll horizontal */
@@ -772,10 +772,10 @@
   background: #f7fcfc;
 }
 
-/* sin turno: rayado gris para que se note que ese dia no se puede marcar */
+/* sin turno: gris liso para que se note que ese dia no se puede marcar */
 .attendance-cell.is-sin-turno,
 .attendance-legend__muestra.is-sin-turno {
-  background: repeating-linear-gradient(135deg, #eef2f2 0 4px, #dfe7e7 4px 8px);
+  background: #e3e8e8;
 }
 
 .attendance-legend {
@@ -801,7 +801,7 @@
   justify-content: center;
   width: 20px;
   height: 20px;
-  border: 1px solid #d8eeee;
+  border: 1px solid #b3d4d4;
   font-weight: 700;
 }
 

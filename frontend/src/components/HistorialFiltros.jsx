@@ -3,9 +3,15 @@ import { useState } from 'react'
 // Valores iniciales del buscador: todos los campos vacíos significan "sin filtros"
 const filtrosVacios = { animal: '', veterinario: '', desde: '', hasta: '' }
 
-// Buscador del historial médico. Guarda lo que se escribe en sus propios campos
-export default function HistorialFiltros({ onBuscar }) {
-  const [filtros, setFiltros] = useState(filtrosVacios)
+// buscador del historial médico. Guarda lo que se escribe en sus propios campos.
+export default function HistorialFiltros({
+  onBuscar,
+  valoresIniciales = {},
+  vista,
+  onCambiarVista,
+}) {
+  // Se parte de los campos vacíos y encima se ponen los valores iniciales que lleguen
+  const [filtros, setFiltros] = useState({ ...filtrosVacios, ...valoresIniciales })
 
   function cambiarCampo(event) {
     setFiltros({ ...filtros, [event.target.name]: event.target.value })
@@ -98,6 +104,27 @@ export default function HistorialFiltros({ onBuscar }) {
           title="Limpiar filtros"
         >
           ×
+        </button>
+      </div>
+
+      {/* Botones para cambiar de vista. aria-pressed indica cuál está activo,
+          así los lectores de pantalla lo anuncian como un botón "presionado" */}
+      <div className="historial-filtros__vistas" role="group" aria-label="Tipo de vista">
+        <button
+          className="historial-filtros__vista"
+          type="button"
+          aria-pressed={vista === 'tabla'}
+          onClick={() => onCambiarVista('tabla')}
+        >
+          ☰ Tabla
+        </button>
+        <button
+          className="historial-filtros__vista"
+          type="button"
+          aria-pressed={vista === 'tarjetas'}
+          onClick={() => onCambiarVista('tarjetas')}
+        >
+          ▦ Tarjetas
         </button>
       </div>
     </form>

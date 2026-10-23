@@ -5,6 +5,15 @@ import {
   getInsumoById,
   updateInsumo as updateInsumoRecord,
 } from '../services/insumo.service.js';
+import { isLowStock, sendLowStockNotification } from '../services/email.service.js';
+
+async function notifyLowStock(insumo) {
+  try {
+    await sendLowStockNotification(insumo);
+  } catch (error) {
+    console.error(`No se pudo enviar el aviso de stock bajo del insumo ${insumo.id}:`, error);
+  }
+}
 
 function parseId(value) {
   if (!/^\d+$/.test(value)) return null;
@@ -57,7 +66,13 @@ export async function updateInsumo(req, res) {
   if (id === null) return res.status(400).json({ error: 'El id debe ser un entero positivo' });
 
   try {
+    const previousInsumo = await getInsumoById(id);
+    if (!previousInsumo) return res.status(404).json({ error: 'Insumo no encontrado' });
+
     const insumo = await updateInsumoRecord(id, req.body);
+    if (!isLowStock(previousInsumo.cantidad) && isLowStock(insumo.cantidad)) {
+      await notifyLowStock(insumo);
+    }
     return res.json(insumo);
   } catch (error) {
     return handleDatabaseError(error, res);

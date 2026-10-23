@@ -68,6 +68,109 @@
   font-size: 1.25rem;
 }
 
+/* Botones Tabla / Tarjetas: margin-left: auto los empuja al extremo derecho del buscador */
+.historial-filtros__vistas {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  padding: 3px;
+  border-radius: 6px;
+  background: #e5eeee;
+}
+
+.historial-filtros__vista {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 4px;
+  color: #315052;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.historial-filtros__vista:hover {
+  background: #c3eeee;
+}
+
+/* El botón de la vista activa se pinta con el mismo verde que el botón "Buscar" */
+.historial-filtros__vista[aria-pressed='true'] {
+  color: #064c3e;
+  background: #19efa0;
+  font-weight: 700;
+}
+
+/* ---------- Tarjetas ---------- */
+
+/* auto-fill + minmax crea tantas columnas de al menos 170px como quepan en el ancho disponible */
+.historial-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historial-tarjeta {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 16px 12px;
+  border: 1px solid #c3eeee;
+  border-radius: 8px;
+  color: #173d3e;
+  background: #fff;
+  box-shadow: 0 4px 8px #174d4c1f;
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* Al pasar el mouse la tarjeta "sube" un poco para indicar que se puede clickear */
+.historial-tarjeta:hover,
+.historial-tarjeta:focus-visible {
+  border-color: #3ba5a3;
+  box-shadow: 0 8px 16px #174d4c40;
+  transform: translateY(-3px);
+}
+
+/* object-fit: contain ajusta la imagen dentro del círculo sin deformarla ni recortarla */
+.historial-tarjeta__foto {
+  box-sizing: border-box;
+  width: 110px;
+  height: 110px;
+  margin-bottom: 8px;
+  padding: 10px;
+  border-radius: 50%;
+  background: #f0fbfa;
+  object-fit: contain;
+}
+
+.historial-tarjeta__foto--inicial {
+  display: grid;
+  place-items: center;
+  color: #1f5f61;
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.historial-tarjeta__nombre {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.historial-tarjeta__dato {
+  color: #536d6e;
+  font-size: 0.9rem;
+}
+
+.historial-tarjetas__vacia {
+  margin: 0;
+  color: #536d6e;
+}
+
 /* ---------- Tabla ---------- */
 
 .historial-tabla-scroll {

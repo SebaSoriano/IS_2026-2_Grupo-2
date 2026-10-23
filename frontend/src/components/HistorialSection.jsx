@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
-import { eliminarHistorial, getHistoriales } from '../services/api.js'
+import { eliminarHistorial, getAnimales, getHistoriales } from '../services/api.js'
 import HistorialFiltros from './HistorialFiltros.jsx'
 import HistorialForm from './HistorialForm.jsx'
 import HistorialTabla from './HistorialTabla.jsx'
+import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './HistorialSection.css'
 
 // Cantidad de registros por página. El backend acepta entre 1 y 100.
 const REGISTROS_POR_PAGINA = 15
 
 // Pestaña "Historial Médico". Este componente es el que guarda el estado y habla con el backend;
-// HistorialFiltros y HistorialTabla solo muestran datos y le avisan lo que hace el usuario.
+// HistorialFiltros, HistorialTabla y HistorialTarjetas solo muestran datos y le avisan lo que hace el usuario.
 export default function HistorialSection() {
   // Respuesta del backend: los registros de la página actual y el total que coincide con los filtros
   const [registros, setRegistros] = useState([])
@@ -28,6 +29,13 @@ export default function HistorialSection() {
   const [formularioAbierto, setFormularioAbierto] = useState(null)
   // Mensaje de éxito o error sobre la tabla
   const [mensaje, setMensaje] = useState(null)
+  // Vista elegida en el buscador: 'tabla' (registros médicos) o 'tarjetas' (un recuadro por animal)
+  const [vista, setVista] = useState('tabla')
+  // Animales de la vista de tarjetas. Se piden recién la primera vez que se abre esa vista
+  const [animales, setAnimales] = useState([])
+  const [estadoAnimales, setEstadoAnimales] = useState('sin-cargar')
+  // Al cambiar este número el buscador se reinicia (ver la "key" de HistorialFiltros más abajo)
+  const [versionBuscador, setVersionBuscador] = useState(0)
 
   // Se pide la lista al backend cada vez que cambian los filtros, la página o "recarga".
   // "cancelado" evita un problema clásico: si el usuario busca dos veces seguidas,
@@ -70,6 +78,42 @@ export default function HistorialSection() {
     setPagina(nuevaPagina)
     setSeleccionadoId(null)
   }
+
+  function cambiarVista(nuevaVista) {
+    setVista(nuevaVista)
+    setSeleccionadoId(null)
+    if (nuevaVista === 'tarjetas' && estadoAnimales !== 'listo') cargarAnimales()
+  }
+
+  // Pide la lista de animales al backend (GET /api/animales) para armar las tarjetas
+  async function cargarAnimales() {
+    setEstadoAnimales('cargando')
+    try {
+      setAnimales(await getAnimales())
+      setEstadoAnimales('listo')
+    } catch (error) {
+      setErrorCarga(error.message)
+      setEstadoAnimales('error')
+    }
+  }
+
+  // Al hacer click en una tarjeta se vuelve a la tabla mostrando solo los registros de ese animal.
+  // Es lo mismo que escribir su nombre en el campo "Animal" y presionar "Buscar":
+  // se mantienen los demás filtros (veterinario y fechas) y solo se cambia el animal.
+  // Se suma 1 a versionBuscador para que el campo "Animal" muestre el nombre elegido.
+  function elegirAnimal(animal) {
+    buscar({ ...filtros, animal: animal.nombre_animal })
+    setVista('tabla')
+    setVersionBuscador(versionBuscador + 1)
+  }
+
+  // En la vista de tarjetas el campo "Animal" del buscador filtra las tarjetas por nombre.
+  // Se hace aquí en el frontend con la misma regla que usa el backend para la tabla:
+  // el texto puede estar en cualquier parte del nombre y no importan mayúsculas o minúsculas.
+  const textoAnimal = (filtros.animal ?? '').trim().toLowerCase()
+  const animalesVisibles = animales.filter((animal) =>
+    animal.nombre_animal.toLowerCase().includes(textoAnimal),
+  )
 
   // Se busca en la página actual el registro que tiene el id seleccionado
   const registroSeleccionado =
@@ -150,7 +194,15 @@ export default function HistorialSection() {
       </div>
 
       <div className="historial-contenido" aria-busy={estado === 'cargando'}>
-        <HistorialFiltros onBuscar={buscar} />
+        {/* La "key" es especial en React: si cambia, React descarta el buscador y crea uno
+            nuevo, que vuelve a leer valoresIniciales. Así se reinicia con el animal elegido. */}
+        <HistorialFiltros
+          key={versionBuscador}
+          valoresIniciales={filtros}
+          onBuscar={buscar}
+          vista={vista}
+          onCambiarVista={cambiarVista}
+        />
 
         {mensaje && (
           <p className={`historial-mensaje historial-mensaje--${mensaje.tipo}`} role="status">
@@ -158,13 +210,27 @@ export default function HistorialSection() {
           </p>
         )}
 
-        {estado === 'cargando' && <p role="status">Cargando historial médico...</p>}
-        {estado === 'error' && (
+        {vista === 'tarjetas' && (
+          <>
+            {estadoAnimales === 'cargando' && <p role="status">Cargando animales...</p>}
+            {estadoAnimales === 'error' && (
+              <p className="historial-mensaje historial-mensaje--error" role="alert">
+                No se pudieron cargar los animales: {errorCarga}
+              </p>
+            )}
+            {estadoAnimales === 'listo' && (
+              <HistorialTarjetas animales={animalesVisibles} onElegirAnimal={elegirAnimal} />
+            )}
+          </>
+        )}
+
+        {vista === 'tabla' && estado === 'cargando' && <p role="status">Cargando historial médico...</p>}
+        {vista === 'tabla' && estado === 'error' && (
           <p className="historial-mensaje historial-mensaje--error" role="alert">
             No se pudo cargar el historial médico: {errorCarga}
           </p>
         )}
-        {estado === 'listo' && (
+        {vista === 'tabla' && estado === 'listo' && (
           <HistorialTabla
             registros={registros}
             total={total}
