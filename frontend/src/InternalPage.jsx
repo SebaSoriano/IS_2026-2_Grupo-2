@@ -5,6 +5,7 @@ import { sections } from './data/sections.js'
 import AnimalSection from './components/AnimalSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
+import DonationSection from './components/DonationSection.jsx'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
 const sectionPath = (section) => section.path ?? `/${section.id}`
@@ -146,6 +147,9 @@ export default function InternalPage() {
               onCloseEditModal={() => setIsInventoryEditOpen(false)}
               onSelectionCountChange={setSelectedInventoryCount}
             />
+          )}
+          {section.id === 'donaciones' && activeSection === 'donaciones' && (
+            <DonationSection />
           )}
         </section>
       ))}
