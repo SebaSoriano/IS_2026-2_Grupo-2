@@ -105,7 +105,8 @@
 
 .area-actions--inventario .area-action,
 .area-actions--animales .area-action,
-.area-actions--voluntarios .area-action {
+.area-actions--voluntarios .area-action,
+.area-actions--historial-medico .area-action {
   width: 164px;
 }
 
