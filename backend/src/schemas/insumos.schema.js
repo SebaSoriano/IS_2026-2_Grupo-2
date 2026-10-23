@@ -26,7 +26,8 @@ const fechaVencimiento = z.string()
   ))
   .transform((value) => new Date(value));
 
-const tipoInsumo = z.string()
+
+export const tipoInsumo = z.string()
   .trim()
   .pipe(z.enum([
     'Alimentación',

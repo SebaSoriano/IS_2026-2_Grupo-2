@@ -7,6 +7,7 @@ import HistorialSection from './components/HistorialSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
 import VolunteerSection from './components/VolunteerSection.jsx'
+import DonationSection from './components/DonationSection.jsx'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
 const sectionPath = (section) => section.path ?? `/${section.id}`
@@ -159,6 +160,9 @@ export default function InternalPage() {
               onCloseDeleteModal={() => setIsInventoryDeleteOpen(false)}
               onSelectionCountChange={setSelectedInventoryCount}
             />
+          )}
+          {section.id === 'donaciones' && activeSection === 'donaciones' && (
+            <DonationSection />
           )}
         </section>
       ))}
