@@ -115,7 +115,8 @@
 
 .section-area--inventario:not([hidden]),
 .section-area--animales:not([hidden]),
-.section-area--voluntarios:not([hidden]) {
+.section-area--voluntarios:not([hidden]), 
+.section-area--historial-medico:not([hidden]) {
   display: grid;
   grid-template-columns: 196px minmax(0, 1fr);
   align-items: start;
@@ -126,7 +127,8 @@
 
 .section-area--inventario .area-actions,
 .section-area--animales .area-actions,
-.section-area--voluntarios .area-actions {
+.section-area--voluntarios .area-actions,
+.section-area--historial-medico .area-actions {
   padding: 0;
 }
 
@@ -167,7 +169,8 @@
 @media (max-width: 760px) {
   .section-area--inventario:not([hidden]),
   .section-area--animales:not([hidden]),
-  .section-area--voluntarios:not([hidden]) {
+  .section-area--voluntarios:not([hidden]),
+  .section-area--historial-medico:not([hidden]) {
     grid-template-columns: minmax(0, 1fr);
   }
 }
