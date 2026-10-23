@@ -1,4 +1,4 @@
-import * as donacionesService from '../services/donaciones.service.js';
+import * as donacionesService from '../services/donaciones.services.js';
 
 // POST /api/donaciones
 export const createDonacion = async (req, res) => {

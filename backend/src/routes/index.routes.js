@@ -6,6 +6,7 @@ import horariosRoutes from './horarios.routes.js';
 import asistenciasRoutes from './asistencias.routes.js';
 import adopcionesRoutes from './adopciones.routes.js';
 import auth from './authRoutes.js';
+import donaciones from './donaciones.routes.js';
 
 import authRoutes from './authRoutes.js';
 
@@ -23,5 +24,6 @@ router.use('/horarios', horariosRoutes);
 router.use('/asistencias', asistenciasRoutes);
 router.use('/adopciones', adopcionesRoutes);
 router.use('/auth', authRoutes);
+router.use('/donaciones', )
 
 export default router;
