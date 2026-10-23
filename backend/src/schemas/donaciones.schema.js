@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { tipoInsumo } from './insumos.schema.js';
 
 export const TIPOS_DONACION = ['monetaria', 'insumos'];
 export const METODOS_PAGO = ['efectivo', 'transferencia'];
@@ -38,7 +39,15 @@ const reglasPorTipo = (datos, ctx) => {
     }
   }
 };
+// Los insumos recibidos se agregan al registro de insumos
+const insumoDonado = z.object({
+  tipo_insumo: tipoInsumo,
+  cantidad: z.number().int('Debe ser entero').min(1, 'Mínimo 1').max(99, 'Máximo 99'),
+  descripcion: z.string().trim().max(255).optional(),
+  fecha_vencimiento: z.coerce.date().optional(),
+}).strict();
 
+const listaInsumos = z.array(insumoDonado).min(1, 'Indica al menos un insumo').max(30).optional();
 // POST /api/donaciones (lo registra un voluntario)
 export const createDonacionPresencialSchema = z
   .object({
@@ -48,6 +57,7 @@ export const createDonacionPresencialSchema = z
       .refine((fecha) => fecha <= new Date(), 'La fecha no puede ser futura')
       .optional(),
     rut_usuario: rut,
+    insumos: listaInsumos,
   })
   .strict()
   .superRefine(reglasPorTipo);
@@ -62,21 +72,6 @@ export const createDonacionWebSchema = z
   })
   .strict()
   .superRefine(reglasPorTipo);
-
-  import { tipoInsumo } from './insumos.schema.js';
-
-// Los insumos recibidos se agregan al registro de insumos
-const insumoDonado = z.object({
-  tipo_insumo: tipoInsumo,
-  cantidad: z.number().int('Debe ser entero').min(1, 'Mínimo 1').max(99, 'Máximo 99'),
-  descripcion: z.string().trim().max(255).optional(),
-  fecha_vencimiento: z.coerce.date().optional(),
-}).strict();
-
-const listaInsumos = z.array(insumoDonado).min(1, 'Indica al menos un insumo').max(30).optional();
-
-// POST /api/donaciones: agrega esta línea dentro del z.object, junto a rut_usuario
-//   insumos: listaInsumos,
 
 // GET /api/donaciones?estado=&tipo_donacion=&origen=
 export const filtrosDonacionSchema = z.object({

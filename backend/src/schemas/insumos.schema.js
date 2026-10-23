@@ -4,7 +4,7 @@ const fecha = z.string()
   .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Debe ser una fecha válida')
   .transform((value) => new Date(value));
 
-const tipoInsumo = z.string()
+export const tipoInsumo = z.string()
   .trim()
   .pipe(z.enum([
     'Alimentación',
