@@ -18,6 +18,18 @@ export async function getAllInsumos() {
   });
 }
 
+export async function getInsumosVencenEntre(fechaInicio, fechaFin) {
+  return prisma.insumo.findMany({
+    where: {
+      fecha_vencimiento: {
+        gte: fechaInicio,
+        lt: fechaFin,
+      },
+    },
+    orderBy: { fecha_vencimiento: 'asc' },
+  });
+}
+
 //obtener insumo por id con la informacion del usuario que lo registro
 export async function getInsumoById(id) {
   return prisma.insumo.findUnique({

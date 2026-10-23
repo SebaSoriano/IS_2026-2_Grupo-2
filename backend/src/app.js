@@ -1,6 +1,7 @@
 import express from 'express'
 import indexRouter from './routes/index.routes.js'
 import { errorHandler } from './middlewares/error.middleware.js'
+import { startExpirationNotifications } from './services/insumo-expiration-notifier.service.js'
 
 const app = express()
 
@@ -15,4 +16,6 @@ app.use((req, res) => res.status(404).json({ error: 'Ruta no encontrada' }))
 // para que capture cualquier error que haya ocurrido en los controllers o middlewares previos
 app.use(errorHandler)
 
-export default app  
+startExpirationNotifications()
+
+export default app
