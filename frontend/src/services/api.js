@@ -165,6 +165,47 @@ export function marcarAsistenciaTurno(id, llego_a_la_hora) {
   return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
 }
 
+// filtros: { estado, tipo_donacion, origen }; los vacíos no se mandan
+export async function getDonaciones(filtros = {}) {
+  const params = new URLSearchParams()
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor) params.set(clave, valor)
+  }
+  const query = params.toString()
+  const donaciones = await getJson(`/donaciones${query ? `?${query}` : ''}`)
+
+  if (!Array.isArray(donaciones)) {
+    throw new Error('La respuesta de la API de donaciones no es válida.')
+  }
+
+  return donaciones
+}
+
+// las de abajo se usarán en los pasos 2 y 3, las dejo listas
+export function crearDonacionPresencial(donacion) {
+  return postJson('/donaciones', donacion)
+}
+
+export function crearDonacionWeb(donacion) {
+  return postJson('/donaciones/web', donacion)
+}
+
+export function actualizarDonacion(id, cambios) {
+  return sendJson('PATCH', `/donaciones/${id}`, cambios)
+}
+
+export function agendarDonacion(id, fecha_agendada) {
+  return sendJson('PATCH', `/donaciones/${id}/agendar`, { fecha_agendada })
+}
+
+// datos: { rut_usuario, insumos? }
+export function confirmarDonacion(id, datos) {
+  return sendJson('PATCH', `/donaciones/${id}/confirmar`, datos)
+}
+
+export function eliminarDonacion(id) {
+  return sendJson('DELETE', `/donaciones/${id}`)
+}
 
 // ---------- Historial medico ----------
 export function getHistoriales(filtros = {}) {
