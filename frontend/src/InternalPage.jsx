@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { adoptionActions } from './data/adoptionActions.js'
+import AdoptionSection from './components/AdoptionSection.jsx'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import AnimalSection from './components/AnimalSection.jsx'
@@ -110,13 +110,13 @@ export default function InternalPage() {
           key={section.id}
         >
           {section.id === 'horario' && activeSection === 'horario' && <ScheduleSection />}
-          {(section.id === 'inventario' || section.id === 'adopcion') && (
+          {section.id === 'inventario' && (
             <div
               className={`area-actions area-actions--${section.id}`}
               role="group"
               aria-label={`Acciones de ${section.label.toLowerCase()}`}
             >
-              {(section.id === 'inventario' ? inventoryActions : adoptionActions).map((action) => (
+              {inventoryActions.map((action) => (
                   <button
                     className="area-action"
                     type="button"
@@ -142,6 +142,12 @@ export default function InternalPage() {
                   </button>
                 ))}
             </div>
+          )}
+          {section.id === 'adopcion' && activeSection === 'adopcion' && (
+            <AdoptionSection />
+          )}
+          {section.id === 'animales' && activeSection === 'animales' && (
+            <AnimalSection />
           )}
           {section.id === 'historial-medico' && activeSection === 'historial-medico' && (
             <HistorialSection />
