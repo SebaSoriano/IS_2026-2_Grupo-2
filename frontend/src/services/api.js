@@ -215,3 +215,30 @@ export function actualizarUsuario(rut, datos) {
 
 export function eliminarUsuario(rut) {
   return sendJson('DELETE', `/usuarios/${rut}`)}
+
+// Busca los animales que todavía no han sido adoptados
+export async function getAnimalesDisponibles() {
+  const animales = await getJson('/animales?adoptado=false')
+
+  if (!Array.isArray(animales)) {
+    throw new Error('La respuesta de la API de animales no es válida.')
+  }
+
+  return animales
+}
+
+// Historial de adopciones, de la más reciente a la más antigua
+export async function getAdopciones() {
+  const adopciones = await getJson('/adopciones')
+
+  if (!Array.isArray(adopciones)) {
+    throw new Error('La respuesta de la API de adopciones no es válida.')
+  }
+
+  return adopciones
+}
+
+// Registra la adopción de un animal (crea también al adoptante)
+export function registrarAdopcion(idAnimal, datos) {
+  return postJson(`/animales/${idAnimal}/adopcion`, datos)
+}
