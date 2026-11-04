@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './PublicPage.css';
+import DonationPanels from './components/DonationPanels.jsx';
+import Modal from './schedule/Modal.jsx';
 
 export default function PublicPage (){
+  const [vistaDonar, setVistaDonar] = useState(null);
+  const cerrarDonar = () => setVistaDonar(null);
   return (
     <body id="publicpage">
       <header class="navbar">
@@ -10,7 +14,7 @@ export default function PublicPage (){
           <h1 class="title">Huellas sin hogar</h1>
         </div>
         <div class="navbar-actions">
-          <button class="btn-header btn-donar">DONAR</button>
+          <button class="btn-header btn-donar" onClick={() => setVistaDonar('opciones')}>DONAR</button>
           <button class="btn-header btn-volun">SE VOLUNTARIO</button>
           <button
             className="btn-header btn-intranet"
@@ -36,6 +40,15 @@ export default function PublicPage (){
           <option value="grande">Tamaño: Grande</option>
         </select>
       </div>
+      {vistaDonar === 'opciones' && (
+        <DonationPanels onContinuar={setVistaDonar} onClose={cerrarDonar} />
+      )}
+      {/* provisorio: aquí irán los formularios del siguiente paso */}
+      {(vistaDonar === 'insumos' || vistaDonar === 'monetaria') && (
+        <Modal title={vistaDonar === 'insumos' ? 'Donar insumos' : 'Donar dinero'}onClose={cerrarDonar}>
+          <p>Aquí irá el formulario de donación {vistaDonar === 'insumos' ? 'de insumos' : 'monetaria'}.</p>
+        </Modal>
+      )}
     </body>
   );
 }

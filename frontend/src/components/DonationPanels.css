@@ -1,0 +1,68 @@
+/* .modal.modal--wide (dos clases) gana sobre .modal sin depender del orden en que carguen los CSS */
+.modal.modal--wide {
+  max-width: 820px;
+}
+
+.donation-panels {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+/* en pantallas angostas los paneles se apilan */
+@media (max-width: 640px) {
+  .donation-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+.donation-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid #c3eeee;
+  border-radius: 8px;
+  background: #effdff;
+}
+
+.donation-panel h3 {
+  margin: 0 0 8px;
+  color: #0f7482;
+  font-size: 1.15rem;
+}
+
+.donation-panel__resumen {
+  margin: 0 0 12px;
+  color: #315052;
+}
+
+.donation-panel ul {
+  margin: 0 0 20px;
+  padding-left: 20px;
+  color: #173d3e;
+  line-height: 1.5;
+}
+
+.donation-panel li + li {
+  margin-top: 6px;
+}
+
+/* margin-top: auto empuja el botón al fondo: quedan alineados aunque un panel tenga más texto */
+.donation-panel__continuar {
+  margin-top: auto;
+  padding: 12px 18px;
+  border: none;
+  border-radius: 6px;
+  color: #0f7482;
+  background: #81f5ff;
+  font: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.donation-panel__continuar:hover,
+.donation-panel__continuar:focus-visible {
+  color: #b1f3f9;
+  background: #0f7482;
+}
