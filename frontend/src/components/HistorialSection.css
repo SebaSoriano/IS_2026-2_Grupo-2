@@ -62,10 +62,11 @@
   background: #19efa0;
 }
 
+/* white-space: nowrap evita que "Limpiar filtros" se parta en dos líneas si falta espacio */
 .historial-filtros__limpiar {
   color: #315052;
   background: #e5eeee;
-  font-size: 1.25rem;
+  white-space: nowrap;
 }
 
 /* Botones Tabla / Tarjetas: margin-left: auto los empuja al extremo derecho del buscador */
