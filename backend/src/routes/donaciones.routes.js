@@ -10,7 +10,7 @@ import {
   confirmarDonacionSchema,
 } from '../schemas/donaciones.schema.js';
 import { idParamSchema } from '../schemas/idParam.schema.js';
-import { requireAuth } from '../middlewares/auth.middleware.js';
+import { requireAuth, requireEdicion } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 const id = validate(idParamSchema, 'params');
@@ -19,10 +19,11 @@ const id = validate(idParamSchema, 'params');
 // Va ANTES del router.use(requireAuth), por eso no pide sesión
 router.post('/web', validate(createDonacionWebSchema), c.createDonacionWeb);
 
-// desde aquí hacia abajo, todas las rutas de donaciones piden sesión.
+// desde aquí hacia abajo, todas las rutas de donaciones piden sesión,
+// y las que cambian datos (POST, PATCH, DELETE) piden además ser Admin o Veterinaria.
 // Express revisa las rutas en orden: un router.use sin ruta se aplica
 // a todas las que se registran después de él
-router.use(requireAuth);
+router.use(requireAuth, requireEdicion);
 
 router.get('/', validate(filtrosDonacionSchema, 'query'), c.getDonaciones);
 router.get('/:id', id, c.getDonacionById);
