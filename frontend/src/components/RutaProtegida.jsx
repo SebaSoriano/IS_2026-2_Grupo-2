@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { obtenerSesion } from '../services/auth.js'
+import { SesionContext } from '../sesion/sesion.js'
 
 // Envuelve las páginas que necesitan sesión (la intranet).
 // Al montarse le pregunta al backend si hay una sesión activa (GET /api/auth/me):
@@ -42,5 +43,11 @@ export default function RutaProtegida({ children }) {
   }
 
   // children es una función que recibe el usuario, ej: {(usuario) => <InternalPage usuario={usuario} />}
-  return children(usuario)
+  // Además se guarda el usuario en SesionContext, para que cualquier sección
+  // pueda saber su rol con usePermisos() sin recibirlo por props
+  return (
+    <SesionContext.Provider value={usuario}>
+      {children(usuario)}
+    </SesionContext.Provider>
+  )
 }
