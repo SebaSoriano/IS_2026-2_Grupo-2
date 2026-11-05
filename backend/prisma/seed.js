@@ -10,7 +10,8 @@ import bcrypt from 'bcryptjs';
 // nueva instancia del cliente de prisma, la otra vive aparte en src/config/prisma.js
 const prisma = new PrismaClient();
 // contraseña de prueba, SOLO para desarrollo
-// todos los usuarios del seed usan esta misma contraseña (el rut del admin es el primero de rutUsuarios)
+// todos los usuarios del seed usan esta misma contraseña
+// roles: el primero de rutUsuarios es Admin, el segundo Veterinaria y el resto Voluntarios
 const PASSWORD_DE_PRUEBA = 'admin1234';
 
 async function main() {
@@ -68,7 +69,8 @@ async function main() {
             return prisma.usuario.create({
                 data: {
                     rut_usuario,
-                    rol_id: i === 0 ? 1 : 3,
+                    // 1 = Admin, 2 = Veterinaria, 3 = Voluntario (ver la lista de roles más arriba)
+                    rol_id: i === 0 ? 1 : i === 1 ? 2 : 3,
                     nombre_usuario: `${nombre} ${apellido}`,
                     correo: faker.internet.email({ firstName: nombre, lastName: apellido }),
                     telefono: '9' + faker.string.numeric(8),
