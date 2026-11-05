@@ -48,7 +48,7 @@ export default function AnimalSection() {
   }
 
   // AnimalForm llama a esta función cuando el backend guardó el animal
-  function animalGuardado(animal) {
+  function animalGuardado(animal, avisoFoto) {
     if (formularioAbierto === 'crear') {
       // Agregar el nuevo animal al principio de la lista
       setAnimales([{ ...animal, adoptado: false, adopcion: null }, ...animales])
@@ -62,6 +62,15 @@ export default function AnimalSection() {
       )
       setMensaje({ tipo: 'exito', texto: `Animal ${animal.id_animal} modificado` })
     }
+
+    // Si el animal se guardó pero la foto falló, se avisa
+    if (avisoFoto) {
+      setMensaje({
+        tipo: 'error',
+        texto: `El animal se guardó, pero la foto no se pudo subir: ${avisoFoto}`,
+      })
+    }
+
     setFormularioAbierto(null)
   }
 
@@ -139,6 +148,7 @@ export default function AnimalSection() {
               <thead>
                 <tr>
                   <th scope="col">Seleccionar</th>
+                  <th scope="col">Foto</th>
                   <th scope="col">ID</th>
                   <th scope="col">Nombre</th>
                   <th scope="col">Especie</th>
@@ -152,7 +162,7 @@ export default function AnimalSection() {
               <tbody>
                 {animales.length === 0 ? (
                   <tr>
-                    <td className="animal-table-empty" colSpan="9">
+                    <td className="animal-table-empty" colSpan="10">
                       No hay animales registrados.
                     </td>
                   </tr>
@@ -171,6 +181,17 @@ export default function AnimalSection() {
                             checked={animal.id_animal === seleccionadoId}
                             onChange={() => setSeleccionadoId(animal.id_animal)}
                             />
+                        </td>
+                        <td>
+                          {animal.foto_animal ? (
+                            <img
+                              className="animal-table__foto"
+                              src={animal.foto_animal}
+                              alt={`Foto de ${animal.nombre_animal}`}
+                            />
+                          ) : (
+                            '—'
+                          )}
                         </td>
                         <td>{animal.id_animal}</td>
                         <td>{animal.nombre_animal || '—'}</td>
