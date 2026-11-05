@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getAsistencias, marcarAsistenciaTurno } from '../services/api.js'
 import Modal from './Modal.jsx'
+import { usePermisos } from '../sesion/sesion.js'
 import {
   DIAS_CORTOS,
   diaDeHoy,
@@ -21,6 +22,8 @@ const describirHoras = (turno) =>
 //  - con 2 o mas: muestra a/b (turnos con llegada a la hora / turnos del dia) y el click abre un pop-up para marcar cada uno
 // cambiosTurnos cambia cuando se añade, edita o borra un turno, para recargar la tabla
 export default function AttendanceSection({ cambiosTurnos }) {
+  // el Voluntario ve la asistencia, pero no puede marcarla: las celdas se muestran sin botón
+  const { puedeEditar } = usePermisos()
   const [mes, setMes] = useState(mesActual)
   const [usuarios, setUsuarios] = useState([])
   const [estado, setEstado] = useState('loading')
@@ -161,6 +164,7 @@ export default function AttendanceSection({ cambiosTurnos }) {
                         esFuturo={dia.fecha > hoy}
                         guardando={guardando}
                         nombre={usuario.nombre_usuario}
+                        soloLectura={!puedeEditar}
                         onAlternar={alternarTurno}
                         onAbrir={() => setDiaAbierto({ rut: usuario.rut_usuario, nombre: usuario.nombre_usuario, dia })}
                       />
@@ -175,7 +179,7 @@ export default function AttendanceSection({ cambiosTurnos }) {
       <ul className="attendance-legend" aria-label="Simbología">
         <li><span className="attendance-legend__muestra is-presente">✓</span> Llegó a la hora</li>
         <li><span className="attendance-legend__muestra is-parcial">a/b</span> Llegó a la hora, <em>a</em> de sus <em>b</em> turnos del día (cuando tiene 2 o más)</li>
-        <li><span className="attendance-legend__muestra is-turno" /> Tiene turno (click para marcar)</li>
+        <li><span className="attendance-legend__muestra is-turno" /> {puedeEditar ? 'Tiene turno (click para marcar)' : 'Tiene turno'}</li>
         <li><span className="attendance-legend__muestra is-sin-turno" /> Sin turno</li>
       </ul>
 
@@ -216,7 +220,8 @@ export default function AttendanceSection({ cambiosTurnos }) {
 }
 
 // una celda por usuario y dia: solo se puede marcar en dias con turno de hoy o anteriores
-function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, onAlternar, onAbrir }) {
+// con soloLectura (Voluntario) se muestra el mismo color y contenido, pero sin botón para hacer click
+function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, soloLectura, onAlternar, onAbrir }) {
   const inicioSemana = dia.diaSemana === 1 ? ' inicio-semana' : ''
   const descripcion = `${nombre}, ${DIAS_CORTOS[dia.diaSemana - 1]} ${dia.numero}`
 
@@ -235,6 +240,16 @@ function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, onAlternar,
   // con un solo turno el click marca o desmarca directo
   if (turnos.length === 1) {
     const [turno] = turnos
+    if (soloLectura) {
+      return (
+        <td
+          className={`attendance-cell ${turno.llego_a_la_hora ? 'is-presente' : 'is-turno'}${inicioSemana}`}
+          title={turno.llego_a_la_hora ? 'Llegó a la hora' : `Turno ${describirHoras(turno)}`}
+        >
+          {turno.llego_a_la_hora ? '✓' : ''}
+        </td>
+      )
+    }
     return (
       <td className={`attendance-cell ${turno.llego_a_la_hora ? 'is-presente' : 'is-turno'}${inicioSemana}`}>
         <button
@@ -253,6 +268,16 @@ function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, onAlternar,
   // con 2 o mas turnos se muestra a/b y el click abre el pop-up del dia
   const presentes = turnos.filter((turno) => turno.llego_a_la_hora).length
   const clase = presentes === turnos.length ? 'is-presente' : presentes > 0 ? 'is-parcial' : 'is-turno'
+  if (soloLectura) {
+    return (
+      <td
+        className={`attendance-cell ${clase}${inicioSemana}`}
+        title={`Llegó a la hora a ${presentes} de ${turnos.length} turnos`}
+      >
+        <span className="attendance-cell__conteo">{presentes}/{turnos.length}</span>
+      </td>
+    )
+  }
   return (
     <td className={`attendance-cell ${clase}${inicioSemana}`}>
       <button
