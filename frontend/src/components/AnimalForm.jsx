@@ -301,7 +301,6 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
                 <span className="animal-form__error">{errores.observaciones_animal}</span>
             )}
             </label>
-            // Campo para subir foto
             <div className="animal-form__field">
             Foto (opcional)
             {vistaPrevia && (
