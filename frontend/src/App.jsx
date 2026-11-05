@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import InternalPage from './InternalPage.jsx'
 import PublicPage from './PublicPage.jsx';
 import Auth from './Auth.jsx';
+import RutaProtegida from './components/RutaProtegida.jsx';
 
 export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname)
@@ -19,5 +20,10 @@ export default function App() {
   if (path === '/') return <PublicPage />
   if (path === '/login') return <Auth />
 
-  return <InternalPage />
+  // la intranet solo se muestra si hay sesión; RutaProtegida le pasa el usuario
+  return (
+    <RutaProtegida>
+      {(usuario) => <InternalPage usuario={usuario} />}
+    </RutaProtegida>
+  )
 }

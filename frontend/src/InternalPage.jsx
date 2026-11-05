@@ -8,6 +8,7 @@ import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
 import VolunteerSection from './components/VolunteerSection.jsx'
 import DonationSection from './components/DonationSection.jsx'
+import SesionUsuario from './components/SesionUsuario.jsx'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
 const sectionPath = (section) => section.path ?? `/${section.id}`
@@ -21,7 +22,8 @@ function getSectionFromPath(pathname) {
   })?.id
 }
 
-export default function InternalPage() {
+// usuario viene de RutaProtegida: { rut, nombre, correo, rol }
+export default function InternalPage({ usuario }) {
   const [activeSection, setActiveSection] = useState(
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
@@ -86,6 +88,7 @@ export default function InternalPage() {
             <img className="brand-logo" src="/logo_straypaws.png" alt="Stray Paws" />
             <span className="brand-title">Stray Paws</span>
           </a>
+          <SesionUsuario usuario={usuario} />
         </div>
 
         <nav className="section-nav" aria-label="Secciones principales">
@@ -175,4 +178,3 @@ export default function InternalPage() {
     </main>
   )
 }
-

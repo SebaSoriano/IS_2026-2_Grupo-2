@@ -1,7 +1,20 @@
 export const API_BASE_URL = '/api'
 
+// Si el backend responde 401 es porque no hay sesión o el token venció.
+// En ese caso se manda a la persona al login, en vez de mostrar un error en la sección.
+// (window.location.assign recarga la página, así que lo que venía después no alcanza a mostrarse)
+function revisarSesion(response) {
+  if (response.status === 401) {
+    window.location.assign('/login')
+  }
+}
+
+// credentials: 'include' hace que el navegador mande la cookie con el token en cada petición.
+// Con el proxy de Vite el frontend y el backend parecen el mismo sitio y la cookie se mandaría igual,
+// pero así queda explícito y sigue funcionando si se despliegan en dominios distintos.
 async function getJson(path) {
-  const response = await fetch(`${API_BASE_URL}${path}`)
+  const response = await fetch(`${API_BASE_URL}${path}`, { credentials: 'include' })
+  revisarSesion(response)
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -35,8 +48,10 @@ async function postJson(path, body) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(body),
   })
+  revisarSesion(response)
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -56,7 +71,7 @@ async function postJson(path, body) {
 // Para PUT y DELETE. Igual que postJson, pero el método se elige
 // y el body es opcional (DELETE no lleva body).
 async function sendJson(method, path, body) {
-  const options = { method }
+  const options = { method, credentials: 'include' }
 
   if (body !== undefined) {
     options.headers = { 'Content-Type': 'application/json' }
@@ -64,6 +79,7 @@ async function sendJson(method, path, body) {
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, options)
+  revisarSesion(response)
 
   // 204 significa "todo bien, pero no hay nada que devolver" (lo que responde el DELETE)
   if (response.status === 204) {
