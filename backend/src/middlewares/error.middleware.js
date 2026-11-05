@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import multer from 'multer';
 
 export class HttpError extends Error {
     constructor(status, message) {
@@ -17,6 +18,16 @@ export const errorHandler = (err, req, res, next) => {
     //Errores a proposito desde services/controllers
     if (err instanceof HttpError) {
         return res.status(err.status).json({ error: err.message });
+    }
+    //Errores de multer al subir archivos
+    if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ error: 'La foto no puede pesar más de 3 MB' });
+        }
+        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+            return res.status(400).json({ error: 'Debe enviar una sola foto en el campo "foto"' });
+        }
+        return res.status(400).json({ error: `Error al subir el archivo: ${err.message}` });
     }
 
     //JSON mal formado en el body (lo lanza express.json())

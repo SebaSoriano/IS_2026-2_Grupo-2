@@ -99,6 +99,7 @@ model animales {
   peso_animal           Float
   especie_animal        String            @db.VarChar(100)
   observaciones_animal  String?
+  foto_animal           String?           @db.VarChar(255)
 
   historial historial_medico[]
   adopciones adopciones[]
