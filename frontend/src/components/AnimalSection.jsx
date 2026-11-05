@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { eliminarAnimal, getAnimales } from '../services/api.js'
 import AnimalForm from './AnimalForm.jsx'
 import './AnimalSection.css'
+import { usePermisos } from '../sesion/sesion.js'
 
 export default function AnimalSection() {
+  // el Voluntario solo puede mirar: no ve los botones de añadir, modificar ni eliminar
+  const { puedeEditar } = usePermisos()
   // Lista de animales que viene del backend
   const [animales, setAnimales] = useState([])
   // Estado de la carga: 'cargando', 'listo' o 'error'
@@ -94,29 +97,33 @@ export default function AnimalSection() {
         role="group"
         aria-label="Acciones de animales"
       >
-        <button className="area-action" type="button" onClick={abrirCrear}>
-          Añadir Animal
-        </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={abrirModificar}
-          disabled={!animalSeleccionado}
-        >
-          Modificar Animal
-        </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={eliminarSeleccionado}
-          disabled={!animalSeleccionado}
-        >
-          Eliminar Animal
-        </button>
-        {!animalSeleccionado && (
-          <p className="animal-actions-help">
-            Selecciona un animal en la tabla para modificarlo o eliminarlo.
-          </p>
+        {puedeEditar && (
+          <>
+          <button className="area-action" type="button" onClick={abrirCrear}>
+            Añadir Animal
+          </button>
+          <button
+            className="area-action"
+            type="button"
+            onClick={abrirModificar}
+            disabled={!animalSeleccionado}
+          >
+            Modificar Animal
+          </button>
+          <button
+            className="area-action"
+            type="button"
+            onClick={eliminarSeleccionado}
+            disabled={!animalSeleccionado}
+          >
+            Eliminar Animal
+          </button>
+          {!animalSeleccionado && (
+            <p className="animal-actions-help">
+              Selecciona un animal en la tabla para modificarlo o eliminarlo.
+            </p>
+          )}
+          </>
         )}
       </div>
 

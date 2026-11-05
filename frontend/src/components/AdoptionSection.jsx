@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { getAdopciones, getAnimalesDisponibles } from '../services/api.js'
 import AdoptionForm from './AdoptionForm.jsx'
 import './AdoptionSection.css'
+import { usePermisos } from '../sesion/sesion.js'
 
 // Muestra una fecha de la base de datos como dd-mm-aaaa
 function formatearFecha(valor) {
@@ -18,6 +19,8 @@ function nombreAdoptante(adoptante) {
 }
 
 export default function AdoptionSection() {
+  // el Voluntario puede ver los animales disponibles y las adopciones, pero no registrar una
+  const { puedeEditar } = usePermisos()
   // Qué tabla se ve: 'disponibles' o 'historial'
   const [vista, setVista] = useState('disponibles')
   const [animales, setAnimales] = useState([])
@@ -104,18 +107,22 @@ export default function AdoptionSection() {
         >
           Adopciones Registradas
         </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={abrirFormulario}
-          disabled={vista !== 'disponibles' || !animalSeleccionado}
-        >
-          Registrar Adopción
-        </button>
-        {vista === 'disponibles' && !animalSeleccionado && (
-          <p className="adoption-actions-help">
-            Selecciona un animal para registrar su adopción.
-          </p>
+        {puedeEditar && (
+          <>
+          <button
+            className="area-action"
+            type="button"
+            onClick={abrirFormulario}
+            disabled={vista !== 'disponibles' || !animalSeleccionado}
+          >
+            Registrar Adopción
+          </button>
+          {vista === 'disponibles' && !animalSeleccionado && (
+            <p className="adoption-actions-help">
+              Selecciona un animal para registrar su adopción.
+            </p>
+          )}
+          </>
         )}
       </div>
 

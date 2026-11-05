@@ -5,6 +5,7 @@ import HistorialForm from './HistorialForm.jsx'
 import HistorialTabla from './HistorialTabla.jsx'
 import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './HistorialSection.css'
+import { usePermisos } from '../sesion/sesion.js'
 
 // Cantidad de registros por página. El backend acepta entre 1 y 100.
 const REGISTROS_POR_PAGINA = 15
@@ -12,6 +13,8 @@ const REGISTROS_POR_PAGINA = 15
 // Pestaña "Historial Médico". Este componente es el que guarda el estado y habla con el backend;
 // HistorialFiltros, HistorialTabla y HistorialTarjetas solo muestran datos y le avisan lo que hace el usuario.
 export default function HistorialSection() {
+  // el Voluntario solo puede mirar: no ve los botones de añadir, modificar ni eliminar
+  const { puedeEditar } = usePermisos()
   // Respuesta del backend: los registros de la página actual y el total que coincide con los filtros
   const [registros, setRegistros] = useState([])
   const [total, setTotal] = useState(0)
@@ -166,30 +169,34 @@ export default function HistorialSection() {
         role="group"
         aria-label="Acciones del historial médico"
       >
-        <button className="area-action" type="button" onClick={() => abrirFormulario('crear')}>
-          Añadir Registro
-        </button>
-        {/* Modificar y eliminar necesitan una fila seleccionada, si no, quedan desactivados */}
-        <button
-          className="area-action"
-          type="button"
-          onClick={() => abrirFormulario('modificar')}
-          disabled={!registroSeleccionado}
-        >
-          Modificar Registro
-        </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={eliminarSeleccionado}
-          disabled={!registroSeleccionado}
-        >
-          Eliminar Registro
-        </button>
-        {!registroSeleccionado && (
-          <p className="historial-ayuda">
-            Selecciona un registro en la tabla para modificarlo o eliminarlo.
-          </p>
+        {puedeEditar && (
+          <>
+          <button className="area-action" type="button" onClick={() => abrirFormulario('crear')}>
+            Añadir Registro
+          </button>
+          {/* Modificar y eliminar necesitan una fila seleccionada, si no, quedan desactivados */}
+          <button
+            className="area-action"
+            type="button"
+            onClick={() => abrirFormulario('modificar')}
+            disabled={!registroSeleccionado}
+          >
+            Modificar Registro
+          </button>
+          <button
+            className="area-action"
+            type="button"
+            onClick={eliminarSeleccionado}
+            disabled={!registroSeleccionado}
+          >
+            Eliminar Registro
+          </button>
+          {!registroSeleccionado && (
+            <p className="historial-ayuda">
+              Selecciona un registro en la tabla para modificarlo o eliminarlo.
+            </p>
+          )}
+          </>
         )}
       </div>
 
