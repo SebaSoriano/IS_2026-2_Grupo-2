@@ -1,6 +1,7 @@
 import { COOKIE_NAME } from '../config/auth.js';
 import { verificarToken } from '../utils/jwt.js';
 import { HttpError } from './error.middleware.js';
+import { ROLES_QUE_EDITAN, METODOS_DE_LECTURA } from '../config/roles.js';
 
 // Protege una ruta: solo deja pasar a quien inició sesión.
 // Lee el token de la cookie (cookie-parser ya la dejó en req.cookies),
@@ -39,4 +40,20 @@ export const requireRol = (...rolesPermitidos) => {
         }
         next();
     };
+};
+
+// Permite leer a todos, pero escribir solo a los roles que editan (Admin y Veterinaria).
+// Mira el método HTTP de la petición:
+// - GET, HEAD u OPTIONS solo consultan, así que pasa cualquiera que tenga sesión.
+// - POST, PUT, PATCH y DELETE cambian datos, así que se revisa el rol con requireRol.
+// Gracias a esto no hace falta escribir requireRol en cada ruta de cada archivo:
+// se pone una vez por sección en index.routes.js.
+// También va DESPUÉS de requireAuth.
+const soloRolesQueEditan = requireRol(...ROLES_QUE_EDITAN);
+
+export const requireEdicion = (req, res, next) => {
+    if (METODOS_DE_LECTURA.includes(req.method)) {
+        return next();
+    }
+    return soloRolesQueEditan(req, res, next);
 };
