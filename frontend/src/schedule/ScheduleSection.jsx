@@ -8,6 +8,7 @@ import TurnoSelector from './TurnoSelector.jsx'
 import WeekPicker from './WeekPicker.jsx'
 import { diaDeHoy, lunesDe, semanaActual } from './calendario.js'
 import { bloquesDelDia, formatearHora, horasDelTurno } from './horas.js'
+import { usePermisos } from '../sesion/sesion.js'
 
 // estas acciones abren un pop-up; Asistencia cambia la vista y Exportar queda pendiente
 const MODAL_POR_ACCION = {
@@ -24,6 +25,12 @@ const vistaDesdeRuta = () =>
   window.location.pathname.replace(/\/+$/, '') === RUTA_ASISTENCIA ? 'asistencia' : 'horario'
 
 export default function ScheduleSection() {
+  // el Voluntario no ve "Añadir turno", "Editar turno" ni "Borrar turno" (las acciones que abren un pop-up);
+  // sí ve "Asistencia" y "Exportar", que solo muestran información
+  const { puedeEditar } = usePermisos()
+  const accionesVisibles = puedeEditar
+    ? scheduleActions
+    : scheduleActions.filter((action) => !MODAL_POR_ACCION[action])
   const [horarios, setHorarios] = useState([])
   const [estado, setEstado] = useState('loading')
   const [errorCarga, setErrorCarga] = useState('')
@@ -119,7 +126,7 @@ export default function ScheduleSection() {
   return (
     <div className="schedule">
       <div className="area-actions area-actions--horario" role="group" aria-label="Acciones de horario">
-        {scheduleActions.map((action) => (
+        {accionesVisibles.map((action) => (
           <button
             className={`area-action${action === 'Asistencia' && vista === 'asistencia' ? ' is-active' : ''}`}
             type="button"

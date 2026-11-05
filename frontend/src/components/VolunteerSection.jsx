@@ -3,6 +3,7 @@ import { eliminarUsuario, getUsuarios } from '../services/api.js'
 import { nombreDelRol } from '../data/roles.js'
 import VolunteerForm from './VolunteerForm.jsx'
 import './VolunteerSection.css'
+import { usePermisos } from '../sesion/sesion.js'
 
 // Muestra una fecha de la base de datos como dd-mm-aaaa
 function formatearFecha(valor) {
@@ -11,6 +12,9 @@ function formatearFecha(valor) {
 }
 
 export default function VolunteerSection() {
+  // solo el Admin puede añadir, modificar o eliminar voluntarios;
+  // la Veterinaria y el Voluntario ven la lista, pero no los botones
+  const { puedeGestionarUsuarios } = usePermisos()
   const [usuarios, setUsuarios] = useState([])
   const [estado, setEstado] = useState('cargando')
   const [errorCarga, setErrorCarga] = useState('')
@@ -94,29 +98,33 @@ export default function VolunteerSection() {
         role="group"
         aria-label="Acciones de voluntarios"
       >
-        <button className="area-action" type="button" onClick={abrirCrear}>
-          Añadir Voluntario
-        </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={abrirModificar}
-          disabled={!usuarioSeleccionado}
-        >
-          Modificar Voluntario
-        </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={eliminarSeleccionado}
-          disabled={!usuarioSeleccionado}
-        >
-          Eliminar Voluntario
-        </button>
-        {!usuarioSeleccionado && (
-          <p className="volunteer-actions-help">
-            Selecciona un voluntario en la tabla para modificarlo o eliminarlo.
-          </p>
+        {puedeGestionarUsuarios && (
+          <>
+          <button className="area-action" type="button" onClick={abrirCrear}>
+            Añadir Voluntario
+          </button>
+          <button
+            className="area-action"
+            type="button"
+            onClick={abrirModificar}
+            disabled={!usuarioSeleccionado}
+          >
+            Modificar Voluntario
+          </button>
+          <button
+            className="area-action"
+            type="button"
+            onClick={eliminarSeleccionado}
+            disabled={!usuarioSeleccionado}
+          >
+            Eliminar Voluntario
+          </button>
+          {!usuarioSeleccionado && (
+            <p className="volunteer-actions-help">
+              Selecciona un voluntario en la tabla para modificarlo o eliminarlo.
+            </p>
+          )}
+          </>
         )}
       </div>
 

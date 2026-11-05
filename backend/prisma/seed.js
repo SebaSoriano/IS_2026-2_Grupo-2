@@ -28,7 +28,7 @@ async function main() {
     await prisma.usuario.deleteMany();
 
     
-    const rutUsuarios = ['11111111-1', '22222222-2', '12123123-2', '44444444-4'];
+    const rutUsuarios = ['11111111-1', '22222222-2', '33333333-3', '44444444-4'];
 
 
     const roles = [

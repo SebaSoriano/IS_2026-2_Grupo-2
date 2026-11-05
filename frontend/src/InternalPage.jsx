@@ -9,6 +9,7 @@ import ScheduleSection from './schedule/ScheduleSection.jsx'
 import VolunteerSection from './components/VolunteerSection.jsx'
 import DonationSection from './components/DonationSection.jsx'
 import SesionUsuario from './components/SesionUsuario.jsx'
+import { usePermisos } from './sesion/sesion.js'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
 const sectionPath = (section) => section.path ?? `/${section.id}`
@@ -22,8 +23,17 @@ function getSectionFromPath(pathname) {
   })?.id
 }
 
+// acciones de inventario que cambian datos (el Voluntario no las ve)
+const ACCIONES_QUE_EDITAN_INVENTARIO = ['Añadir Registro', 'Modificar Registro', 'Eliminar Registro']
+
 // usuario viene de RutaProtegida: { rut, nombre, correo, rol }
 export default function InternalPage({ usuario }) {
+  // los botones de inventario que cambian datos (añadir, modificar, eliminar) solo los ven Admin y Veterinaria;
+  // "Exportar Registros" solo lee, así que lo ven todos
+  const { puedeEditar } = usePermisos()
+  const accionesInventario = puedeEditar
+    ? inventoryActions
+    : inventoryActions.filter((action) => !ACCIONES_QUE_EDITAN_INVENTARIO.includes(action))
   const [activeSection, setActiveSection] = useState(
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
@@ -120,7 +130,7 @@ export default function InternalPage({ usuario }) {
               role="group"
               aria-label={`Acciones de ${section.label.toLowerCase()}`}
             >
-              {inventoryActions.map((action) => (
+              {accionesInventario.map((action) => (
                   <button
                     className="area-action"
                     type="button"
