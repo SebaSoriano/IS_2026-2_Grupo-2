@@ -9,7 +9,7 @@ import historialRoutes from './historial.routes.js';
 import usuariosRoutes from './usuario.routes.js';
 import donacionesRoutes from './donaciones.routes.js';
 import authRoutes from './authRoutes.js';
-import { requireAuth } from '../middlewares/auth.middleware.js';
+import { requireAuth, requireEdicion } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
@@ -28,16 +28,21 @@ router.use('/auth', authRoutes);
 router.use('/donaciones', donacionesRoutes);
 
 // ---------- Rutas de la intranet (piden sesión) ----------
-// requireAuth se ejecuta antes que el router de cada sección:
-// si no hay una cookie con un token válido, responde 401 y no llega al controlador
+// Cada sección pasa por dos middlewares, en este orden:
+// 1. requireAuth: si no hay una cookie con un token válido responde 401 (no autenticado)
+// 2. requireEdicion: deja leer (GET) a todos, pero POST, PUT, PATCH y DELETE
+//    solo a Admin y Veterinaria; al Voluntario le responde 403 (prohibido)
+// Express acepta un arreglo de middlewares, así no se repiten los dos en cada línea.
+const conSesion = [requireAuth, requireEdicion];
 
-router.use('/insumos', requireAuth, insumosRouter);
-router.use('/animales', requireAuth, animalesRoutes);
-router.use('/turnos', requireAuth, turnosRoutes);
-router.use('/horarios', requireAuth, horariosRoutes);
-router.use('/asistencias', requireAuth, asistenciasRoutes);
-router.use('/adopciones', requireAuth, adopcionesRoutes);
-router.use('/historial', requireAuth, historialRoutes);
-router.use('/usuarios', requireAuth, usuariosRoutes);
+router.use('/insumos', conSesion, insumosRouter);
+router.use('/animales', conSesion, animalesRoutes);
+router.use('/turnos', conSesion, turnosRoutes);
+router.use('/horarios', conSesion, horariosRoutes);
+router.use('/asistencias', conSesion, asistenciasRoutes);
+router.use('/adopciones', conSesion, adopcionesRoutes);
+router.use('/historial', conSesion, historialRoutes);
+// en usuarios, además, modificar y eliminar es solo del Admin (ver usuario.routes.js)
+router.use('/usuarios', conSesion, usuariosRoutes);
 
 export default router;
