@@ -4,8 +4,13 @@ export const createDonacionPresencial = async (req, res) => {
   res.status(201).json(await donacionesService.createDonacionPresencial(req.body));
 };
 
+// req.file lo deja multer (undefined si no se adjuntó archivo)
 export const createDonacionWeb = async (req, res) => {
-  res.status(201).json(await donacionesService.createDonacionWeb(req.body));
+  res.status(201).json(await donacionesService.createDonacionWeb(req.body, req.file));
+};
+
+export const getComprobante = async (req, res) => {
+  res.sendFile(await donacionesService.getComprobante(req.params.id));
 };
 
 export const getDonaciones = async (req, res) => {

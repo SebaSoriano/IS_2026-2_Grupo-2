@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
+import { borrarComprobante, guardarComprobante, rutaComprobante } from '../utils/comprobantes.js';
 
 const usuarioPublico = { select: { rut_usuario: true, nombre_usuario: true } };
 const incluir = { usuario: usuarioPublico, insumos: true };
@@ -48,11 +49,43 @@ export const createDonacionPresencial = async ({ insumos, ...datos }) => {
 };
 
 // Formulario público: nace pendiente, el estado y el origen los decide el servidor, no el cliente
-export const createDonacionWeb = (datos) =>
-  prisma.donaciones.create({
-    data: { ...datos, origen: 'web', estado: 'pendiente', fecha_donacion: new Date() },
-    include: incluir,
-  });
+// Formulario público: nace pendiente. archivo = req.file de multer (o undefined)
+export const createDonacionWeb = async (datos, archivo) => {
+  if (datos.tipo_donacion === 'monetaria') {
+    if (!archivo) throw new HttpError(400, 'Adjunta el comprobante de la transferencia (JPG o PNG)');
+    const cuenta = await prisma.cuenta_transferencia.findUnique({ where: { id_cuenta: datos.id_cuenta } });
+    if (!cuenta || !cuenta.activa) throw new HttpError(400, 'La cuenta indicada no está disponible');
+  } else if (archivo) {
+    throw new HttpError(400, 'El comprobante solo aplica a donaciones monetarias');
+  }
+
+  // El archivo se guarda al final, cuando todo lo demás ya pasó las validaciones
+  const comprobante_url = archivo ? await guardarComprobante(archivo) : undefined;
+
+  try {
+    return await prisma.donaciones.create({
+      data: { ...datos, comprobante_url, origen: 'web', estado: 'pendiente', fecha_donacion: new Date() },
+      include: incluir,
+    });
+  } catch (error) {
+    // si la base de datos falla, no se deja un archivo huérfano en disco
+    if (comprobante_url) await borrarComprobante(comprobante_url);
+    throw error;
+  }
+};
+
+export const getComprobante = async (id) => {
+  const donacion = await obtenerDonacion(id);
+  if (!donacion.comprobante_url) throw new HttpError(404, 'Esta donación no tiene comprobante');
+  return rutaComprobante(donacion.comprobante_url);
+};
+
+// Si tenía comprobante, también se borra el archivo. Los insumos ya recibidos quedan en el inventario
+export const deleteDonacion = async (id_donacion) => {
+  const donacion = await obtenerDonacion(id_donacion);
+  await prisma.donaciones.delete({ where: { id_donacion } });
+  if (donacion.comprobante_url) await borrarComprobante(donacion.comprobante_url);
+};
 
 export const getAllDonaciones = (filtros = {}) =>
   prisma.donaciones.findMany({
@@ -118,7 +151,3 @@ export const confirmarDonacion = async (id, { rut_usuario, insumos }) => {
     return tx.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });
   });
 };
-
-// Si tenía insumos asociados, esas filas quedan en el inventario con id_donacion = null (ON DELETE SET NULL)
-export const deleteDonacion = (id_donacion) =>
-  prisma.donaciones.delete({ where: { id_donacion } });

@@ -63,15 +63,42 @@ export const createDonacionPresencialSchema = z
   .superRefine(reglasPorTipo);
 
 // POST /api/donaciones/web (formulario público del donante)
+// Un formulario con archivo (multipart) manda todo como texto
+const montoDesdeFormulario = z.coerce
+  .number({ error: 'Debe ser un número' })
+  .int('Debe ser un número entero')
+  .positive('Debe ser mayor a 0')
+  .max(100_000_000, 'El monto es demasiado alto')
+  .optional();
+
+// Reglas propias de la web: solo transferencias, y hay que indicar a qué cuenta se transfirió
+const reglasWeb = (datos, ctx) => {
+  const error = (campo, message) => ctx.addIssue({ code: 'custom', path: [campo], message });
+
+  if (datos.tipo_donacion === 'monetaria') {
+    if (datos.metodo_pago !== undefined && datos.metodo_pago !== 'transferencia') {
+      error('metodo_pago', 'Por la web solo se aceptan transferencias');
+    }
+    if (datos.id_cuenta === undefined) error('id_cuenta', 'Indica la cuenta a la que transferiste');
+  } else if (datos.id_cuenta !== undefined) {
+    error('id_cuenta', 'Solo aplica a donaciones monetarias');
+  }
+};
+
+// POST /api/donaciones/web (formulario público; el comprobante viaja como archivo, no en el body)
 export const createDonacionWebSchema = z
   .object({
     ...camposDonacion,
+    monto_donacion: montoDesdeFormulario,
+    id_cuenta: z.coerce.number({ error: 'Debe ser un número' }).int().positive().optional(),
     donante_nombre: z.string().trim().min(1, 'No puede estar vacío').max(100),
     donante_correo: z.email('Debe ser un correo válido').max(100),
     donante_telefono: z.string().trim().regex(/^\+?\d{8,14}$/, 'Teléfono inválido').optional(),
   })
+  .omit({ comprobante_url: true }) // el donante no puede mandar un "comprobante_url" propio
   .strict()
-  .superRefine(reglasPorTipo);
+  .superRefine(reglasPorTipo)
+  .superRefine(reglasWeb);
 
 // GET /api/donaciones?estado=&tipo_donacion=&origen=
 export const filtrosDonacionSchema = z.object({

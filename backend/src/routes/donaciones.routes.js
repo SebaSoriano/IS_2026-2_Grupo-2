@@ -10,15 +10,18 @@ import {
   confirmarDonacionSchema,
 } from '../schemas/donaciones.schema.js';
 import { idParamSchema } from '../schemas/idParam.schema.js';
+import { recibirComprobante } from '../middlewares/upload.middleware.js';
 
 const router = Router();
 const id = validate(idParamSchema, 'params');
 
 router.get('/', validate(filtrosDonacionSchema, 'query'), c.getDonaciones);
 router.get('/:id', id, c.getDonacionById);
+router.get('/:id/comprobante', id, c.getComprobante);
 
 router.post('/', validate(createDonacionPresencialSchema), c.createDonacionPresencial);
 router.post('/web', validate(createDonacionWebSchema), c.createDonacionWeb); // público
+router.post('/web', recibirComprobante, validate(createDonacionWebSchema), c.createDonacionWeb);
 
 router.patch('/:id', id, validate(updateDonacionSchema), c.updateDonacion);
 router.patch('/:id/agendar', id, validate(agendarDonacionSchema), c.agendarDonacion);
