@@ -130,16 +130,16 @@ async function main() {
         return fecha;
     };
     const insumos = [
-        { tipo_insumo: 'Alimentación', dias_ingreso: -6, dias_vencimiento: 266, descripcion: 'Alimento seco para perros adultos en sacos de 15 kg', cantidad: 8, rut_usuario: '12123123-2' },
-        { tipo_insumo: 'Alimentación', dias_ingreso: -5, dias_vencimiento: 236, descripcion: 'Alimento seco para gatos adultos en sacos de 10 kg', cantidad: 5, rut_usuario: '12123123-2' },
+        { tipo_insumo: 'Alimentación', dias_ingreso: -6, dias_vencimiento: 266, descripcion: 'Alimento seco para perros adultos en sacos de 15 kg', cantidad: 8, rut_usuario: '11111111-1' },
+        { tipo_insumo: 'Alimentación', dias_ingreso: -5, dias_vencimiento: 236, descripcion: 'Alimento seco para gatos adultos en sacos de 10 kg', cantidad: 5, rut_usuario: '11111111-1' },
         { tipo_insumo: 'Alimentación', dias_ingreso: -4, dias_vencimiento: 175, descripcion: 'Alimento húmedo para perros en latas de 400 g, para recuperación o dietas especiales', cantidad: 36, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Higiene y aseo', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Arena sanitaria para gatos en bolsas de 10 kg', cantidad: 12, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Salud', dias_ingreso: -7, dias_vencimiento: 1090, descripcion: 'Gasas estériles en paquetes de 100 unidades para curaciones bajo supervisión veterinaria', cantidad: 10, rut_usuario: '44444444-4' },
         { tipo_insumo: 'Higiene y aseo', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Guantes de nitrilo en cajas de 100 unidades para manejo e higiene', cantidad: 14, rut_usuario: '44444444-4' },
-        { tipo_insumo: 'Salud', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '12123123-2' },
+        { tipo_insumo: 'Salud', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '11111111-1' },
         { tipo_insumo: 'Limpieza', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Desinfectante de superficies en bidones de 5 litros para caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Limpieza', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Limpiador enzimático en botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
-        { tipo_insumo: 'Limpieza', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Bolsas resistentes para residuos en rollos de 20 unidades', cantidad: 25, rut_usuario: '12123123-2' },
+        { tipo_insumo: 'Limpieza', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Bolsas resistentes para residuos en rollos de 20 unidades', cantidad: 25, rut_usuario: '11111111-1' },
         { tipo_insumo: 'Accesorios y juguetes', dias_ingreso: -5, dias_vencimiento: null, descripcion: 'Correas de 1.5 m para paseos supervisados', cantidad: 10, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Limpieza', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Toallas absorbentes en paquetes de 10 unidades para limpieza y cuidado de animales', cantidad: 7, rut_usuario: '44444444-4' },
     ].map(({ dias_ingreso, dias_vencimiento, ...insumo }) => ({
