@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { scheduleActions } from '../data/scheduleActions.js'
 import { actualizarTurno, crearTurno, eliminarTurno, getHorarios } from '../services/api.js'
 import AttendanceSection from './AttendanceSection.jsx'
+import ExportModal from './ExportModal.jsx'
 import Modal from './Modal.jsx'
 import TurnoForm from './TurnoForm.jsx'
 import TurnoSelector from './TurnoSelector.jsx'
@@ -10,7 +11,7 @@ import { diaDeHoy, lunesDe, semanaActual } from './calendario.js'
 import { bloquesDelDia, formatearHora, horasDelTurno } from './horas.js'
 import { usePermisos } from '../sesion/sesion.js'
 
-// estas acciones abren un pop-up; Asistencia cambia la vista y Exportar queda pendiente
+// estas acciones abren un pop-up para editar turnos; Asistencia cambia la vista y Exportar abre su propio pop-up
 const MODAL_POR_ACCION = {
   'Añadir turno': 'crear',
   'Editar turno': 'editar',
@@ -134,9 +135,11 @@ export default function ScheduleSection() {
             onClick={
               action === 'Asistencia'
                 ? alternarAsistencia
-                : MODAL_POR_ACCION[action]
-                  ? () => abrirModal(MODAL_POR_ACCION[action])
-                  : undefined
+                : action === 'Exportar'
+                  ? () => abrirModal('exportar')
+                  : MODAL_POR_ACCION[action]
+                    ? () => abrirModal(MODAL_POR_ACCION[action])
+                    : undefined
             }
             aria-pressed={action === 'Asistencia' ? vista === 'asistencia' : undefined}
             disabled={MODAL_POR_ACCION[action] && estado !== 'success'}
@@ -164,6 +167,8 @@ export default function ScheduleSection() {
         )}
         {estado === 'success' && <ScheduleTable horarios={horarios} />}
       </div>
+
+      {modal === 'exportar' && <ExportModal semanaInicial={semana} onClose={cerrarModal} />}
 
       {modal === 'crear' && (
         <Modal title="Añadir turno" onClose={cerrarModal}>
