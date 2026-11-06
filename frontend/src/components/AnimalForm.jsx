@@ -146,7 +146,7 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
             }
         }
         // Avisarle a AnimalSection que se guardó (cierra el popup y actualiza la tabla)
-        onSaved(animalGuardado)
+        onSaved(animalGuardado, avisoFoto)
         } catch (error) {
         if (error.details && error.details.length > 0) {
             // 400: errores de validación, uno por campo
