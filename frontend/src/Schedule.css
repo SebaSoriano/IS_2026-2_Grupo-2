@@ -82,8 +82,139 @@
 /* selector de semana sobre la tabla */
 .schedule-week {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+/* selector Semana | Mes al lado del selector de periodo */
+.schedule-escala {
+  display: flex;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 6px;
+  background: #c3eeee;
+}
+
+.schedule-escala button {
+  min-width: 80px;
+  height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.schedule-escala button:hover {
+  background: #dcf8f5;
+}
+
+.schedule-escala button.is-active {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+/* ---------- Vista Mes del horario: calendario de lunes a domingo ---------- */
+
+.schedule-month {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  color: #173d3e;
+}
+
+.schedule-month thead th {
+  padding: 12px 8px;
+  color: #fff;
+  background: #17a3b5;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.schedule-month thead th + th {
+  border-left: 1px solid #45b8c6;
+}
+
+.schedule-month td {
+  height: 110px;
+  padding: 6px 8px;
+  border: 1px solid #d8eeee;
+  vertical-align: top;
+  font-size: 14px;
+}
+
+.schedule-month td.has-turno {
+  background: #effbfa;
+}
+
+.schedule-month td.is-fuera-de-mes {
+  background: #e3e8e8;
+}
+
+/* dias que ya pasaron: se ven mas apagados, igual que en la tabla semanal */
+.schedule-month td.is-pasado {
+  color: #6f8a8b;
+  background: #f7f9f9;
+}
+
+.schedule-month td.is-pasado.has-turno {
+  background: #eef5f5;
+}
+
+.schedule-month td.is-hoy {
+  box-shadow: inset 0 0 0 3px #19efa0;
+}
+
+/* numero del dia: al hacer click abre esa semana en la vista Semana */
+.schedule-month__dia {
+  display: block;
+  min-width: 30px;
+  height: 30px;
+  margin-bottom: 4px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 6px;
+  color: #10494b;
+  background: #c3eeee;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.schedule-month__dia:hover,
+.schedule-month__dia:focus-visible {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.schedule-month td.is-hoy .schedule-month__dia {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.schedule-month__turno {
+  display: block;
+  line-height: 1.3;
+}
+
+.schedule-month__turno + .schedule-month__turno {
+  margin-top: 4px;
+}
+
+.schedule-month__turno strong {
+  color: #10494b;
+}
+
+.schedule-month td.is-pasado .schedule-month__turno strong {
+  color: inherit;
 }
 
 .week-picker {
