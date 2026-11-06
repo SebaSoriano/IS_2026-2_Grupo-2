@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import './PublicPage.css';
 import DonationPanels from './components/DonationPanels.jsx';
-import Modal from './schedule/Modal.jsx';
+import DonationInsumosForm from './components/DonationFormInsumo.jsx';
+import DonationMonetariaForm from './components/DonationFormMonetaria.jsx';
 
 export default function PublicPage (){
   const [vistaDonar, setVistaDonar] = useState(null);
   const cerrarDonar = () => setVistaDonar(null);
   return (
-    <body id="publicpage">
+    <div id="publicpage">
       <header class="navbar">
         <div class="mainlogo">
           <img src="./logo_straypaws.png" alt="Logo" class="logo" />
@@ -43,19 +44,15 @@ export default function PublicPage (){
       {vistaDonar === 'opciones' && (
         <DonationPanels onContinuar={setVistaDonar} onClose={cerrarDonar} />
       )}
-      {/* provisorio: aquí irán los formularios del siguiente paso */}
-      {(vistaDonar === 'insumos' || vistaDonar === 'monetaria') && (
-        <Modal title={vistaDonar === 'insumos' ? 'Donar insumos' : 'Donar dinero'}onClose={cerrarDonar}>
-          <p>Aquí irá el formulario de donación {vistaDonar === 'insumos' ? 'de insumos' : 'monetaria'}.</p>
-        </Modal>
-      )}
-    </body>
+      {vistaDonar === 'insumos' && (<DonationInsumosForm onVolver={() => setVistaDonar('opciones')} onClose={cerrarDonar} />)}
+      {vistaDonar === 'monetaria' && (<DonationMonetariaForm onVolver={() => setVistaDonar('opciones')} onClose={cerrarDonar} />)}
+    </div>
   );
 }
 
 export const Navbar = () => {
   return (
-    <body id="publicpage">
+    <div id="publicpage">
       <header class="navbar">
         <div class="mainlogo">
           <img src="frontend/public/logo_straypaws.png" alt="Logo" class="logo" />
@@ -67,7 +64,7 @@ export const Navbar = () => {
           <button class="btn-header btn-intranet">Acceder a Intranet</button>
         </div>
       </header>
-    </body>
+    </div>
   );
 };
 

@@ -202,3 +202,37 @@ export function confirmarDonacion(id, datos) {
 export function eliminarDonacion(id) {
   return sendJson('DELETE', `/donaciones/${id}`)
 }
+// Formulario con archivo: el navegador arma solo el Content-Type (incluye un "boundary"), por eso NO se escribe ese header
+async function postFormData(path, formData) {
+  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', body: formData })
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('application/json')) {
+    throw new Error('La API devolvió una respuesta que no es JSON.')
+  }
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    const error = new Error(data.error ?? `Error HTTP ${response.status}`)
+    error.details = data.details ?? []
+    throw error
+  }
+
+  return data
+}
+
+export async function getCuentasPublicas() {
+  const cuentas = await getJson('/cuentas-transferencia/publicas')
+
+  if (!Array.isArray(cuentas)) {
+    throw new Error('La respuesta de la API de cuentas no es válida.')
+  }
+
+  return cuentas
+}
+
+// formData lleva los campos de texto y el archivo en el campo "comprobante"
+export function crearDonacionWebConComprobante(formData) {
+  return postFormData('/donaciones/web', formData)
+}
