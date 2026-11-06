@@ -1,21 +1,23 @@
-import { describirSemana, diaDeHoy, diasDelMes, nombreDelMes, semanasDelMes, sumarDias } from './calendario.js'
-import { bloquesDelDia, formatearHora, horasDelTurno } from './horas.js'
+import {
+  DIAS_LARGOS,
+  describirSemana,
+  diaDeHoy,
+  nombreDelMes,
+  semanasDelCalendario,
+  sumarDias,
+  turnosPorFecha,
+} from './calendario.js'
+import { bloquesDelDia, formatearHora, horasDelTurno, rangoHoras } from './horas.js'
 
 // hoja que se imprime al exportar; en pantalla no se ve (ver .hoja-impresion en Schedule.css)
 // tipo: 'horario-semanal' (datos = respuesta de getHorarios)
 //       'horario-mensual' o 'asistencia-semanal' (datos = usuarios con sus turnos, de getAsistencias)
-
-const DIAS_LARGOS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
 
 const TITULOS = {
   'horario-semanal': 'Horario semanal',
   'horario-mensual': 'Horario mensual',
   'asistencia-semanal': 'Asistencia semanal',
 }
-
-// "08:00" a "12:00" -> "08:00–12:00"; sin hora de ida queda solo la llegada
-const rangoHoras = (turno) =>
-  turno.hora_fin ? `${turno.hora_inicio.slice(0, 5)}–${turno.hora_fin.slice(0, 5)}` : turno.hora_inicio.slice(0, 5)
 
 const porHoraDeInicio = (a, b) => a.hora_inicio.localeCompare(b.hora_inicio)
 
@@ -89,15 +91,7 @@ function HorarioSemanal({ horarios }) {
 
 // calendario del mes (lunes a domingo); en cada dia sus turnos ordenados por hora de llegada
 function HorarioMensual({ usuarios, mes }) {
-  const turnosPorFecha = new Map()
-  for (const usuario of usuarios) {
-    for (const turno of usuario.turnos) {
-      const fecha = turno.fecha.slice(0, 10)
-      turnosPorFecha.set(fecha, [...(turnosPorFecha.get(fecha) ?? []), { ...turno, nombre: usuario.nombre_usuario }])
-    }
-  }
-
-  const semanas = semanasDelMes(diasDelMes(mes))
+  const porFecha = turnosPorFecha(usuarios)
 
   return (
     <table className="hoja-tabla hoja-tabla--mensual">
@@ -107,30 +101,24 @@ function HorarioMensual({ usuarios, mes }) {
         </tr>
       </thead>
       <tbody>
-        {semanas.map((dias, i) => {
-          // la primera semana se rellena al inicio y la ultima al final para que cada dia quede en su columna
-          const vaciasAntes = i === 0 ? dias[0].diaSemana - 1 : 0
-          const vaciasDespues = 7 - vaciasAntes - dias.length
-          return (
-            <tr key={dias[0].fecha}>
-              {Array.from({ length: vaciasAntes }, (_, j) => <td key={`antes-${j}`} className="is-fuera-de-mes" />)}
-              {dias.map((dia) => {
-                const turnos = (turnosPorFecha.get(dia.fecha) ?? []).sort(porHoraDeInicio)
-                return (
-                  <td key={dia.fecha} className={turnos.length > 0 ? 'has-turno' : undefined}>
-                    <span className="hoja-tabla__dia">{dia.numero}</span>
-                    {turnos.map((turno) => (
-                      <span className="hoja-tabla__turno" key={turno.id}>
-                        <strong>{rangoHoras(turno)}</strong> {turno.nombre}
-                      </span>
-                    ))}
-                  </td>
-                )
-              })}
-              {Array.from({ length: vaciasDespues }, (_, j) => <td key={`despues-${j}`} className="is-fuera-de-mes" />)}
-            </tr>
-          )
-        })}
+        {semanasDelCalendario(mes).map((semana) => (
+          <tr key={semana.find(Boolean).fecha}>
+            {semana.map((dia, i) => {
+              if (!dia) return <td key={`vacia-${i}`} className="is-fuera-de-mes" />
+              const turnos = porFecha.get(dia.fecha) ?? []
+              return (
+                <td key={dia.fecha} className={turnos.length > 0 ? 'has-turno' : undefined}>
+                  <span className="hoja-tabla__dia">{dia.numero}</span>
+                  {turnos.map((turno) => (
+                    <span className="hoja-tabla__turno" key={turno.id}>
+                      <strong>{rangoHoras(turno)}</strong> {turno.nombre}
+                    </span>
+                  ))}
+                </td>
+              )
+            })}
+          </tr>
+        ))}
       </tbody>
     </table>
   )

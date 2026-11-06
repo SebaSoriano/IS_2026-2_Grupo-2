@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom'
 import { getAsistencias, getHorarios } from '../services/api.js'
 import HojaImpresion from './HojaImpresion.jsx'
 import Modal from './Modal.jsx'
+import MonthPicker from './MonthPicker.jsx'
 import WeekPicker from './WeekPicker.jsx'
-import { mesActual, moverMes, nombreDelMes, sumarDias } from './calendario.js'
+import { sumarDias } from './calendario.js'
 
 const OPCIONES = [
   { tipo: 'horario-semanal', titulo: 'Horario semanal', detalle: 'Turnos de una semana, hora por hora.' },
@@ -30,11 +31,11 @@ async function cargarDatos(tipo, semana, mes) {
 
 // pop-up de Exportar: se elige que imprimir (horario semanal o mensual, o asistencia semanal) y su periodo
 // al imprimir se arma una hoja aparte (HojaImpresion) que es lo unico que sale en el papel o en el PDF
-// semanaInicial es la semana que se esta viendo en el horario
-export default function ExportModal({ semanaInicial, onClose }) {
-  const [tipo, setTipo] = useState('horario-semanal')
+// parte en lo que se esta viendo en el horario: tipoInicial, semanaInicial ("AAAA-MM-DD" del lunes) y mesInicial ("AAAA-MM")
+export default function ExportModal({ tipoInicial = 'horario-semanal', semanaInicial, mesInicial, onClose }) {
+  const [tipo, setTipo] = useState(tipoInicial)
   const [semana, setSemana] = useState(semanaInicial)
-  const [mes, setMes] = useState(mesActual)
+  const [mes, setMes] = useState(mesInicial)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState('')
   // hoja lista para imprimir: { tipo, semana, mes, datos }
@@ -91,15 +92,7 @@ export default function ExportModal({ semanaInicial, onClose }) {
           <span className="turno-form__label">{tipo === 'horario-mensual' ? 'Mes' : 'Semana'}</span>
           <div className="export-periodo">
             {tipo === 'horario-mensual' ? (
-              <div className="week-picker">
-                <button type="button" onClick={() => setMes((m) => moverMes(m, -1))} aria-label="Mes anterior" title="Mes anterior">
-                  ‹
-                </button>
-                <span aria-live="polite">{nombreDelMes(mes)}</span>
-                <button type="button" onClick={() => setMes((m) => moverMes(m, 1))} aria-label="Mes siguiente" title="Mes siguiente">
-                  ›
-                </button>
-              </div>
+              <MonthPicker mes={mes} onChange={setMes} />
             ) : (
               <WeekPicker lunes={semana} onChange={setSemana} />
             )}
