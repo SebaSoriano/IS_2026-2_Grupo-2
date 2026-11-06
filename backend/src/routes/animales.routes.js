@@ -1,10 +1,12 @@
 import { Router } from "express";
+import { recibirFotoAnimal } from "../middlewares/upload.middleware.js";
 import {
     getAnimales,
     getAnimalById,
     createAnimal,
     updateAnimal,
-    deleteAnimal
+    deleteAnimal,
+    subirFotoAnimal
 } from "../controllers/animales.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import {
@@ -26,5 +28,8 @@ router.delete("/:id", validate(idParamSchema, "params"), deleteAnimal);
 
 // La adopción es una acción sobre un animal concreto, por eso va anidada
 router.post("/:id/adopcion", validate(idParamSchema, "params"), validate(createAdopcionSchema, "body"), createAdopcion);
+
+// Subir o reemplazar la foto de un animal (multipart/form-data, campo "foto")
+router.post("/:id/foto", validate(idParamSchema, "params"), recibirFotoAnimal, subirFotoAnimal);
 
 export default router;

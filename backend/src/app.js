@@ -1,11 +1,19 @@
 import express from 'express'
+import cookieParser from 'cookie-parser'
 import indexRouter from './routes/index.routes.js'
 import { errorHandler } from './middlewares/error.middleware.js'
+import { CARPETA_UPLOADS } from './config/uploads.js'
 import { startExpirationNotifications } from './services/insumo-expiration-notifier.service.js'
 
 const app = express()
 
 app.use(express.json())
+// cookie-parser lee el header "Cookie" que manda el navegador
+// y deja las cookies como objeto en req.cookies (ej: req.cookies.token)
+app.use(cookieParser())
+
+// Archivos subidos (fotos), ej: GET /uploads/animales/animal-5-...jpg
+app.use('/uploads', express.static(CARPETA_UPLOADS))
 
 // Todas las rutas de la API quedan bajo /api
 app.use('/api', indexRouter)

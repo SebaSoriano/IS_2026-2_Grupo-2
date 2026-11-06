@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { adoptionActions } from './data/adoptionActions.js'
+import AdoptionSection from './components/AdoptionSection.jsx'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import AnimalSection from './components/AnimalSection.jsx'
@@ -7,6 +7,9 @@ import HistorialSection from './components/HistorialSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
 import VolunteerSection from './components/VolunteerSection.jsx'
+import DonationSection from './components/DonationSection.jsx'
+import SesionUsuario from './components/SesionUsuario.jsx'
+import { usePermisos } from './sesion/sesion.js'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
 const sectionPath = (section) => section.path ?? `/${section.id}`
@@ -20,7 +23,17 @@ function getSectionFromPath(pathname) {
   })?.id
 }
 
-export default function InternalPage() {
+// acciones de inventario que cambian datos (el Voluntario no las ve)
+const ACCIONES_QUE_EDITAN_INVENTARIO = ['Añadir Registro', 'Modificar Registro', 'Eliminar Registro']
+
+// usuario viene de RutaProtegida: { rut, nombre, correo, rol }
+export default function InternalPage({ usuario }) {
+  // los botones de inventario que cambian datos (añadir, modificar, eliminar) solo los ven Admin y Veterinaria;
+  // "Exportar Registros" solo lee, así que lo ven todos
+  const { puedeEditar } = usePermisos()
+  const accionesInventario = puedeEditar
+    ? inventoryActions
+    : inventoryActions.filter((action) => !ACCIONES_QUE_EDITAN_INVENTARIO.includes(action))
   const [activeSection, setActiveSection] = useState(
     () => getSectionFromPath(window.location.pathname) ?? 'adopcion',
   )
@@ -85,6 +98,7 @@ export default function InternalPage() {
             <img className="brand-logo" src="/logo_straypaws.png" alt="Stray Paws" />
             <span className="brand-title">Stray Paws</span>
           </a>
+          <SesionUsuario usuario={usuario} />
         </div>
 
         <nav className="section-nav" aria-label="Secciones principales">
@@ -110,13 +124,13 @@ export default function InternalPage() {
           key={section.id}
         >
           {section.id === 'horario' && activeSection === 'horario' && <ScheduleSection />}
-          {(section.id === 'inventario' || section.id === 'adopcion') && (
+          {section.id === 'inventario' && (
             <div
               className={`area-actions area-actions--${section.id}`}
               role="group"
               aria-label={`Acciones de ${section.label.toLowerCase()}`}
             >
-              {(section.id === 'inventario' ? inventoryActions : adoptionActions).map((action) => (
+              {accionesInventario.map((action) => (
                   <button
                     className="area-action"
                     type="button"
@@ -143,6 +157,12 @@ export default function InternalPage() {
                 ))}
             </div>
           )}
+          {section.id === 'adopcion' && activeSection === 'adopcion' && (
+            <AdoptionSection />
+          )}
+          {section.id === 'animales' && activeSection === 'animales' && (
+            <AnimalSection />
+          )}
           {section.id === 'historial-medico' && activeSection === 'historial-medico' && (
             <HistorialSection />
           )}
@@ -160,9 +180,11 @@ export default function InternalPage() {
               onSelectionCountChange={setSelectedInventoryCount}
             />
           )}
+          {section.id === 'donaciones' && activeSection === 'donaciones' && (
+            <DonationSection />
+          )}
         </section>
       ))}
     </main>
   )
 }
-

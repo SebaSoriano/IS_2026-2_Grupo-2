@@ -1,7 +1,20 @@
 export const API_BASE_URL = '/api'
 
+// Si el backend responde 401 es porque no hay sesión o el token venció.
+// En ese caso se manda a la persona al login, en vez de mostrar un error en la sección.
+// (window.location.assign recarga la página, así que lo que venía después no alcanza a mostrarse)
+function revisarSesion(response) {
+  if (response.status === 401) {
+    window.location.assign('/login')
+  }
+}
+
+// credentials: 'include' hace que el navegador mande la cookie con el token en cada petición.
+// Con el proxy de Vite el frontend y el backend parecen el mismo sitio y la cookie se mandaría igual,
+// pero así queda explícito y sigue funcionando si se despliegan en dominios distintos.
 async function getJson(path) {
-  const response = await fetch(`${API_BASE_URL}${path}`)
+  const response = await fetch(`${API_BASE_URL}${path}`, { credentials: 'include' })
+  revisarSesion(response)
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -35,8 +48,10 @@ async function postJson(path, body) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(body),
   })
+  revisarSesion(response)
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -56,7 +71,7 @@ async function postJson(path, body) {
 // Para PUT y DELETE. Igual que postJson, pero el método se elige
 // y el body es opcional (DELETE no lleva body).
 async function sendJson(method, path, body) {
-  const options = { method }
+  const options = { method, credentials: 'include' }
 
   if (body !== undefined) {
     options.headers = { 'Content-Type': 'application/json' }
@@ -64,6 +79,7 @@ async function sendJson(method, path, body) {
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, options)
+  revisarSesion(response)
 
   // 204 significa "todo bien, pero no hay nada que devolver" (lo que responde el DELETE)
   if (response.status === 204) {
@@ -165,6 +181,47 @@ export function marcarAsistenciaTurno(id, llego_a_la_hora) {
   return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
 }
 
+// filtros: { estado, tipo_donacion, origen }; los vacíos no se mandan
+export async function getDonaciones(filtros = {}) {
+  const params = new URLSearchParams()
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor) params.set(clave, valor)
+  }
+  const query = params.toString()
+  const donaciones = await getJson(`/donaciones${query ? `?${query}` : ''}`)
+
+  if (!Array.isArray(donaciones)) {
+    throw new Error('La respuesta de la API de donaciones no es válida.')
+  }
+
+  return donaciones
+}
+
+// las de abajo se usarán en los pasos 2 y 3, las dejo listas
+export function crearDonacionPresencial(donacion) {
+  return postJson('/donaciones', donacion)
+}
+
+export function crearDonacionWeb(donacion) {
+  return postJson('/donaciones/web', donacion)
+}
+
+export function actualizarDonacion(id, cambios) {
+  return sendJson('PATCH', `/donaciones/${id}`, cambios)
+}
+
+export function agendarDonacion(id, fecha_agendada) {
+  return sendJson('PATCH', `/donaciones/${id}/agendar`, { fecha_agendada })
+}
+
+// datos: { rut_usuario, insumos? }
+export function confirmarDonacion(id, datos) {
+  return sendJson('PATCH', `/donaciones/${id}/confirmar`, datos)
+}
+
+export function eliminarDonacion(id) {
+  return sendJson('DELETE', `/donaciones/${id}`)
+}
 
 // ---------- Historial medico ----------
 export function getHistoriales(filtros = {}) {
@@ -215,3 +272,56 @@ export function actualizarUsuario(rut, datos) {
 
 export function eliminarUsuario(rut) {
   return sendJson('DELETE', `/usuarios/${rut}`)}
+
+// Busca los animales que todavía no han sido adoptados
+export async function getAnimalesDisponibles() {
+  const animales = await getJson('/animales?adoptado=false')
+
+  if (!Array.isArray(animales)) {
+    throw new Error('La respuesta de la API de animales no es válida.')
+  }
+
+  return animales
+}
+
+// Historial de adopciones, de la más reciente a la más antigua
+export async function getAdopciones() {
+  const adopciones = await getJson('/adopciones')
+
+  if (!Array.isArray(adopciones)) {
+    throw new Error('La respuesta de la API de adopciones no es válida.')
+  }
+
+  return adopciones
+}
+
+// Registra la adopción de un animal (crea también al adoptante)
+export function registrarAdopcion(idAnimal, datos) {
+  return postJson(`/animales/${idAnimal}/adopcion`, datos)
+}
+// Sube la foto de un animal. Se envía como formulario (multipart/form-data), no como JSON
+export async function subirFotoAnimal(idAnimal, archivo) {
+  const formulario = new FormData()
+  formulario.append('foto', archivo)
+
+  // No se pone 'Content-Type': el navegador lo arma solo con el separador que necesita
+  const response = await fetch(`${API_BASE_URL}/animales/${idAnimal}/foto`, {
+    method: 'POST',
+    body: formulario,
+  })
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('application/json')) {
+    throw new Error('La API devolvió una respuesta que no es JSON.')
+  }
+
+  const data = await response.json()
+
+  if (!response.ok) {
+    const error = new Error(data.error ?? `Error HTTP ${response.status}`)
+    error.details = data.details ?? []
+    throw error
+  }
+
+  return data
+}

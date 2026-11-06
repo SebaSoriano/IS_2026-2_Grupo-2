@@ -1,5 +1,6 @@
 
 import * as animalesService from '../services/animales.service.js';
+import { HttpError } from '../middlewares/error.middleware.js';
 
 // GET /api/animales
 export const getAnimales = async (req, res) => {
@@ -30,4 +31,14 @@ export const updateAnimal = async (req, res) => {
 export const deleteAnimal = async (req, res) => {
   await animalesService.deleteAnimal(req.params.id);
   res.status(204).send();
+};
+
+// POST /api/animales/:id/foto
+export const subirFotoAnimal = async (req, res) => {
+  // multer deja el archivo en req.file; si no vino ninguno, es un error
+  if (!req.file) {
+    throw new HttpError(400, 'Debe adjuntar una imagen en el campo "foto"');
+  }
+  const animal = await animalesService.actualizarFotoAnimal(req.params.id, req.file);
+  res.json(animal);
 };

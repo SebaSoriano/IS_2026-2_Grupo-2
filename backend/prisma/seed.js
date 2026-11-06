@@ -10,7 +10,8 @@ import bcrypt from 'bcryptjs';
 // nueva instancia del cliente de prisma, la otra vive aparte en src/config/prisma.js
 const prisma = new PrismaClient();
 // contraseña de prueba, SOLO para desarrollo
-// todos los usuarios del seed usan esta misma contraseña (el rut del admin es el primero de rutUsuarios)
+// todos los usuarios del seed usan esta misma contraseña
+// roles: el primero de rutUsuarios es Admin, el segundo Veterinaria y el resto Voluntarios
 const PASSWORD_DE_PRUEBA = 'admin1234';
 
 async function main() {
@@ -27,7 +28,7 @@ async function main() {
     await prisma.usuario.deleteMany();
 
     
-    const rutUsuarios = ['11111111-1', '22222222-2', '12123123-2', '44444444-4'];
+    const rutUsuarios = ['11111111-1', '22222222-2', '33333333-3', '44444444-4'];
 
 
     const roles = [
@@ -68,7 +69,8 @@ async function main() {
             return prisma.usuario.create({
                 data: {
                     rut_usuario,
-                    rol_id: i === 0 ? 1 : 3,
+                    // 1 = Admin, 2 = Veterinaria, 3 = Voluntario (ver la lista de roles más arriba)
+                    rol_id: i === 0 ? 1 : i === 1 ? 2 : 3,
                     nombre_usuario: `${nombre} ${apellido}`,
                     correo: faker.internet.email({ firstName: nombre, lastName: apellido }),
                     telefono: '9' + faker.string.numeric(8),
@@ -148,6 +150,60 @@ async function main() {
     const resultadoInsumos = await prisma.insumo.createMany({ data: insumos });
     console.log(`Insumos creados: ${resultadoInsumos.count}`);
 
+
+
+    console.log('-Creando animales');
+    // 20 animales de ejemplo entre perros y gatos
+    const animales = [
+        { nombre_animal: 'Firulais', especie_animal: 'Perro', edad: 4, peso_animal: 18.5, via_ingreso: 'Rescate', observaciones_animal: 'Muy sociable con otros perros' },
+        { nombre_animal: 'Canela', especie_animal: 'Perro', edad: 2, peso_animal: 12.3, via_ingreso: 'Abandono', observaciones_animal: 'Le teme a los ruidos fuertes' },
+        { nombre_animal: 'Bruno', especie_animal: 'Perro', edad: 7, peso_animal: 27.0, via_ingreso: 'Entrega voluntaria' },
+        { nombre_animal: 'Rocky', especie_animal: 'Perro', edad: 5, peso_animal: 22.4, via_ingreso: 'Rescate', observaciones_animal: 'Cojea levemente de la pata trasera izquierda' },
+        { nombre_animal: 'Toby', especie_animal: 'Perro', edad: 1, peso_animal: 8.7, via_ingreso: 'Abandono' },
+        { nombre_animal: 'Kiara', especie_animal: 'Perro', edad: 3, peso_animal: 15.1, via_ingreso: 'Traslado' },
+        { nombre_animal: 'Maximiliano', especie_animal: 'Perro', edad: 9, peso_animal: 30.2, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Perro senior, tranquilo' },
+        { nombre_animal: 'Pelusa', especie_animal: 'Perro', edad: 6, peso_animal: 6.4, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Copito', especie_animal: 'Perro', edad: 0, peso_animal: 3.2, via_ingreso: 'Abandono', observaciones_animal: 'Cachorro de unos 4 meses' },
+        { nombre_animal: 'Negrita', especie_animal: 'Perro', edad: 8, peso_animal: 19.8, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Manchas', especie_animal: 'Perro', edad: 3, peso_animal: 24.6, via_ingreso: 'Otro' },
+        { nombre_animal: 'Michi', especie_animal: 'Gato', edad: 2, peso_animal: 4.1, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Luna', especie_animal: 'Gato', edad: 4, peso_animal: 3.8, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Esterilizada' },
+        { nombre_animal: 'Garfield', especie_animal: 'Gato', edad: 6, peso_animal: 6.2, via_ingreso: 'Abandono', observaciones_animal: 'Necesita dieta controlada' },
+        { nombre_animal: 'Nieve', especie_animal: 'Gato', edad: 1, peso_animal: 2.9, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Simba', especie_animal: 'Gato', edad: 3, peso_animal: 4.7, via_ingreso: 'Traslado' },
+        { nombre_animal: 'Pantufla', especie_animal: 'Gato', edad: 10, peso_animal: 4.4, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Gata senior, muy cariñosa' },
+        { nombre_animal: 'Tigre', especie_animal: 'Gato', edad: 5, peso_animal: 5.3, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Oreo', especie_animal: 'Gato', edad: 0, peso_animal: 1.6, via_ingreso: 'Abandono', observaciones_animal: 'Gatito de unos 3 meses' },
+        { nombre_animal: 'Mostaza', especie_animal: 'Gato', edad: 7, peso_animal: 5.0, via_ingreso: 'Otro' },
+    ];
+    // createManyAndReturn (a diferencia de createMany) devuelve los animales creados con su id,
+    // que se necesita para asociarles los registros médicos
+    const animalesCreados = await prisma.animales.createManyAndReturn({ data: animales });
+    console.log(`Animales creados: ${animalesCreados.length}`);
+
+    console.log('-Creando historial medico');
+    const veterinarios = ['Dra. Sofía González', 'Dr. Alan Arriagada', 'Dra. Camila Rojas'];
+    const tratamientos = ['Control General', 'Vacuna Antirrábica', 'Desparasitación', 'Curación de herida', 'Esterilización'];
+    // la vacuna múltiple es distinta según la especie
+    const vacunaSegunEspecie = { Perro: 'Vacuna Óctuple', Gato: 'Vacuna triple felina' };
+    const historial = [];
+    for (const animal of animalesCreados) {
+        // cada animal recibe entre 1 y 4 registros, en fechas pasadas del último año.
+        // las fechas quedan a las 00:00 UTC, igual que las que guarda el backend
+        const cantidad = faker.number.int({ min: 1, max: 4 });
+        for (let i = 0; i < cantidad; i++) {
+            const diasAtras = faker.number.int({ min: 1, max: 365 });
+            historial.push({
+                id_animal: animal.id_animal,
+                tratamiento: faker.helpers.arrayElement([...tratamientos, vacunaSegunEspecie[animal.especie_animal]]),
+                fecha_tratamiento: new Date(hoyUTC - diasAtras * UN_DIA),
+                veterinario: faker.helpers.arrayElement(veterinarios),
+                observaciones: faker.datatype.boolean({ probability: 0.3 }) ? 'Sin complicaciones' : null,
+            });
+        }
+    }
+    const resultadoHistorial = await prisma.historial_medico.createMany({ data: historial });
+    console.log(`Registros medicos creados: ${resultadoHistorial.count}`);
 }
 main()
     .catch((e) => {

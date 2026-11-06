@@ -705,6 +705,8 @@
 .attendance-cell {
   height: 40px;
   padding: 0;
+  /* centra el ✓ y el conteo cuando la celda no tiene botón (Voluntario, solo lectura) */
+  text-align: center;
 }
 
 .attendance-cell button {

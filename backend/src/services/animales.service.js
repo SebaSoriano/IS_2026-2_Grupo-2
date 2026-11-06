@@ -1,5 +1,8 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
+import fs from 'fs/promises';
+import path from 'path';
+import { CARPETA_FOTOS_ANIMALES } from '../config/uploads.js';
 
 
 // Agrega "adoptado" y "adopcion" a un animal
@@ -164,5 +167,50 @@ export async function deleteAnimal(id) {
     where: { id_animal: id },
   });
 
+  // También se borra su foto del disco
+  await borrarArchivoFoto(animal.foto_animal);
+
   return animalEliminado;
+}
+
+//------------------------------------------------------------
+
+// Borra del disco el archivo de una foto (si existe)
+async function borrarArchivoFoto(rutaFoto) {
+  if (!rutaFoto) {
+    return;
+  }
+  // De "/uploads/animales/animal-5-...jpg" se toma solo "animal-5-...jpg"
+  const nombreArchivo = path.basename(rutaFoto);
+  try {
+    await fs.unlink(path.join(CARPETA_FOTOS_ANIMALES, nombreArchivo));
+  } catch {
+    // Si el archivo ya no existe, no pasa nada
+  }
+}
+
+// Guarda la foto de un animal y borra la anterior
+export async function actualizarFotoAnimal(id, archivo) {
+  // Buscar el animal 
+  const animal = await prisma.animales.findUnique({
+    where: { id_animal: id },
+    select: { foto_animal: true },
+  });
+
+  // Si no existe, se borra el archivo que multer alcanzó a guardar y se responde 404
+  if (animal === null) {
+    await borrarArchivoFoto(archivo.filename);
+    throw new HttpError(404, 'Animal no encontrado');
+  }
+
+  // Guardar en la base la ruta pública de la foto nueva
+  const animalModificado = await prisma.animales.update({
+    where: { id_animal: id },
+    data: { foto_animal: `/uploads/animales/${archivo.filename}` },
+  });
+
+  // Borrar del disco la foto anterior si tenía alguna
+  await borrarArchivoFoto(animal.foto_animal);
+
+  return animalModificado;
 }

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './Auth.css';
-import { login } from './services/auth.js';
+import { login, obtenerSesion } from './services/auth.js';
 // imágenes decorativas
 import perroImg from './assets/login/perro.webp';
 import gatoImg from './assets/login/gato.webp';
@@ -37,6 +37,17 @@ export default function Auth() {
     // true mientras se espera la respuesta del backend (bloquea el botón)
     const [loading, setLoading] = useState(false);
 
+    // si la persona ya tiene una sesión activa (por ejemplo, marcó "Recordarme")
+    // no tiene sentido mostrarle el login: se la manda directo a la intranet
+    useEffect(() => {
+        obtenerSesion()
+            .then((usuario) => {
+                if (usuario) window.location.replace('/adopcion')
+            })
+            // si el servidor no responde se queda en el login, que mostrará el error al intentar entrar
+            .catch(() => {})
+    }, [])
+
     // al apretar continuar evita que el navegador
     // recargue la página
     const handleSubmit = async (event) => {
@@ -46,12 +57,14 @@ export default function Auth() {
 
         try {
         // el rut se manda limpio y con el formato correcto; la contraseña se manda tal cual
+        // recordarme decide cuánto dura la sesión (8 horas o 7 días)
             const { ok, status } = await login({
                 rut_usuario: limpiarRut(rut),
                 contrasena,
+                recordarme,
             })
             if (ok) {
-                // login correcto: se entra a la intranet
+                // login correcto: el backend ya guardó la cookie con el token, se entra a la intranet
                 // no se desbloquea el botón porque la página se va a cambiar
                 window.location.assign('/adopcion')
                 return
