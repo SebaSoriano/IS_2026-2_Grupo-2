@@ -17,7 +17,7 @@ function textoEdad(edad) {
 }
 
 // Vista de tarjetas: un recuadro por animal con su foto, nombre, especie y edad.
-export default function HistorialTarjetas({ animales, onElegirAnimal }) {
+export default function HistorialTarjetas({ animales, onElegirAnimal, seleccionadoId = null }) {
   if (animales.length === 0) {
     return <p className="historial-tarjetas__vacia">No hay animales que coincidan con la búsqueda.</p>
   }
@@ -25,14 +25,19 @@ export default function HistorialTarjetas({ animales, onElegirAnimal }) {
   return (
     <ul className="historial-tarjetas" aria-label="Animales">
       {animales.map((animal) => {
-        const foto = fotoDeEjemplo(animal.especie_animal)
+        // Si el animal tiene foto real se usa esa; si no, la de ejemplo según la especie
+        const foto = animal.foto_animal ?? fotoDeEjemplo(animal.especie_animal)
 
         return (
           <li key={animal.id_animal}>
             {/* Se usa un <button> (y no un <div> con onClick) para que la tarjeta
                 también se pueda abrir con el teclado (Tab + Enter) */}
             <button
-              className="historial-tarjeta"
+              className={
+                animal.id_animal === seleccionadoId
+                  ? 'historial-tarjeta is-selected'
+                  : 'historial-tarjeta'
+              }
               type="button"
               onClick={() => onElegirAnimal(animal)}
               aria-label={`Ver historial médico de ${animal.nombre_animal}`}

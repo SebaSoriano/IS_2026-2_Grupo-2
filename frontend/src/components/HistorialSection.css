@@ -293,3 +293,9 @@
   color: #536d6e;
   font-size: 0.875rem;
 }
+
+/* Tarjeta seleccionada (se usa en la sección Animales) */
+.historial-tarjeta.is-selected {
+  border: 2px solid #3ba5a3;
+  background: #dcf8f5;
+}
