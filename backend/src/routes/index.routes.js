@@ -8,6 +8,8 @@ import adopcionesRoutes from './adopciones.routes.js';
 import auth from './authRoutes.js';
 import donacionesRoutes from './donaciones.routes.js';
 import cuentasTransfRoutes from './cuentasTransf.routes.js';
+import historialRoutes from './historial.routes.js';
+import usuariosRoutes from './usuario.routes.js';import donacionesRoutes from './donaciones.routes.js';
 
 import authRoutes from './authRoutes.js';
 
@@ -24,7 +26,9 @@ router.use('/turnos', turnosRoutes);
 router.use('/horarios', horariosRoutes);
 router.use('/asistencias', asistenciasRoutes);
 router.use('/adopciones', adopcionesRoutes);
+router.use('/historial', historialRoutes);
 router.use('/auth', authRoutes);
+router.use('/usuarios', usuariosRoutes);
 router.use('/donaciones', donacionesRoutes);
 router.use('/cuentas-transferencia', cuentasTransfRoutes);
 export default router;

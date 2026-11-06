@@ -1,13 +1,10 @@
 import express from 'express'
-import cors from 'cors'
 import indexRouter from './routes/index.routes.js'
 import { errorHandler } from './middlewares/error.middleware.js'
 
 const app = express()
 
-app.use(cors())  
 app.use(express.json())
-import routes from './routes/index.routes.js';
 
 // Todas las rutas de la API quedan bajo /api
 app.use('/api', indexRouter)

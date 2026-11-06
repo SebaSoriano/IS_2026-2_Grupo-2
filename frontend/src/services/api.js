@@ -117,6 +117,10 @@ export function actualizarInsumo(id, insumo) {
   return sendJson('PUT', `/insumos/${id}`, insumo)
 }
 
+export function eliminarInsumo(id) {
+  return sendJson('DELETE', `/insumos/${id}`)
+}
+
 // horario de una semana (lunes "AAAA-MM-DD"): los 7 dias (1 = Lunes ... 7 = Domingo) con su fecha y sus turnos
 export async function getHorarios(semana) {
   const horarios = await getJson(`/horarios?semana=${semana}`)
@@ -128,10 +132,10 @@ export async function getHorarios(semana) {
   return horarios
 }
 
-// usuarios cuyo nombre contiene el texto escrito, sin importar mayusculas
-export function buscarUsuarios(nombre) {
-  return getJson(`/horarios/usuarios?nombre=${encodeURIComponent(nombre)}`)
-}
+// todos los usuarios ordenados por nombre, para elegir a quien se le asigna un turno
+//export function getUsuarios() {
+//  return getJson('/horarios/usuarios')
+//}
 
 export function crearTurno(turno) {
   return postJson('/turnos', turno)
@@ -236,3 +240,53 @@ export async function getCuentasPublicas() {
 export function crearDonacionWebConComprobante(formData) {
   return postFormData('/donaciones/web', formData)
 }
+
+// ---------- Historial medico ----------
+export function getHistoriales(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  return getJson(query ? `/historial?${query}` : '/historial')
+}
+
+export function crearHistorial(registro) {
+  return postJson('/historial', registro)
+}
+
+export function actualizarHistorial(id, registro) {
+  return sendJson('PUT', `/historial/${id}`, registro)
+}
+
+export function eliminarHistorial(id) {
+  return sendJson('DELETE', `/historial/${id}`)
+}
+
+export async function getUsuarios() {
+  const usuarios = await getJson('/usuarios')
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de voluntarios no es válida.')
+  }
+
+  return usuarios
+}
+
+// Crear usa la ruta de registro que ya existe.
+// Esa ruta responde { status, data: { user } }, por eso se devuelve respuesta.data.user
+export async function crearUsuario(usuario) {
+  const respuesta = await postJson('/auth/register', usuario)
+  return respuesta.data.user
+}
+
+export function actualizarUsuario(rut, datos) {
+  return sendJson('PUT', `/usuarios/${rut}`, datos)
+}
+
+export function eliminarUsuario(rut) {
+  return sendJson('DELETE', `/usuarios/${rut}`)}

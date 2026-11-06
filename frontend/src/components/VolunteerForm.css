@@ -1,0 +1,131 @@
+.volunteer-dialog {
+  box-sizing: border-box;
+  width: min(560px, calc(100% - 32px));
+  max-height: min(90vh, 760px);
+  padding: 0;
+  border: 1px solid #9bd6d3;
+  border-radius: 10px;
+  color: #173d3e;
+  box-shadow: 0 16px 48px #071b1c40;
+}
+
+.volunteer-dialog::backdrop {
+  background: #071b1c80;
+}
+
+.volunteer-form {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.volunteer-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.volunteer-dialog-header h2 {
+  margin: 0;
+  color: #10494b;
+}
+
+.volunteer-dialog-close {
+  border: 0;
+  color: #315052;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.volunteer-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.volunteer-form__field {
+  display: grid;
+  gap: 6px;
+  color: #315052;
+  font-weight: 700;
+}
+
+.volunteer-form__field input,
+.volunteer-form__field select,
+.volunteer-form__field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #9bd6d3;
+  border-radius: 5px;
+  color: #173d3e;
+  background: #fff;
+  font: inherit;
+  font-weight: 400;
+}
+
+.volunteer-form__error {
+  margin: 0;
+  color: #a32121;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.volunteer-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.volunteer-form__actions button {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 5px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.volunteer-form__actions button:disabled,
+.volunteer-dialog-close:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.volunteer-form__cancel {
+  color: #315052;
+  background: #e5eeee;
+}
+
+.volunteer-form__submit {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+@media (max-width: 480px) {
+  .volunteer-form {
+    padding: 18px;
+  }
+
+  .volunteer-form__row {
+    grid-template-columns: 1fr;
+  }
+
+  .volunteer-form__actions {
+    flex-direction: column-reverse;
+  }
+}
+
+.volunteer-form__help {
+  color: #536d6e;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.volunteer-form__field input:disabled {
+  color: #536d6e;
+  background: #f0f4f4;
+}

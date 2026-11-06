@@ -3,8 +3,10 @@ import { adoptionActions } from './data/adoptionActions.js'
 import { inventoryActions } from './data/inventoryActions.js'
 import { sections } from './data/sections.js'
 import AnimalSection from './components/AnimalSection.jsx'
+import HistorialSection from './components/HistorialSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
+import VolunteerSection from './components/VolunteerSection.jsx'
 import DonationSection from './components/DonationSection.jsx'
 
 // cada seccion usa su path si lo tiene (ej: horario en /intranet/horario), si no /<id>
@@ -25,6 +27,7 @@ export default function InternalPage() {
   )
   const [isInventoryCreateOpen, setIsInventoryCreateOpen] = useState(false)
   const [isInventoryEditOpen, setIsInventoryEditOpen] = useState(false)
+  const [isInventoryDeleteOpen, setIsInventoryDeleteOpen] = useState(false)
   const [selectedInventoryCount, setSelectedInventoryCount] = useState(0)
 
   useEffect(() => {
@@ -34,6 +37,7 @@ export default function InternalPage() {
         setActiveSection(sectionId)
         if (sectionId !== 'inventario') {
           setSelectedInventoryCount(0)
+          setIsInventoryDeleteOpen(false)
         }
         return
       }
@@ -41,6 +45,7 @@ export default function InternalPage() {
       window.history.replaceState(null, '', '/adopcion')
       setActiveSection('adopcion')
       setSelectedInventoryCount(0)
+      setIsInventoryDeleteOpen(false)
     }
 
     syncSectionWithPath()
@@ -69,6 +74,7 @@ export default function InternalPage() {
     setActiveSection(section.id)
     if (section.id !== 'inventario') {
       setSelectedInventoryCount(0)
+      setIsInventoryDeleteOpen(false)
     }
   }
 
@@ -128,6 +134,8 @@ export default function InternalPage() {
                           ? () => setIsInventoryCreateOpen(true)
                           : action === 'Modificar Registro'
                             ? () => setIsInventoryEditOpen(true)
+                            : action === 'Eliminar Registro'
+                              ? () => setIsInventoryDeleteOpen(true)
                             : undefined
                     }
                   >
@@ -136,8 +144,11 @@ export default function InternalPage() {
                 ))}
             </div>
           )}
-          {section.id === 'animales' && activeSection === 'animales' && (
-            <AnimalSection />
+          {section.id === 'historial-medico' && activeSection === 'historial-medico' && (
+            <HistorialSection />
+          )}
+          {section.id === 'voluntarios' && activeSection === 'voluntarios' && (
+            <VolunteerSection />
           )}
           {section.id === 'inventario' && activeSection === 'inventario' && (
             <InventorySection
@@ -145,6 +156,8 @@ export default function InternalPage() {
               onCloseCreateModal={() => setIsInventoryCreateOpen(false)}
               isEditModalOpen={isInventoryEditOpen}
               onCloseEditModal={() => setIsInventoryEditOpen(false)}
+              isDeleteModalOpen={isInventoryDeleteOpen}
+              onCloseDeleteModal={() => setIsInventoryDeleteOpen(false)}
               onSelectionCountChange={setSelectedInventoryCount}
             />
           )}
@@ -156,3 +169,4 @@ export default function InternalPage() {
     </main>
   )
 }
+

@@ -105,6 +105,11 @@
   background: #19efa0;
 }
 
+.inventory-form-delete {
+  color: #fff;
+  background: #a32121;
+}
+
 @media (max-width: 480px) {
   .inventory-form {
     padding: 18px;

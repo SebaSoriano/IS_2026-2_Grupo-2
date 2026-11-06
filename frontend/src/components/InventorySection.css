@@ -72,6 +72,10 @@
   border-bottom: 0;
 }
 
+.inventory-table tbody tr.inventory-row--expired {
+  background-color: #fff0f0;
+}
+
 .inventory-empty {
   color: #536d6e;
   text-align: center;

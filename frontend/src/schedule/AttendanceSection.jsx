@@ -174,7 +174,7 @@ export default function AttendanceSection({ cambiosTurnos }) {
 
       <ul className="attendance-legend" aria-label="Simbología">
         <li><span className="attendance-legend__muestra is-presente">✓</span> Llegó a la hora</li>
-        <li><span className="attendance-legend__muestra is-parcial">b/c</span> Llegó a la hora a <em>b</em> de sus <em>c</em> turnos del día (cuando tiene 2 o más)</li>
+        <li><span className="attendance-legend__muestra is-parcial">a/b</span> Llegó a la hora, <em>a</em> de sus <em>b</em> turnos del día (cuando tiene 2 o más)</li>
         <li><span className="attendance-legend__muestra is-turno" /> Tiene turno (click para marcar)</li>
         <li><span className="attendance-legend__muestra is-sin-turno" /> Sin turno</li>
       </ul>
