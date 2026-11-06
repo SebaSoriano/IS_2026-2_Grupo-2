@@ -5,7 +5,7 @@ import HojaImpresion from './HojaImpresion.jsx'
 import Modal from './Modal.jsx'
 import MonthPicker from './MonthPicker.jsx'
 import WeekPicker from './WeekPicker.jsx'
-import { sumarDias } from './calendario.js'
+import { describirSemana, nombreDelMes, sumarDias } from './calendario.js'
 
 const OPCIONES = [
   { tipo: 'horario-semanal', titulo: 'Horario semanal', detalle: 'Turnos de una semana, hora por hora.' },
@@ -42,8 +42,12 @@ export default function ExportModal({ tipoInicial = 'horario-semanal', semanaIni
   const [impresion, setImpresion] = useState(null)
 
   // con la hoja ya en la pagina se abre el dialogo de impresion; al cerrarlo se quita la hoja
+  // mientras se imprime, el titulo de la pestaña describe la hoja: es el nombre que el navegador propone al guardar el PDF
   useEffect(() => {
     if (!impresion) return undefined
+    const tituloOriginal = document.title
+    const periodo = impresion.tipo === 'horario-mensual' ? nombreDelMes(impresion.mes) : describirSemana(impresion.semana)
+    document.title = `${OPCIONES.find((opcion) => opcion.tipo === impresion.tipo).titulo} - ${periodo.replace(' · ', ' ')}`
     document.body.classList.add('imprimiendo')
     const terminar = () => setImpresion(null)
     window.addEventListener('afterprint', terminar)
@@ -52,6 +56,7 @@ export default function ExportModal({ tipoInicial = 'horario-semanal', semanaIni
       cancelAnimationFrame(frame)
       window.removeEventListener('afterprint', terminar)
       document.body.classList.remove('imprimiendo')
+      document.title = tituloOriginal
     }
   }, [impresion])
 

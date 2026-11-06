@@ -10,6 +10,9 @@ import {
 import { bloquesDelDia, formatearHora, horasDelTurno, rangoHoras } from './horas.js'
 
 // hoja que se imprime al exportar; en pantalla no se ve (ver .hoja-impresion en Schedule.css)
+// la pagina se imprime sin margen para que el navegador no agregue su encabezado y pie
+// (titulo de la pestaña, fecha, URL y numero de pagina); el margen lo ponen las filas vacias
+// del thead y tfoot del marco, que el navegador repite en cada pagina
 // tipo: 'horario-semanal' (datos = respuesta de getHorarios)
 //       'horario-mensual' o 'asistencia-semanal' (datos = usuarios con sus turnos, de getAsistencias)
 
@@ -27,19 +30,33 @@ export default function HojaImpresion({ tipo, semana, mes, datos }) {
 
   return (
     <div className="hoja-impresion">
-      {/* solo mientras esta hoja existe la impresion sale en A4 horizontal */}
-      <style>{'@page { size: A4 landscape; margin: 10mm; }'}</style>
+      {/* solo mientras esta hoja existe la impresion sale en A4 horizontal y sin margen del navegador */}
+      <style>{'@page { size: A4 landscape; margin: 0; }'}</style>
 
-      <header className="hoja-impresion__header">
-        <h1>{TITULOS[tipo]}</h1>
-        <p>{periodo}</p>
-      </header>
+      <table className="hoja-impresion__marco" role="presentation">
+        <thead>
+          <tr><td className="hoja-impresion__margen" /></tr>
+        </thead>
+        <tfoot>
+          <tr><td className="hoja-impresion__margen" /></tr>
+        </tfoot>
+        <tbody>
+          <tr>
+            <td className="hoja-impresion__contenido">
+              <header className="hoja-impresion__header">
+                <h1>{TITULOS[tipo]}</h1>
+                <p>{periodo}</p>
+              </header>
 
-      {tipo === 'horario-semanal' && <HorarioSemanal horarios={datos} />}
-      {tipo === 'horario-mensual' && <HorarioMensual usuarios={datos} mes={mes} />}
-      {tipo === 'asistencia-semanal' && <AsistenciaSemanal usuarios={datos} semana={semana} />}
+              {tipo === 'horario-semanal' && <HorarioSemanal horarios={datos} />}
+              {tipo === 'horario-mensual' && <HorarioMensual usuarios={datos} mes={mes} />}
+              {tipo === 'asistencia-semanal' && <AsistenciaSemanal usuarios={datos} semana={semana} />}
 
-      <footer className="hoja-impresion__pie">Impreso el {fechaImpresion}</footer>
+              <footer className="hoja-impresion__pie">Impreso el {fechaImpresion}</footer>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   )
 }

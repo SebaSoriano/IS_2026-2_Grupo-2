@@ -1090,6 +1090,23 @@
   font-size: 10pt;
 }
 
+/* marco de la hoja: la pagina no tiene margen (asi el navegador no imprime su encabezado ni pie)
+   y el margen de 10mm lo dan las filas vacias de arriba y abajo, que se repiten en cada pagina,
+   y el relleno de los lados */
+.hoja-impresion__marco {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hoja-impresion__margen {
+  height: 10mm;
+  padding: 0;
+}
+
+.hoja-impresion__contenido {
+  padding: 0 10mm;
+}
+
 .hoja-impresion__header {
   display: flex;
   align-items: baseline;
