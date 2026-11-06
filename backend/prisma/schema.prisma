@@ -24,6 +24,7 @@ model Usuario {
     adopciones  adopciones[]
     rol_id Int
     rol Rol @relation(fields: [rol_id], references: [id])
+    cuentas       cuenta_transferencia[]
 }
 
 model Agendamiento {
@@ -146,7 +147,9 @@ model donaciones {
 
   rut_usuario         String?
   usuario             Usuario?       @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
-
+  id_cuenta           Int?
+  cuenta              cuenta_transferencia? @relation(fields: [id_cuenta], references: [id_cuenta], onDelete: Restrict)
+  
   insumos             Insumo[]
   }
 
@@ -173,6 +176,30 @@ model adopciones {
   adoptante adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
 
   @@id([id_usuario, id_animal, id_adoptante])
+}
+
+enum TipoCuenta {
+  corriente
+  vista
+  ahorro
+  rut
+}
+
+model cuenta_transferencia {
+  id_cuenta      Int        @id @default(autoincrement())
+  banco          String     @db.VarChar(100)
+  tipo_cuenta    TipoCuenta
+  numero_cuenta  String     @db.VarChar(20)
+  titular_nombre String     @db.VarChar(100)
+  titular_rut    String     @db.VarChar(12)
+  correo         String?    @db.VarChar(100)
+  activa         Boolean    @default(true)
+
+  // voluntario que administra la cuenta y confirma las donaciones que llegan a ella
+  rut_usuario    String
+  usuario        Usuario    @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
+
+  donaciones     donaciones[]
 }
 
 model Rol {

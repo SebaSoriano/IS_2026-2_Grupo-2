@@ -18,6 +18,7 @@ async function main() {
     await prisma.turno.deleteMany();
     await prisma.adopciones.deleteMany();
     await prisma.donaciones.deleteMany();
+    await prisma.cuenta_transferencia.deleteMany();
     await prisma.historial_medico.deleteMany();
     await prisma.agendamiento.deleteMany();
     await prisma.horario.deleteMany();
@@ -119,6 +120,18 @@ async function main() {
     }
     const resultadoTurnos = await prisma.turno.createMany({ data: turnos });
     console.log(`Turnos creados: ${resultadoTurnos.count}`);
+
+    console.log('-Creando cuentas de transferencia');
+    await prisma.cuenta_transferencia.createMany({
+        data: [
+            { banco: 'Banco Estado', tipo_cuenta: 'rut', numero_cuenta: '11111111',
+              titular_nombre: usuarios[0].nombre_usuario, titular_rut: rutUsuarios[0],
+              correo: usuarios[0].correo, rut_usuario: rutUsuarios[0] },
+            { banco: 'Banco de Chile', tipo_cuenta: 'vista', numero_cuenta: '000122223333',
+              titular_nombre: usuarios[1].nombre_usuario, titular_rut: rutUsuarios[1],
+              correo: usuarios[1].correo, rut_usuario: rutUsuarios[1] },
+        ],
+    });
 
     console.log('-Creando insumos');
     const fechaBase = new Date();
