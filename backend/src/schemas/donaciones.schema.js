@@ -6,7 +6,7 @@ export const METODOS_PAGO = ['efectivo', 'transferencia'];
 export const ESTADOS_DONACION = ['pendiente', 'agendada', 'confirmada'];
 export const ORIGENES_DONACION = ['presencial', 'web'];
 
-const rut = z.string().trim().regex(/^\d{7,8}-[\dkK]$/, 'Debe ser un RUT con formato 12345678-9');
+export const rut = z.string().trim().regex(/^\d{7,8}-[\dkK]$/, 'Debe ser un RUT con formato 12345678-9');
 
 // Campos que comparten el registro presencial y el web
 const camposDonacion = {

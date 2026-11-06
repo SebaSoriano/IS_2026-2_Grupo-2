@@ -1,4 +1,4 @@
-import * as cuentasService from '../services/cuentas.services.js';
+import * as cuentasService from '../services/cuentasTransf.service.js';
 
 export const getCuentasPublicas = async (req, res) => {
   res.json(await cuentasService.getCuentasPublicas());

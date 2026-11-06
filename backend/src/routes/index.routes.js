@@ -7,7 +7,7 @@ import asistenciasRoutes from './asistencias.routes.js';
 import adopcionesRoutes from './adopciones.routes.js';
 import auth from './authRoutes.js';
 import donacionesRoutes from './donaciones.routes.js';
-import cuentasRoutes from './cuentasTransf.routes.js';
+import cuentasTransfRoutes from './cuentasTransf.routes.js';
 
 import authRoutes from './authRoutes.js';
 

@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import * as c from '../controllers/cuentas.controller.js';
+import * as c from '../controllers/cuentasTransf.controller.js';
 import { validate } from '../middlewares/validate.middleware.js';
-import { createCuentaSchema, updateCuentaSchema } from '../schemas/cuentas.schema.js';
+import { createCuentaSchema, updateCuentaSchema } from '../schemas/cuentasTransf.schema.js';
 import { idParamSchema } from '../schemas/idParam.schema.js';
 
 const router = Router();
