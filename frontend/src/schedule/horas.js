@@ -21,3 +21,7 @@ export function horasDelTurno(turno) {
   const fin = turno.hora_fin ? leerHora(turno.hora_fin) : inicio + 1
   return rango(inicio, fin - 1)
 }
+
+// "08:00" a "12:00" -> "08:00–12:00"; sin hora de ida queda solo la llegada
+export const rangoHoras = (turno) =>
+  turno.hora_fin ? `${turno.hora_inicio.slice(0, 5)}–${turno.hora_fin.slice(0, 5)}` : turno.hora_inicio.slice(0, 5)
