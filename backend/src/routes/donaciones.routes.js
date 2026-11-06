@@ -20,7 +20,6 @@ router.get('/:id', id, c.getDonacionById);
 router.get('/:id/comprobante', id, c.getComprobante);
 
 router.post('/', validate(createDonacionPresencialSchema), c.createDonacionPresencial);
-router.post('/web', validate(createDonacionWebSchema), c.createDonacionWeb); // público
 router.post('/web', recibirComprobante, validate(createDonacionWebSchema), c.createDonacionWeb);
 
 router.patch('/:id', id, validate(updateDonacionSchema), c.updateDonacion);
