@@ -5,11 +5,10 @@ import turnosRoutes from './turnos.routes.js';
 import horariosRoutes from './horarios.routes.js';
 import asistenciasRoutes from './asistencias.routes.js';
 import adopcionesRoutes from './adopciones.routes.js';
-import auth from './authRoutes.js';
 import donacionesRoutes from './donaciones.routes.js';
 import cuentasTransfRoutes from './cuentasTransf.routes.js';
 import historialRoutes from './historial.routes.js';
-import usuariosRoutes from './usuario.routes.js';import donacionesRoutes from './donaciones.routes.js';
+import usuariosRoutes from './usuario.routes.js';
 
 import authRoutes from './authRoutes.js';
 

@@ -7,16 +7,17 @@ import DonationMonetariaForm from './components/DonationFormMonetaria.jsx';
 export default function PublicPage (){
   const [vistaDonar, setVistaDonar] = useState(null);
   const cerrarDonar = () => setVistaDonar(null);
+  const [filtro, setFiltro] = useState('todos');
   return (
     <div id="publicpage">
-      <header class="navbar">
-        <div class="mainlogo">
+      <header className="navbar">
+        <div className="mainlogo">
           <img src="./logo_straypaws.png" alt="Logo" class="logo" />
-          <h1 class="title">Huellas sin hogar</h1>
+          <h1 className="title">Huellas sin hogar</h1>
         </div>
-        <div class="navbar-actions">
-          <button class="btn-header btn-donar" onClick={() => setVistaDonar('opciones')}>DONAR</button>
-          <button class="btn-header btn-volun">SE VOLUNTARIO</button>
+        <div className="navbar-actions">
+          <button className="btn-header btn-donar" onClick={() => setVistaDonar('opciones')}>DONAR</button>
+          <button className="btn-header btn-volun">SE VOLUNTARIO</button>
           <button
             className="btn-header btn-intranet"
             onClick={() => window.location.assign('/login')}
@@ -30,6 +31,7 @@ export default function PublicPage (){
           className="filter-select"
           onChange={(e) => onFilterChange(e.target.value)}
           defaultValue="">
+        <FilterBar onFilterChange={setFiltro} />
           <option value="" disabled hidden>
             Filtrar por...
           </option>
@@ -53,15 +55,15 @@ export default function PublicPage (){
 export const Navbar = () => {
   return (
     <div id="publicpage">
-      <header class="navbar">
-        <div class="mainlogo">
+      <header className="navbar">
+        <div className="mainlogo">
           <img src="frontend/public/logo_straypaws.png" alt="Logo" class="logo" />
-          <h1 class="title">Huellas sin hogar</h1>
+          <h1 className="title">Huellas sin hogar</h1>
         </div>
-        <div class="navbar-actions">
-          <button class="btn-header btn-donar">DONAR</button>
-          <button class="btn-header btn-volun">SE VOLUNTARIO</button>
-          <button class="btn-header btn-intranet">Acceder a Intranet</button>
+        <div className="navbar-actions">
+          <button className="btn-header btn-donar">DONAR</button>
+          <button className="btn-header btn-volun">SE VOLUNTARIO</button>
+          <button className="btn-header btn-intranet">Acceder a Intranet</button>
         </div>
       </header>
     </div>
