@@ -8,6 +8,8 @@ export default function PublicPage (){
   const [vistaDonar, setVistaDonar] = useState(null);
   const cerrarDonar = () => setVistaDonar(null);
   const [filtro, setFiltro] = useState('todos');
+  const [animales, setAnimales] = useState([])
+  const visibles = animales.filter((a) => filtro === 'todos' || /* condición según el filtro */ true)
   return (
     <div id="publicpage">
       <header className="navbar">
