@@ -10,8 +10,15 @@ export const ROLES = {
   VOLUNTARIO: 'Voluntario',
 }
 
-// Admin y Veterinaria pueden agregar, modificar y eliminar registros.
-// El Voluntario solo puede mirar.
+// Los tres roles pueden agregar registros nuevos (los botones "Añadir ...", "Registrar ...").
+// Se revisa que el rol sea uno de los conocidos, y no solo que haya sesión,
+// para que un rol nuevo que se cree en la base de datos no reciba permisos sin querer.
+export function puedeAgregar(usuario) {
+  return [ROLES.ADMIN, ROLES.VETERINARIA, ROLES.VOLUNTARIO].includes(usuario?.rol)
+}
+
+// Solo Admin y Veterinaria pueden modificar y eliminar registros que ya existen.
+// El Voluntario puede agregar, pero no cambiar ni borrar.
 export function puedeEditar(usuario) {
   return usuario?.rol === ROLES.ADMIN || usuario?.rol === ROLES.VETERINARIA
 }
