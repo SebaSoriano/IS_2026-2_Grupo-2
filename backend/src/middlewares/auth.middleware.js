@@ -51,9 +51,17 @@ export const requireRol = (...rolesPermitidos) => {
 // También va DESPUÉS de requireAuth.
 const soloRolesQueEditan = requireRol(...ROLES_QUE_EDITAN);
 
+const soloRolesQueCrean = requireRol(...ROLES_QUE_CREAN);
+
 export const requireEdicion = (req, res, next) => {
+    // leer: pasan todos los que tienen sesión
     if (METODOS_DE_LECTURA.includes(req.method)) {
         return next();
     }
+    // agregar: pasan Admin, Veterinaria y Voluntario
+    if (METODOS_DE_CREACION.includes(req.method)) {
+        return soloRolesQueCrean(req, res, next);
+    }
+    // modificar o eliminar: pasan solo Admin y Veterinaria
     return soloRolesQueEditan(req, res, next);
 };
