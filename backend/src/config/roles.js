@@ -8,10 +8,14 @@ export const ROLES = {
     VOLUNTARIO: 'Voluntario',
 };
 
-// Roles que pueden crear, modificar y eliminar registros (todo lo que no sea leer).
+// Roles que pueden modificar y eliminar registros (todo lo que no sea leer).
 // El Voluntario no está en la lista: él solo puede consultar.
 export const ROLES_QUE_EDITAN = [ROLES.ADMIN, ROLES.VETERINARIA];
 
 // Métodos HTTP que solo leen datos y no cambian nada en la base de datos.
 // GET es el que usa la página para consultar; HEAD y OPTIONS los usa el navegador por su cuenta.
 export const METODOS_DE_LECTURA = ['GET', 'HEAD', 'OPTIONS'];
+
+// MÉTODOS HTTP que pueden crear
+export const ROLES_QUE_CREAN = [ROLES.ADMIN, ROLES.VETERINARIA, ROLES.VOLUNTARIO];
+export const METODOS_DE_CREACION = ['POST'];
