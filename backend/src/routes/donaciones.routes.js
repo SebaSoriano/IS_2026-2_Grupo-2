@@ -18,7 +18,7 @@ const id = validate(idParamSchema, 'params');
 
 // pública: la usa el formulario de donaciones de la página pública, sin iniciar sesión.
 // Va ANTES del router.use(requireAuth), por eso no pide sesión
-router.post('/web', validate(createDonacionWebSchema), c.createDonacionWeb);
+router.post('/web', recibirComprobante, validate(createDonacionWebSchema), c.createDonacionWeb);
 
 // desde aquí hacia abajo, todas las rutas de donaciones piden sesión.
 // Registrar una donación presencial (POST) lo puede hacer cualquier rol, también el Voluntario;
@@ -32,7 +32,6 @@ router.get('/:id', id, c.getDonacionById);
 router.get('/:id/comprobante', id, c.getComprobante);
 
 router.post('/', validate(createDonacionPresencialSchema), c.createDonacionPresencial);
-router.post('/web', recibirComprobante, validate(createDonacionWebSchema), c.createDonacionWeb);
 
 router.patch('/:id', id, validate(updateDonacionSchema), c.updateDonacion);
 router.patch('/:id/agendar', id, validate(agendarDonacionSchema), c.agendarDonacion);
