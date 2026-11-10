@@ -30,8 +30,9 @@ router.use('/donaciones', donacionesRoutes);
 // ---------- Rutas de la intranet (piden sesión) ----------
 // Cada sección pasa por dos middlewares, en este orden:
 // 1. requireAuth: si no hay una cookie con un token válido responde 401 (no autenticado)
-// 2. requireEdicion: deja leer (GET) a todos, pero POST, PUT, PATCH y DELETE
-//    solo a Admin y Veterinaria; al Voluntario le responde 403 (prohibido)
+// 2. requireEdicion: deja leer (GET) y agregar (POST) a todos los roles,
+//    pero modificar y eliminar (PUT, PATCH y DELETE) solo a Admin y Veterinaria;
+//    si el Voluntario intenta modificar o eliminar, le responde 403 (prohibido)
 // Express acepta un arreglo de middlewares, así no se repiten los dos en cada línea.
 const conSesion = [requireAuth, requireEdicion];
 

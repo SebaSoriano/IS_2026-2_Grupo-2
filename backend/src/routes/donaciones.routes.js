@@ -19,8 +19,9 @@ const id = validate(idParamSchema, 'params');
 // Va ANTES del router.use(requireAuth), por eso no pide sesión
 router.post('/web', validate(createDonacionWebSchema), c.createDonacionWeb);
 
-// desde aquí hacia abajo, todas las rutas de donaciones piden sesión,
-// y las que cambian datos (POST, PATCH, DELETE) piden además ser Admin o Veterinaria.
+// desde aquí hacia abajo, todas las rutas de donaciones piden sesión.
+// Registrar una donación presencial (POST) lo puede hacer cualquier rol, también el Voluntario;
+// las que modifican o eliminan (PATCH, DELETE) piden además ser Admin o Veterinaria.
 // Express revisa las rutas en orden: un router.use sin ruta se aplica
 // a todas las que se registran después de él
 router.use(requireAuth, requireEdicion);
