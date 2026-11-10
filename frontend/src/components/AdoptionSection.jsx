@@ -19,8 +19,9 @@ function nombreAdoptante(adoptante) {
 }
 
 export default function AdoptionSection() {
-  // el Voluntario puede ver los animales disponibles y las adopciones, pero no registrar una
-  const { puedeEditar } = usePermisos()
+  // registrar una adopción es agregar un registro nuevo, así que lo pueden hacer todos los roles,
+  // también el Voluntario (en esta sección no hay botones de modificar ni eliminar)
+  const { puedeAgregar } = usePermisos()
   // Qué tabla se ve: 'disponibles' o 'historial'
   const [vista, setVista] = useState('disponibles')
   const [animales, setAnimales] = useState([])
@@ -107,7 +108,7 @@ export default function AdoptionSection() {
         >
           Adopciones Registradas
         </button>
-        {puedeEditar && (
+        {puedeAgregar && (
           <>
           <button
             className="area-action"

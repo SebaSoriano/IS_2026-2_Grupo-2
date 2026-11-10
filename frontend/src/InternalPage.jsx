@@ -23,13 +23,14 @@ function getSectionFromPath(pathname) {
   })?.id
 }
 
-// acciones de inventario que cambian datos (el Voluntario no las ve)
-const ACCIONES_QUE_EDITAN_INVENTARIO = ['Añadir Registro', 'Modificar Registro', 'Eliminar Registro']
+// acciones de inventario que cambian o borran un insumo que ya existe (el Voluntario no las ve).
+// "Añadir Registro" no está aquí porque agregar lo pueden hacer todos los roles
+const ACCIONES_QUE_EDITAN_INVENTARIO = ['Modificar Registro', 'Eliminar Registro']
 
 // usuario viene de RutaProtegida: { rut, nombre, correo, rol }
 export default function InternalPage({ usuario }) {
-  // los botones de inventario que cambian datos (añadir, modificar, eliminar) solo los ven Admin y Veterinaria;
-  // "Exportar Registros" solo lee, así que lo ven todos
+  // "Añadir Registro" y "Exportar Registros" los ven todos los roles;
+  // "Modificar Registro" y "Eliminar Registro" solo Admin y Veterinaria
   const { puedeEditar } = usePermisos()
   const accionesInventario = puedeEditar
     ? inventoryActions

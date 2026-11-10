@@ -13,8 +13,9 @@ const REGISTROS_POR_PAGINA = 15
 // Pestaña "Historial Médico". Este componente es el que guarda el estado y habla con el backend;
 // HistorialFiltros, HistorialTabla y HistorialTarjetas solo muestran datos y le avisan lo que hace el usuario.
 export default function HistorialSection() {
-  // el Voluntario solo puede mirar: no ve los botones de añadir, modificar ni eliminar
-  const { puedeEditar } = usePermisos()
+  // todos los roles pueden añadir registros (puedeAgregar);
+  // modificar y eliminar es solo de Admin y Veterinaria (puedeEditar)
+  const { puedeAgregar, puedeEditar } = usePermisos()
   // Respuesta del backend: los registros de la página actual y el total que coincide con los filtros
   const [registros, setRegistros] = useState([])
   const [total, setTotal] = useState(0)
@@ -169,11 +170,15 @@ export default function HistorialSection() {
         role="group"
         aria-label="Acciones del historial médico"
       >
-        {puedeEditar && (
-          <>
+        {/* "Añadir Registro" lo ven todos los roles, también el Voluntario */}
+        {puedeAgregar && (
           <button className="area-action" type="button" onClick={() => abrirFormulario('crear')}>
             Añadir Registro
           </button>
+        )}
+        {/* "Modificar" y "Eliminar" solo los ven Admin y Veterinaria */}
+        {puedeEditar && (
+          <>
           {/* Modificar y eliminar necesitan una fila seleccionada, si no, quedan desactivados */}
           <button
             className="area-action"

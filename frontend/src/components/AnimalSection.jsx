@@ -8,8 +8,9 @@ import './HistorialSection.css'
 import { usePermisos } from '../sesion/sesion.js'
 
 export default function AnimalSection() {
-  // el Voluntario solo puede mirar: no ve los botones de añadir, modificar ni eliminar
-  const { puedeEditar } = usePermisos()
+  // todos los roles ven "Añadir Animal" (puedeAgregar);
+  // "Modificar" y "Eliminar" solo los ven Admin y Veterinaria (puedeEditar), el Voluntario no
+  const { puedeAgregar, puedeEditar } = usePermisos()
   const [animales, setAnimales] = useState([])
   // Estado de la carga: 'cargando', 'listo' o 'error'
   const [estado, setEstado] = useState('cargando')
@@ -115,11 +116,13 @@ export default function AnimalSection() {
         role="group"
         aria-label="Acciones de animales"
       >
+        {puedeAgregar && (
+          <button className="area-action" type="button" onClick={abrirCrear}>
+            Añadir Animal
+          </button>
+        )}
         {puedeEditar && (
           <>
-            <button className="area-action" type="button" onClick={abrirCrear}>
-              Añadir Animal
-            </button>
             <button
               className="area-action"
               type="button"

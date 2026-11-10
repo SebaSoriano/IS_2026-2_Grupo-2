@@ -25,12 +25,17 @@ const vistaDesdeRuta = () =>
   window.location.pathname.replace(/\/+$/, '') === RUTA_ASISTENCIA ? 'asistencia' : 'horario'
 
 export default function ScheduleSection() {
-  // el Voluntario no ve "Añadir turno", "Editar turno" ni "Borrar turno" (las acciones que abren un pop-up);
-  // sí ve "Asistencia" y "Exportar", que solo muestran información
-  const { puedeEditar } = usePermisos()
-  const accionesVisibles = puedeEditar
-    ? scheduleActions
-    : scheduleActions.filter((action) => !MODAL_POR_ACCION[action])
+  // cada botón se muestra según lo que hace:
+  // - "Añadir turno" crea un turno nuevo: lo ven todos los roles (puedeAgregar)
+  // - "Editar turno" y "Borrar turno" cambian uno que ya existe: solo Admin y Veterinaria (puedeEditar)
+  // - "Asistencia" y "Exportar" solo muestran información: los ve cualquiera
+  const { puedeAgregar, puedeEditar } = usePermisos()
+  const accionesVisibles = scheduleActions.filter((action) => {
+    const modal = MODAL_POR_ACCION[action]
+    if (modal === 'crear') return puedeAgregar
+    if (modal === 'editar' || modal === 'borrar') return puedeEditar
+    return true
+  })
   const [horarios, setHorarios] = useState([])
   const [estado, setEstado] = useState('loading')
   const [errorCarga, setErrorCarga] = useState('')
