@@ -106,7 +106,7 @@ export default function ExportModal({ tipoInicial = 'horario-semanal', semanaIni
 
         <p className="turno-form__summary">
           Se abrirá la ventana de impresión en hoja horizontal. Puedes imprimir directo o elegir
-          «Guardar como PDF». Activa «Gráficos de fondo» para mantener los colores.
+          «Guardar como PDF».
         </p>
 
         {error && <p className="turno-form__error" role="alert">No se pudo preparar la exportación: {error}</p>}

@@ -1077,7 +1077,7 @@
   }
 }
 
-/* mantiene los colores del modulo en el papel */
+/* mantiene los colores del modulo en el papel aunque la opcion «Graficos de fondo» del navegador este desactivada */
 .hoja-impresion,
 .hoja-impresion * {
   -webkit-print-color-adjust: exact;
