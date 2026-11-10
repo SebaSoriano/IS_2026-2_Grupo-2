@@ -1,7 +1,12 @@
 import { COOKIE_NAME } from '../config/auth.js';
 import { verificarToken } from '../utils/jwt.js';
 import { HttpError } from './error.middleware.js';
-import { ROLES_QUE_EDITAN, METODOS_DE_LECTURA } from '../config/roles.js';
+import {
+    ROLES_QUE_CREAN,
+    ROLES_QUE_EDITAN,
+    METODOS_DE_LECTURA,
+    METODOS_DE_CREACION,
+} from '../config/roles.js';
 
 // Protege una ruta: solo deja pasar a quien inició sesión.
 // Lee el token de la cookie (cookie-parser ya la dejó en req.cookies),
@@ -42,26 +47,25 @@ export const requireRol = (...rolesPermitidos) => {
     };
 };
 
-// Permite leer a todos, pero escribir solo a los roles que editan (Admin y Veterinaria).
-// Mira el método HTTP de la petición:
+// Decide quién puede hacer cada petición según su método HTTP.
+// Mira el método de la petición y aplica una de tres reglas:
 // - GET, HEAD u OPTIONS solo consultan, así que pasa cualquiera que tenga sesión.
-// - POST, PUT, PATCH y DELETE cambian datos, así que se revisa el rol con requireRol.
+// - POST agrega un registro nuevo, así que pasan Admin, Veterinaria y Voluntario (ROLES_QUE_CREAN).
+// - PUT, PATCH y DELETE cambian o borran algo que ya existe, así que pasan solo
+//   Admin y Veterinaria (ROLES_QUE_EDITAN); al Voluntario se le responde 403.
 // Gracias a esto no hace falta escribir requireRol en cada ruta de cada archivo:
 // se pone una vez por sección en index.routes.js.
-// También va DESPUÉS de requireAuth.
+// También va DESPUÉS de requireAuth, porque requireRol usa req.usuario.
+// Los dos "porteros" se arman una sola vez aquí afuera, y no en cada petición.
+const soloRolesQueCrean = requireRol(...ROLES_QUE_CREAN);
 const soloRolesQueEditan = requireRol(...ROLES_QUE_EDITAN);
 
-const soloRolesQueCrean = requireRol(...ROLES_QUE_CREAN);
-
 export const requireEdicion = (req, res, next) => {
-    // leer: pasan todos los que tienen sesión
     if (METODOS_DE_LECTURA.includes(req.method)) {
         return next();
     }
-    // agregar: pasan Admin, Veterinaria y Voluntario
     if (METODOS_DE_CREACION.includes(req.method)) {
         return soloRolesQueCrean(req, res, next);
     }
-    // modificar o eliminar: pasan solo Admin y Veterinaria
     return soloRolesQueEditan(req, res, next);
 };
