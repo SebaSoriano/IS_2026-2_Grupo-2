@@ -107,3 +107,31 @@ export function describirSemana(lunes) {
 
   return `Semana ${numero} de ${nombreMes} · ${rango}`
 }
+
+// ---------- calendario mensual (vista Mes del horario y hoja de impresion) ----------
+
+export const DIAS_LARGOS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+
+// semanas del mes con 7 casillas cada una (lunes a domingo); null = dia de otro mes
+// asi cada dia queda en la columna de su dia de la semana
+export function semanasDelCalendario(mes) {
+  return semanasDelMes(diasDelMes(mes)).map((dias, i) => {
+    const vaciasAntes = i === 0 ? dias[0].diaSemana - 1 : 0
+    const vaciasDespues = 7 - vaciasAntes - dias.length
+    return [...Array(vaciasAntes).fill(null), ...dias, ...Array(vaciasDespues).fill(null)]
+  })
+}
+
+// usuarios con sus turnos (respuesta de getAsistencias) -> Map fecha "AAAA-MM-DD" -> turnos de ese dia
+// cada turno lleva el nombre de la persona y quedan ordenados por hora de llegada
+export function turnosPorFecha(usuarios) {
+  const porFecha = new Map()
+  for (const usuario of usuarios) {
+    for (const turno of usuario.turnos) {
+      const fecha = turno.fecha.slice(0, 10)
+      porFecha.set(fecha, [...(porFecha.get(fecha) ?? []), { ...turno, nombre: usuario.nombre_usuario }])
+    }
+  }
+  for (const turnos of porFecha.values()) turnos.sort((a, b) => a.hora_inicio.localeCompare(b.hora_inicio))
+  return porFecha
+}
