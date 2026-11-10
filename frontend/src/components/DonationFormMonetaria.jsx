@@ -19,7 +19,7 @@ const TAMANO_MAXIMO = 5 * 1024 * 1024 // 5 MB, igual que el servidor
 function errorDeArchivo(archivo) {
   if (!archivo) return ''
   if (!TIPOS_PERMITIDOS.includes(archivo.type)) return 'Debe ser una imagen JPG o PNG'
-  if (archivo.size > TAMANO_MAXIMO) return 'No puede superar los 5 MB'
+  if (archivo.size > TAMANO_MAXIMO) return 'El archivo no puede superar los 5 MB'
   return ''
 }
 
