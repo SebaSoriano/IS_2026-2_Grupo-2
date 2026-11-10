@@ -118,3 +118,17 @@
     flex-direction: column-reverse;
   }
 }
+
+.animal-form__preview {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border: 1px solid #9bd6d3;
+  border-radius: 8px;
+}
+
+.animal-form__help {
+  color: #536d6e;
+  font-size: 0.875rem;
+  font-weight: 400;
+}

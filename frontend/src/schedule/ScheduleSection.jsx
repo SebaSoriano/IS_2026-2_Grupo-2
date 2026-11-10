@@ -2,14 +2,18 @@ import { useCallback, useEffect, useState } from 'react'
 import { scheduleActions } from '../data/scheduleActions.js'
 import { actualizarTurno, crearTurno, eliminarTurno, getHorarios } from '../services/api.js'
 import AttendanceSection from './AttendanceSection.jsx'
+import ExportModal from './ExportModal.jsx'
 import Modal from './Modal.jsx'
+import MonthPicker from './MonthPicker.jsx'
+import MonthSchedule from './MonthSchedule.jsx'
 import TurnoForm from './TurnoForm.jsx'
 import TurnoSelector from './TurnoSelector.jsx'
 import WeekPicker from './WeekPicker.jsx'
-import { diaDeHoy, lunesDe, semanaActual } from './calendario.js'
+import { diaDeHoy, lunesDe, mesActual, semanaActual } from './calendario.js'
 import { bloquesDelDia, formatearHora, horasDelTurno } from './horas.js'
+import { usePermisos } from '../sesion/sesion.js'
 
-// estas acciones abren un pop-up; Asistencia cambia la vista y Exportar queda pendiente
+// estas acciones abren un pop-up para editar turnos; Asistencia cambia la vista y Exportar abre su propio pop-up
 const MODAL_POR_ACCION = {
   'Añadir turno': 'crear',
   'Editar turno': 'editar',
@@ -24,6 +28,17 @@ const vistaDesdeRuta = () =>
   window.location.pathname.replace(/\/+$/, '') === RUTA_ASISTENCIA ? 'asistencia' : 'horario'
 
 export default function ScheduleSection() {
+  // cada botón se muestra según lo que hace:
+  // - "Añadir turno" crea un turno nuevo: lo ven todos los roles (puedeAgregar)
+  // - "Editar turno" y "Borrar turno" cambian uno que ya existe: solo Admin y Veterinaria (puedeEditar)
+  // - "Asistencia" y "Exportar" solo muestran información: los ve cualquiera
+  const { puedeAgregar, puedeEditar } = usePermisos()
+  const accionesVisibles = scheduleActions.filter((action) => {
+    const modal = MODAL_POR_ACCION[action]
+    if (modal === 'crear') return puedeAgregar
+    if (modal === 'editar' || modal === 'borrar') return puedeEditar
+    return true
+  })
   const [horarios, setHorarios] = useState([])
   const [estado, setEstado] = useState('loading')
   const [errorCarga, setErrorCarga] = useState('')
@@ -35,6 +50,9 @@ export default function ScheduleSection() {
   const [vista, setVista] = useState(vistaDesdeRuta)
   // semana que se ve en la tabla ("AAAA-MM-DD" de su lunes), parte en la semana actual
   const [semana, setSemana] = useState(semanaActual)
+  // el horario se ve por 'semana' (tabla por horas) o por 'mes' (calendario); el mes parte en el actual
+  const [escala, setEscala] = useState('semana')
+  const [mes, setMes] = useState(mesActual)
   // cuenta los cambios de turnos para que la asistencia recargue los dias con turno
   const [cambiosTurnos, setCambiosTurnos] = useState(0)
 
@@ -70,6 +88,12 @@ export default function ScheduleSection() {
   const cambiarSemana = (nuevaSemana) => {
     setEstado('loading')
     setSemana(nuevaSemana)
+  }
+
+  // click en un dia del calendario mensual: abre su semana en la vista Semana
+  const verSemana = (lunes) => {
+    if (lunes !== semana) cambiarSemana(lunes)
+    setEscala('semana')
   }
 
   const dias = horarios.map(({ id, dia }) => ({ id, dia }))
@@ -119,7 +143,7 @@ export default function ScheduleSection() {
   return (
     <div className="schedule">
       <div className="area-actions area-actions--horario" role="group" aria-label="Acciones de horario">
-        {scheduleActions.map((action) => (
+        {accionesVisibles.map((action) => (
           <button
             className={`area-action${action === 'Asistencia' && vista === 'asistencia' ? ' is-active' : ''}`}
             type="button"
@@ -127,9 +151,11 @@ export default function ScheduleSection() {
             onClick={
               action === 'Asistencia'
                 ? alternarAsistencia
-                : MODAL_POR_ACCION[action]
-                  ? () => abrirModal(MODAL_POR_ACCION[action])
-                  : undefined
+                : action === 'Exportar'
+                  ? () => abrirModal('exportar')
+                  : MODAL_POR_ACCION[action]
+                    ? () => abrirModal(MODAL_POR_ACCION[action])
+                    : undefined
             }
             aria-pressed={action === 'Asistencia' ? vista === 'asistencia' : undefined}
             disabled={MODAL_POR_ACCION[action] && estado !== 'success'}
@@ -145,18 +171,54 @@ export default function ScheduleSection() {
         </div>
       )}
 
-      <div className="schedule-table-container" aria-busy={estado === 'loading'} hidden={vista === 'asistencia'}>
+      <div
+        className="schedule-table-container"
+        aria-busy={escala === 'semana' && estado === 'loading'}
+        hidden={vista === 'asistencia'}
+      >
         <div className="schedule-week">
-          <WeekPicker lunes={semana} onChange={cambiarSemana} />
+          <div className="schedule-escala" role="group" aria-label="Ver horario por">
+            {[['semana', 'Semana'], ['mes', 'Mes']].map(([valor, texto]) => (
+              <button
+                type="button"
+                key={valor}
+                className={escala === valor ? 'is-active' : undefined}
+                aria-pressed={escala === valor}
+                onClick={() => setEscala(valor)}
+              >
+                {texto}
+              </button>
+            ))}
+          </div>
+          {escala === 'semana' ? (
+            <WeekPicker lunes={semana} onChange={cambiarSemana} />
+          ) : (
+            <MonthPicker mes={mes} onChange={setMes} />
+          )}
         </div>
-        {estado === 'loading' && <p role="status">Cargando horario...</p>}
-        {estado === 'error' && (
-          <p className="inventory-error" role="alert">
-            No se pudo cargar el horario: {errorCarga}
-          </p>
+        {escala === 'mes' ? (
+          <MonthSchedule mes={mes} cambiosTurnos={cambiosTurnos} onVerSemana={verSemana} />
+        ) : (
+          <>
+            {estado === 'loading' && <p role="status">Cargando horario...</p>}
+            {estado === 'error' && (
+              <p className="inventory-error" role="alert">
+                No se pudo cargar el horario: {errorCarga}
+              </p>
+            )}
+            {estado === 'success' && <ScheduleTable horarios={horarios} />}
+          </>
         )}
-        {estado === 'success' && <ScheduleTable horarios={horarios} />}
       </div>
+
+      {modal === 'exportar' && (
+        <ExportModal
+          tipoInicial={escala === 'mes' ? 'horario-mensual' : 'horario-semanal'}
+          semanaInicial={semana}
+          mesInicial={mes}
+          onClose={cerrarModal}
+        />
+      )}
 
       {modal === 'crear' && (
         <Modal title="Añadir turno" onClose={cerrarModal}>

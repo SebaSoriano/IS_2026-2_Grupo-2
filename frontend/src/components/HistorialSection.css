@@ -62,10 +62,11 @@
   background: #19efa0;
 }
 
+/* white-space: nowrap evita que "Limpiar filtros" se parta en dos líneas si falta espacio */
 .historial-filtros__limpiar {
   color: #315052;
   background: #e5eeee;
-  font-size: 1.25rem;
+  white-space: nowrap;
 }
 
 /* Botones Tabla / Tarjetas: margin-left: auto los empuja al extremo derecho del buscador */
@@ -102,22 +103,25 @@
 
 /* ---------- Tarjetas ---------- */
 
-/* auto-fill + minmax crea tantas columnas de al menos 170px como quepan en el ancho disponible */
+/* auto-fill + minmax crea tantas columnas de al menos 210px como quepan en el ancho disponible.
+   Al subir el mínimo de 170px a 210px, cada tarjeta queda más ancha (y por eso más grande). */
 .historial-tarjetas {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 20px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* El padding de arriba y de los lados es de 8px para que la foto quede casi pegada al borde.
+   Abajo se dejan 16px para que el texto no quede apretado contra el borde inferior. */
 .historial-tarjeta {
   display: grid;
   justify-items: center;
   gap: 4px;
   width: 100%;
-  padding: 16px 12px;
+  padding: 8px 8px 16px;
   border: 1px solid #c3eeee;
   border-radius: 8px;
   color: #173d3e;
@@ -136,23 +140,29 @@
   transform: translateY(-3px);
 }
 
-/* object-fit: contain ajusta la imagen dentro del círculo sin deformarla ni recortarla */
+/* La foto ocupa todo el ancho de la tarjeta y es cuadrada.
+   aspect-ratio: 1 / 1 hace que el alto sea siempre igual al ancho, mida lo que mida la tarjeta.
+   object-fit: cover llena todo el cuadrado sin deformar la imagen; si la imagen no es cuadrada,
+   recorta lo que sobra. object-position: center top hace que ese recorte se haga por abajo,
+   para que no se pierda la cabeza del animal. */
 .historial-tarjeta__foto {
+  display: block;
   box-sizing: border-box;
-  width: 110px;
-  height: 110px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   margin-bottom: 8px;
-  padding: 10px;
-  border-radius: 50%;
+  border-radius: 4px;
   background: #f0fbfa;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center top;
 }
 
+/* Cuando no hay foto, se muestra la inicial del nombre en un cuadrado del mismo tamaño */
 .historial-tarjeta__foto--inicial {
   display: grid;
   place-items: center;
   color: #1f5f61;
-  font-size: 2.5rem;
+  font-size: 4rem;
   font-weight: 700;
 }
 
@@ -170,6 +180,7 @@
   margin: 0;
   color: #536d6e;
 }
+
 
 /* ---------- Tabla ---------- */
 
@@ -281,4 +292,10 @@
   margin: 0;
   color: #536d6e;
   font-size: 0.875rem;
+}
+
+/* Tarjeta seleccionada (se usa en la sección Animales) */
+.historial-tarjeta.is-selected {
+  border: 2px solid #3ba5a3;
+  background: #dcf8f5;
 }

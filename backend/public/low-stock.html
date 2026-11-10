@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+  <body style="margin:0;padding:0;background:#f2fbfb;font-family:Arial,sans-serif;color:#071b1c;">
+    <div style="display:none;max-height:0;overflow:hidden;">{{preheader}}</div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f2fbfb;padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #c3eeee;border-radius:16px;overflow:hidden;">
+            <tr>
+              <td style="background:#9bd6d3;padding:24px 32px;color:#071b1c;">
+                <table role="presentation" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td style="padding-right:14px;">
+                      <img src="cid:straypaws-logo" width="80" alt="Logo de StrayPaws" style="display:block;width:80px;height:auto;border:0;border-radius:8px;">
+                    </td>
+                    <td>
+                      <div style="font-size:30px;font-weight:bold;letter-spacing:1px;">StrayPaws</div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:32px;">
+                <h1 style="font-size:24px;line-height:1.3;margin:0 0 12px;color:#064c3e;">Un insumo necesita atención</h1>
+                <p style="font-size:15px;line-height:1.6;margin:0 0 24px;color:#315052;">El siguiente insumo se encuentra en bajo stock.</p>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #9bd6d3;border-radius:10px;font-size:14px;">
+                  <tr><td style="padding:12px;color:#315052;">Insumo</td><td style="padding:12px;font-weight:bold;color:#071b1c;">{{nombre}}</td></tr>
+                  <tr><td style="padding:12px;border-top:1px solid #c3eeee;color:#315052;">Cantidad disponible</td><td style="padding:12px;border-top:1px solid #c3eeee;color:#064c3e;font-weight:bold;">{{cantidad}}</td></tr>
+                  <tr><td style="padding:12px;border-top:1px solid #c3eeee;color:#315052;">ID</td><td style="padding:12px;border-top:1px solid #c3eeee;">{{id}}</td></tr>
+                  {{#descripcion}}<tr><td style="padding:12px;border-top:1px solid #c3eeee;color:#315052;">Descripción</td><td style="padding:12px;border-top:1px solid #c3eeee;">{{descripcion}}</td></tr>{{/descripcion}}
+                </table>
+                </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -1,20 +1,27 @@
 import { useEffect, useState } from 'react'
 import { eliminarAnimal, getAnimales } from '../services/api.js'
 import AnimalForm from './AnimalForm.jsx'
+import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './AnimalSection.css'
+// Se importa para usar los estilos de las tarjetas y de los botones Tabla/Tarjetas
+import './HistorialSection.css'
+import { usePermisos } from '../sesion/sesion.js'
 
 export default function AnimalSection() {
-  // Lista de animales que viene del backend
+  // todos los roles ven "Añadir Animal" (puedeAgregar);
+  // "Modificar" y "Eliminar" solo los ven Admin y Veterinaria (puedeEditar), el Voluntario no
+  const { puedeAgregar, puedeEditar } = usePermisos()
   const [animales, setAnimales] = useState([])
   // Estado de la carga: 'cargando', 'listo' o 'error'
   const [estado, setEstado] = useState('cargando')
   const [errorCarga, setErrorCarga] = useState('')
-  // id del animal seleccionado en la tabla (null = ninguno)
+  // id del animal seleccionado (null = ninguno)
   const [seleccionadoId, setSeleccionadoId] = useState(null)
   // Qué popup está abierto: null (ninguno), 'crear' o 'modificar'
   const [formularioAbierto, setFormularioAbierto] = useState(null)
-  // Mensaje de éxito o error sobre la tabla
   const [mensaje, setMensaje] = useState(null)
+  // Cómo se muestran los animales: 'tabla' o 'tarjetas'
+  const [vista, setVista] = useState('tabla')
 
   // Cargar los animales una vez, al entrar a la pestaña
   useEffect(() => {
@@ -29,9 +36,18 @@ export default function AnimalSection() {
       })
   }, [])
 
-  // Buscar en la lista el animal que tiene el id seleccionado
   const animalSeleccionado =
     animales.find((animal) => animal.id_animal === seleccionadoId) ?? null
+
+  // Si se aprieta el animal que ya estaba seleccionado, se deselecciona;
+  // si se aprieta otro, se selecciona ese
+  function alternarSeleccion(id) {
+    if (seleccionadoId === id) {
+      setSeleccionadoId(null)
+    } else {
+      setSeleccionadoId(id)
+    }
+  }
 
   function abrirCrear() {
     setMensaje(null)
@@ -48,13 +64,11 @@ export default function AnimalSection() {
   }
 
   // AnimalForm llama a esta función cuando el backend guardó el animal
-  function animalGuardado(animal) {
+  function animalGuardado(animal, avisoFoto) {
     if (formularioAbierto === 'crear') {
-      // Agregar el nuevo animal al principio de la lista
       setAnimales([{ ...animal, adoptado: false, adopcion: null }, ...animales])
       setMensaje({ tipo: 'exito', texto: `Animal registrado con el id ${animal.id_animal}` })
     } else {
-      // Reemplazar en la lista el animal modificado
       setAnimales(
         animales.map((actual) =>
           actual.id_animal === animal.id_animal ? { ...actual, ...animal } : actual,
@@ -62,6 +76,15 @@ export default function AnimalSection() {
       )
       setMensaje({ tipo: 'exito', texto: `Animal ${animal.id_animal} modificado` })
     }
+
+    // Si el animal se guardó pero la foto falló, se avisa
+    if (avisoFoto) {
+      setMensaje({
+        tipo: 'error',
+        texto: `El animal se guardó, pero la foto no se pudo subir: ${avisoFoto}`,
+      })
+    }
+
     setFormularioAbierto(null)
   }
 
@@ -76,7 +99,6 @@ export default function AnimalSection() {
     setMensaje(null)
     try {
       await eliminarAnimal(animalSeleccionado.id_animal)
-      // Quitarlo de la lista
       setAnimales(
         animales.filter((animal) => animal.id_animal !== animalSeleccionado.id_animal),
       )
@@ -94,33 +116,63 @@ export default function AnimalSection() {
         role="group"
         aria-label="Acciones de animales"
       >
-        <button className="area-action" type="button" onClick={abrirCrear}>
-          Añadir Animal
-        </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={abrirModificar}
-          disabled={!animalSeleccionado}
-        >
-          Modificar Animal
-        </button>
-        <button
-          className="area-action"
-          type="button"
-          onClick={eliminarSeleccionado}
-          disabled={!animalSeleccionado}
-        >
-          Eliminar Animal
-        </button>
-        {!animalSeleccionado && (
-          <p className="animal-actions-help">
-            Selecciona un animal en la tabla para modificarlo o eliminarlo.
-          </p>
+        {puedeAgregar && (
+          <button className="area-action" type="button" onClick={abrirCrear}>
+            Añadir Animal
+          </button>
+        )}
+        {puedeEditar && (
+          <>
+            <button
+              className="area-action"
+              type="button"
+              onClick={abrirModificar}
+              disabled={!animalSeleccionado}
+            >
+              Modificar Animal
+            </button>
+            <button
+              className="area-action"
+              type="button"
+              onClick={eliminarSeleccionado}
+              disabled={!animalSeleccionado}
+            >
+              Eliminar Animal
+            </button>
+            {!animalSeleccionado && (
+              <p className="animal-actions-help">
+                Selecciona un animal para modificarlo o eliminarlo. Apriétalo otra vez
+                para deseleccionarlo.
+              </p>
+            )}
+          </>
         )}
       </div>
 
       <div className="animal-table-container" aria-busy={estado === 'cargando'}>
+        {/* Botones Tabla / Tarjetas con las mismas clases de Historial médico.
+            El div de afuera es flex para que "margin-left: auto" los mande a la derecha */}
+        <div style={{ display: 'flex', marginBottom: '12px' }}>
+          <div className="historial-filtros__vistas" role="group" aria-label="Tipo de vista">
+            <button
+              className="historial-filtros__vista"
+              type="button"
+              aria-pressed={vista === 'tabla'}
+              onClick={() => setVista('tabla')}
+            >
+              ☰ Tabla
+            </button>
+            <button
+              className="historial-filtros__vista"
+              type="button"
+              aria-pressed={vista === 'tarjetas'}
+              onClick={() => setVista('tarjetas')}
+            >
+              ▦ Tarjetas
+            </button>
+          </div>
+        </div>
+
         {mensaje && (
           <p className={`animal-message animal-message--${mensaje.tipo}`} role="status">
             {mensaje.texto}
@@ -132,13 +184,23 @@ export default function AnimalSection() {
             No se pudieron cargar los animales: {errorCarga}
           </p>
         )}
-        {estado === 'listo' && (
+
+        {estado === 'listo' && vista === 'tarjetas' && (
+          <HistorialTarjetas
+            animales={animales}
+            seleccionadoId={seleccionadoId}
+            onElegirAnimal={(animal) => alternarSeleccion(animal.id_animal)}
+          />
+        )}
+
+        {estado === 'listo' && vista === 'tabla' && (
           <div className="animal-table-scroll">
             <table className="animal-table">
               <caption>Animales registrados</caption>
               <thead>
                 <tr>
                   <th scope="col">Seleccionar</th>
+                  <th scope="col">Foto</th>
                   <th scope="col">ID</th>
                   <th scope="col">Nombre</th>
                   <th scope="col">Especie</th>
@@ -152,7 +214,7 @@ export default function AnimalSection() {
               <tbody>
                 {animales.length === 0 ? (
                   <tr>
-                    <td className="animal-table-empty" colSpan="9">
+                    <td className="animal-table-empty" colSpan="10">
                       No hay animales registrados.
                     </td>
                   </tr>
@@ -161,25 +223,37 @@ export default function AnimalSection() {
                     <tr
                       key={animal.id_animal}
                       className={animal.id_animal === seleccionadoId ? 'is-selected' : ''}
-                      onClick={() => setSeleccionadoId(animal.id_animal)}
+                      onClick={() => alternarSeleccion(animal.id_animal)}
                     >
-                        <td>
-                            <input
-                            type="radio"
-                            name="animal-seleccionado"
-                            aria-label={`Seleccionar animal ${animal.id_animal}`}
-                            checked={animal.id_animal === seleccionadoId}
-                            onChange={() => setSeleccionadoId(animal.id_animal)}
-                            />
-                        </td>
-                        <td>{animal.id_animal}</td>
-                        <td>{animal.nombre_animal || '—'}</td>
-                        <td>{animal.especie_animal}</td>
-                        <td>{animal.via_ingreso}</td>
-                        <td>{animal.edad}</td>
-                        <td>{animal.peso_animal}</td>
-                        <td>{animal.adoptado ? 'Adoptado' : 'Disponible'}</td>
-                        <td>{animal.observaciones_animal || '—'}</td>
+                      <td>
+                        {/* checkbox en vez de radio: un radio no se puede desmarcar */}
+                        <input
+                          type="checkbox"
+                          aria-label={`Seleccionar animal ${animal.id_animal}`}
+                          checked={animal.id_animal === seleccionadoId}
+                          onChange={() => alternarSeleccion(animal.id_animal)}
+                          onClick={(event) => event.stopPropagation()}
+                        />
+                      </td>
+                      <td>
+                        {animal.foto_animal ? (
+                          <img
+                            className="animal-table__foto"
+                            src={animal.foto_animal}
+                            alt={`Foto de ${animal.nombre_animal}`}
+                          />
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td>{animal.id_animal}</td>
+                      <td>{animal.nombre_animal || '—'}</td>
+                      <td>{animal.especie_animal}</td>
+                      <td>{animal.via_ingreso}</td>
+                      <td>{animal.edad}</td>
+                      <td>{animal.peso_animal}</td>
+                      <td>{animal.adoptado ? 'Adoptado' : 'Disponible'}</td>
+                      <td>{animal.observaciones_animal || '—'}</td>
                     </tr>
                   ))
                 )}

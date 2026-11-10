@@ -96,14 +96,8 @@ export default function HistorialFiltros({
         <button className="historial-filtros__buscar" type="submit">
           Buscar
         </button>
-        <button
-          className="historial-filtros__limpiar"
-          type="button"
-          onClick={limpiar}
-          aria-label="Limpiar filtros"
-          title="Limpiar filtros"
-        >
-          ×
+                <button className="historial-filtros__limpiar" type="button" onClick={limpiar}>
+          Limpiar filtros
         </button>
       </div>
 

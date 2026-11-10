@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarAnimal, crearAnimal } from '../services/api.js'
+import { actualizarAnimal, crearAnimal, subirFotoAnimal } from '../services/api.js'
 import './AnimalForm.css'
 
 // Valores iniciales del formulario
@@ -14,6 +14,9 @@ const formularioVacio = {
 
 // Opciones para la vía de ingreso
 const viasDeIngreso = ['Rescate', 'Abandono', 'Entrega voluntaria', 'Traslado', 'Otro']
+// Fotos permitidas (las mismas que acepta el backend) y peso máximo: 3 MB
+const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp']
+const TAMANO_MAXIMO_FOTO = 3 * 1024 * 1024
 
 // Convierte un animal de la base de datos en los valores del formulario
 function formularioDesdeAnimal(animal) {
@@ -37,6 +40,49 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
     const [errores, setErrores] = useState({})
     const [mensajeError, setMensajeError] = useState('')
     const [enviando, setEnviando] = useState(false)
+    
+    // Foto: el archivo elegido y la imagen que se muestra como vista previa
+    const fotoActual = esEdicion ? animal.foto_animal ?? null : null
+    const [archivoFoto, setArchivoFoto] = useState(null)
+    const [vistaPrevia, setVistaPrevia] = useState(fotoActual)
+    const [errorFoto, setErrorFoto] = useState('')
+
+    // Libera la memoria de la vista previa cuando cambia o se cierra el popup
+    useEffect(() => {
+        return () => {
+            if (vistaPrevia && vistaPrevia.startsWith('blob:')) {
+                URL.revokeObjectURL(vistaPrevia)
+            }
+        }
+    }, [vistaPrevia])
+
+    // Se ejecuta cuando el usuario elige un archivo
+    function seleccionarFoto(event) {
+        const archivo = event.target.files[0]
+        setErrorFoto('')
+
+        // Si canceló la selección, se vuelve a la foto que tenía
+        if (!archivo) {
+            setArchivoFoto(null)
+            setVistaPrevia(fotoActual)
+            return
+        }
+
+        if (!TIPOS_FOTO.includes(archivo.type)) {
+            setErrorFoto('La foto debe ser una imagen JPG, PNG o WEBP')
+            event.target.value = ''
+            return
+        }
+
+        if (archivo.size > TAMANO_MAXIMO_FOTO) {
+            setErrorFoto('La foto no puede pesar más de 3 MB')
+            event.target.value = ''
+            return
+        }
+
+        setArchivoFoto(archivo)
+        setVistaPrevia(URL.createObjectURL(archivo))
+    }
 
     // Referencia al <dialog> para poder abrirlo
     const dialogRef = useRef(null)
@@ -89,8 +135,18 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         } else {
             animalGuardado = await crearAnimal(datos)
         }
+        // Si se eligió una foto, la sube
+        let avisoFoto = null
+        if (archivoFoto !== null) {
+            try {
+                animalGuardado = await subirFotoAnimal(animalGuardado.id_animal, archivoFoto)
+            } catch (errorSubida) {
+                // El animal ya se guardó; solo falló la foto
+                avisoFoto = errorSubida.message
+            }
+        }
         // Avisarle a AnimalSection que se guardó (cierra el popup y actualiza la tabla)
-        onSaved(animalGuardado)
+        onSaved(animalGuardado, avisoFoto)
         } catch (error) {
         if (error.details && error.details.length > 0) {
             // 400: errores de validación, uno por campo
@@ -245,6 +301,21 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
                 <span className="animal-form__error">{errores.observaciones_animal}</span>
             )}
             </label>
+            <div className="animal-form__field">
+            Foto (opcional)
+            {vistaPrevia && (
+                <img className="animal-form__preview" src={vistaPrevia} alt="Vista previa de la foto" />
+            )}
+            <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={seleccionarFoto}
+                disabled={enviando}
+                aria-label="Elegir foto del animal"
+            />
+            <span className="animal-form__help">JPG, PNG o WEBP, máximo 3 MB.</span>
+            {errorFoto && <span className="animal-form__error">{errorFoto}</span>}
+            </div>
 
             <div className="animal-form__actions">
             <button
