@@ -3,6 +3,7 @@ import { HttpError } from '../middlewares/error.middleware.js';
 import { borrarComprobante, guardarComprobante, rutaComprobante } from '../utils/comprobantes.js';
 import { ROLES } from '../config/roles.js';
 
+const usuarioPublico = { select: { rut_usuario: true, nombre_usuario: true } };
 const cuentaPublica = { select: { id_cuenta: true, banco: true, titular_nombre: true, rut_usuario: true } };
 const incluir = { usuario: usuarioPublico, insumos: true, cuenta: cuentaPublica };
 
