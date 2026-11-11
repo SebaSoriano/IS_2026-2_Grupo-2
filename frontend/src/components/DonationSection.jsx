@@ -234,7 +234,7 @@ export default function DonationSection() {
               <tbody>
                 {donaciones.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="{columnas}">No hay donaciones para mostrar.</td>
+                    <td className="inventory-empty" colSpan={columnas}>No hay donaciones para mostrar.</td>
                   </tr>
                 ) : (
                   donaciones.map((donacion) => (
@@ -309,7 +309,7 @@ export default function DonationSection() {
           <DonationPresencialForm onClose={() => setRegistrando(false)} onListo={accionTerminada} />
         )}
         </div>
-        <DonationEstadisticas recarga={recarga} />
+        <DonationStats recarga={recarga} />
       </div>
     </>
   )
