@@ -2,7 +2,7 @@ import express from 'express'
 import cookieParser from 'cookie-parser'
 import indexRouter from './routes/index.routes.js'
 import { errorHandler } from './middlewares/error.middleware.js'
-import { CARPETA_UPLOADS } from './config/uploads.js'
+import { CARPETA_FOTOS_ANIMALES } from './config/uploads.js'
 import { startExpirationNotifications } from './services/insumo-expiration-notifier.service.js'
 
 const app = express()
@@ -13,7 +13,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 // Archivos subidos (fotos), ej: GET /uploads/animales/animal-5-...jpg
-app.use('/uploads', express.static(CARPETA_UPLOADS))
+app.use('/uploads/animales', express.static(CARPETA_FOTOS_ANIMALES))
 
 // Todas las rutas de la API quedan bajo /api
 app.use('/api', indexRouter)
