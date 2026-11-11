@@ -56,7 +56,6 @@ export const createDonacionPresencialSchema = z
       .date({ error: 'Debe ser una fecha válida (AAAA-MM-DD)' })
       .refine((fecha) => fecha <= new Date(), 'La fecha no puede ser futura')
       .optional(),
-    rut_usuario: rut,
     insumos: listaInsumos,
   })
   .strict()
@@ -119,12 +118,17 @@ export const updateDonacionSchema = z.object({
   .refine((d) => Object.keys(d).length > 0, 'Debe enviar al menos un campo para modificar');
 
 // PATCH /api/donaciones/:id/agendar
+const inicioDeHoy = () => {
+  const hoy = new Date();
+  hoy.setUTCHours(0, 0, 0, 0);
+  return hoy;
+};
+
 export const agendarDonacionSchema = z.object({
-  fecha_agendada: z.coerce.date().refine((f) => f > new Date(), 'La fecha agendada debe ser futura'),
+  fecha_agendada: z.coerce.date().refine((f) => f >= inicioDeHoy(), 'La fecha agendada no puede ser anterior a hoy'),
 }).strict();
 
 // PATCH /api/donaciones/:id/confirmar
 export const confirmarDonacionSchema = z.object({
-  rut_usuario: rut,        // voluntario que recibe la donación
   insumos: listaInsumos,   // obligatorio si la donación es de insumos (lo revisa el service)
 }).strict();

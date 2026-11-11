@@ -10,8 +10,9 @@ import {
   confirmarDonacionSchema,
 } from '../schemas/donaciones.schema.js';
 import { idParamSchema } from '../schemas/idParam.schema.js';
-import { requireAuth, requireEdicion } from '../middlewares/auth.middleware.js';
+import { requireAuth, requireRol } from '../middlewares/auth.middleware.js';
 import { recibirComprobante } from '../middlewares/upload.middleware.js';
+import { ROLES } from '../config/roles.js';
 
 const router = Router();
 const id = validate(idParamSchema, 'params');
@@ -25,7 +26,7 @@ router.post('/web', recibirComprobante, validate(createDonacionWebSchema), c.cre
 // las que modifican o eliminan (PATCH, DELETE) piden además ser Admin o Veterinaria.
 // Express revisa las rutas en orden: un router.use sin ruta se aplica
 // a todas las que se registran después de él
-router.use(requireAuth, requireEdicion);
+router.use(requireAuth);
 
 router.get('/', validate(filtrosDonacionSchema, 'query'), c.getDonaciones);
 router.get('/:id', id, c.getDonacionById);
@@ -33,10 +34,10 @@ router.get('/:id/comprobante', id, c.getComprobante);
 
 router.post('/', validate(createDonacionPresencialSchema), c.createDonacionPresencial);
 
-router.patch('/:id', id, validate(updateDonacionSchema), c.updateDonacion);
 router.patch('/:id/agendar', id, validate(agendarDonacionSchema), c.agendarDonacion);
 router.patch('/:id/confirmar', id, validate(confirmarDonacionSchema), c.confirmarDonacion);
+router.patch('/:id', requireRol(ROLES.ADMIN), id, validate(updateDonacionSchema), c.updateDonacion);
 
-router.delete('/:id', id, c.deleteDonacion);
+router.delete('/:id', requireRol(ROLES.ADMIN), id, c.deleteDonacion);
 
 export default router;

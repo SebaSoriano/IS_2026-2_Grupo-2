@@ -1,7 +1,7 @@
 import * as donacionesService from '../services/donaciones.services.js';
 
 export const createDonacionPresencial = async (req, res) => {
-  res.status(201).json(await donacionesService.createDonacionPresencial(req.body));
+  res.status(201).json(await donacionesService.createDonacionPresencial(req.body, req.usuario));
 };
 
 // req.file lo deja multer (undefined si no se adjuntó archivo)
@@ -31,7 +31,7 @@ export const agendarDonacion = async (req, res) => {
 };
 
 export const confirmarDonacion = async (req, res) => {
-  res.json(await donacionesService.confirmarDonacion(req.params.id, req.body));
+  res.json(await donacionesService.confirmarDonacion(req.params.id, req.body, req.usuario));
 };
 
 export const deleteDonacion = async (req, res) => {

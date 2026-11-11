@@ -1,9 +1,10 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 import { borrarComprobante, guardarComprobante, rutaComprobante } from '../utils/comprobantes.js';
+import { ROLES } from '../config/roles.js';
 
-const usuarioPublico = { select: { rut_usuario: true, nombre_usuario: true } };
-const incluir = { usuario: usuarioPublico, insumos: true };
+const cuentaPublica = { select: { id_cuenta: true, banco: true, titular_nombre: true, rut_usuario: true } };
+const incluir = { usuario: usuarioPublico, insumos: true, cuenta: cuentaPublica };
 
 // Desde qué estado se puede pasar a cuáles
 const TRANSICIONES = {
@@ -30,20 +31,35 @@ const verificarInsumos = (tipo, insumos) => {
   if (tipo === 'monetaria' && insumos) throw new HttpError(400, 'Los insumos solo aplican a donaciones de insumos');
 };
 
+// Quién puede agendar o confirmar una donación:
+// - monetaria: el Admin o el voluntario titular de la cuenta a la que llegó la transferencia
+// - insumos: cualquier usuario con sesión (no hay una cuenta a la que se haya transferido)
+const verificarPermiso = async (donacion, usuario) => {
+  if (donacion.tipo_donacion !== 'monetaria' || usuario.rol === ROLES.ADMIN) return;
+
+  const cuenta = donacion.id_cuenta
+    ? await prisma.cuenta_transferencia.findUnique({ where: { id_cuenta: donacion.id_cuenta } })
+    : null;
+
+  if (cuenta?.rut_usuario !== usuario.rut) {
+    throw new HttpError(403, 'Solo el voluntario titular de la cuenta puede gestionar esta donación');
+  }
+};
+
 const filasDeInsumo = (insumos, id_donacion, rut_usuario) =>
   insumos.map((insumo) => ({ ...insumo, id_donacion, rut_usuario, fecha_ingreso: new Date() }));
 
 // Registro presencial: ya está recibida, así que nace confirmada
-export const createDonacionPresencial = async ({ insumos, ...datos }) => {
+export const createDonacionPresencial = async ({ insumos, ...datos }, usuario) => {
   verificarInsumos(datos.tipo_donacion, insumos);
   const fecha = datos.fecha_donacion ?? new Date();
 
   // Transacción: o se guarda la donación Y sus insumos, o no se guarda nada
   return prisma.$transaction(async (tx) => {
     const { id_donacion } = await tx.donaciones.create({
-      data: { ...datos, origen: 'presencial', estado: 'confirmada', fecha_donacion: fecha, fecha_confirmacion: fecha },
+      data: { ...datos, rut_usuario: usuario.rut, origen: 'presencial', estado: 'confirmada', fecha_donacion: fecha, fecha_confirmacion: fecha },
     });
-    if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id_donacion, datos.rut_usuario) });
+    if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id_donacion, usuario.rut) });
     return tx.donaciones.findUnique({ where: { id_donacion }, include: incluir });
   });
 };
@@ -125,7 +141,11 @@ export const updateDonacion = async (id, datos) => {
 
 export const agendarDonacion = async (id, { fecha_agendada }) => {
   const donacion = await obtenerDonacion(id);
+  if (donacion.tipo_donacion !== 'insumos') {
+    throw new HttpError(409, 'Solo las donaciones de insumos se pueden agendar');
+  }
   verificarTransicion(donacion.estado, 'agendada');
+  await verificarPermiso(donacion, usuario);
   return prisma.donaciones.update({
     where: { id_donacion: id },
     data: { estado: 'agendada', fecha_agendada },
@@ -133,9 +153,10 @@ export const agendarDonacion = async (id, { fecha_agendada }) => {
   });
 };
 
-export const confirmarDonacion = async (id, { rut_usuario, insumos }) => {
+export const confirmarDonacion = async (id, { insumos }, usuario) => {
   const donacion = await obtenerDonacion(id);
   verificarTransicion(donacion.estado, 'confirmada');
+  await verificarPermiso(donacion, usuario);
   verificarInsumos(donacion.tipo_donacion, insumos);
 
   return prisma.$transaction(async (tx) => {
@@ -143,11 +164,11 @@ export const confirmarDonacion = async (id, { rut_usuario, insumos }) => {
     // solo uno actualiza una fila y el otro recibe 409 (así no se duplican los insumos)
     const { count } = await tx.donaciones.updateMany({
       where: { id_donacion: id, estado: donacion.estado },
-      data: { estado: 'confirmada', fecha_confirmacion: new Date(), rut_usuario },
+      data: { estado: 'confirmada', fecha_confirmacion: new Date(), rut_usuario: usuario.rut },
     });
     if (count === 0) throw new HttpError(409, 'La donación cambió de estado, actualiza e inténtalo de nuevo');
 
-    if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id, rut_usuario) });
+        if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id, usuario.rut) });
     return tx.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });
   });
 };
