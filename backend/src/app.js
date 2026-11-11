@@ -14,10 +14,10 @@ app.use(express.json())
 app.use(cookieParser())
 // Todas las rutas de la API quedan bajo /api
 app.use('/api', indexRouter)
+
+app.use('/uploads/animales', express.static(CARPETA_FOTOS_ANIMALES))
 // En produccion el frontend lo entrega este mismo servidor:
 // asi la pagina y la API comparten dominio y puerto.
-app.use('/uploads/animales', express.static(CARPETA_FOTOS_ANIMALES))
-
 const CARPETA_FRONTEND = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'frontend', 'dist')
 if (fs.existsSync(path.join(CARPETA_FRONTEND, 'index.html'))) {
   app.use(express.static(CARPETA_FRONTEND))
