@@ -82,3 +82,8 @@
 .donation-accion--eliminar:focus-visible {
   background: #a93226;
 }
+
+/* columna de contenido: tabla + estadísticas (min-width 0 evita que la tabla ensanche la grilla) */
+.donation-contenido {
+  min-width: 0;
+}

@@ -38,3 +38,7 @@ export const deleteDonacion = async (req, res) => {
   await donacionesService.deleteDonacion(req.params.id);
   res.status(204).end();
 };
+
+export const getEstadisticas = async (req, res) => {
+  res.json(await donacionesService.getEstadisticas());
+};

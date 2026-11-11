@@ -31,6 +31,7 @@ router.use(requireAuth);
 router.get('/', validate(filtrosDonacionSchema, 'query'), c.getDonaciones);
 router.get('/:id', id, c.getDonacionById);
 router.get('/:id/comprobante', id, c.getComprobante);
+router.get('/estadisticas', c.getEstadisticas);
 
 router.post('/', validate(createDonacionPresencialSchema), c.createDonacionPresencial);
 

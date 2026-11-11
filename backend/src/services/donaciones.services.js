@@ -172,3 +172,52 @@ export const confirmarDonacion = async (id, { insumos }, usuario) => {
     return tx.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });
   });
 };
+
+// ---------- Estadísticas ----------
+const TOP_DONANTES = 5;
+
+const sinTildes = (texto) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+
+// Un donante se identifica por su correo; si no dejó correo, por su nombre.
+// Sin ninguno de los dos es anónimo y no entra a los rankings
+const claveDonante = (donacion) => {
+  if (donacion.donante_correo) return `correo:${donacion.donante_correo.trim().toLowerCase()}`;
+  if (donacion.donante_nombre) return `nombre:${sinTildes(donacion.donante_nombre)}`;
+  return null;
+};
+
+export const getEstadisticas = async () => {
+  // solo cuentan las confirmadas: las pendientes todavía no se sabe si llegaron
+  const donaciones = await prisma.donaciones.findMany({
+    where: { estado: 'confirmada' },
+    select: { tipo_donacion: true, monto_donacion: true, donante_nombre: true, donante_correo: true },
+    orderBy: { fecha_donacion: 'asc' },
+  });
+
+  const donantes = new Map();
+  for (const donacion of donaciones) {
+    const clave = claveDonante(donacion);
+    if (!clave) continue;
+
+    const donante = donantes.get(clave) ?? { nombre: 'Sin nombre', total: 0, cantidad: 0 };
+    // van de la más antigua a la más reciente: queda el nombre con que donó la última vez
+    if (donacion.donante_nombre) donante.nombre = donacion.donante_nombre;
+    donante.cantidad += 1;
+    if (donacion.tipo_donacion === 'monetaria') donante.total += donacion.monto_donacion ?? 0;
+    donantes.set(clave, donante);
+  }
+
+  const lista = [...donantes.values()];
+  const porNombre = (a, b) => a.nombre.localeCompare(b.nombre, 'es');
+
+  // por monto: solo quienes donaron dinero; por cantidad: todos (monetarias e insumos)
+  const porMonto = lista
+    .filter((donante) => donante.total > 0)
+    .sort((a, b) => b.total - a.total || b.cantidad - a.cantidad || porNombre(a, b))
+    .slice(0, TOP_DONANTES);
+  const porCantidad = [...lista]
+    .sort((a, b) => b.cantidad - a.cantidad || b.total - a.total || porNombre(a, b))
+    .slice(0, TOP_DONANTES);
+
+  return { porMonto, porCantidad };
+};

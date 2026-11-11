@@ -1,0 +1,92 @@
+.donation-estadisticas {
+  margin-top: 20px;
+}
+
+.donation-estadisticas h2 {
+  margin: 0 0 12px;
+  color: #173d3e;
+  font-size: 1.1rem;
+}
+
+.donation-estadisticas__rankings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.donation-ranking h3 {
+  margin: 0;
+  color: #173d3e;
+  font-size: 1rem;
+}
+
+.donation-ranking__nota,
+.donation-estadisticas__aviso {
+  margin: 2px 0 10px;
+  color: #4d6a6b;
+  font-size: 0.85rem;
+}
+
+.donation-estadisticas__aviso {
+  margin: 16px 0 0;
+}
+
+.donation-ranking__vacio {
+  margin: 0;
+  color: #4d6a6b;
+}
+
+.donation-ranking__lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* nombre | barra | valor: el texto va en tinta normal, solo la barra lleva el color */
+.donation-ranking__lista li {
+  display: grid;
+  grid-template-columns: minmax(90px, 140px) 1fr minmax(90px, auto);
+  align-items: center;
+  gap: 10px;
+}
+
+.donation-ranking__nombre {
+  overflow: hidden;
+  color: #173d3e;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.donation-ranking__pista {
+  height: 16px;
+  border-radius: 4px;
+  background: #e3f6f4;
+}
+
+.donation-ranking__barra {
+  display: block;
+  min-width: 4px;
+  height: 100%;
+  border-radius: 0 4px 4px 0;
+  background: #19a99f;
+}
+
+.donation-ranking__valor {
+  color: #173d3e;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 520px) {
+  .donation-ranking__lista li {
+    grid-template-columns: 1fr auto;
+  }
+
+  .donation-ranking__pista {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

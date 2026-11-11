@@ -7,6 +7,7 @@ import DonationConfirmarModal from './DonationConfirmarModal.jsx'
 import DonationPresencialForm from './DonationFormPresencial.jsx'
 import DonationEditarModal from './DonationEditarModal.jsx'
 import DonationEliminarModal from './DonationEliminarModal.jsx'
+import DonationStats from './DonationStats.jsx'
 import './DonationSection.css'
 
 const OPCIONES_FILTRO = {
@@ -181,7 +182,9 @@ export default function DonationSection() {
         )}
       </div>
 
-      <div className="inventory-table-container" aria-busy={status === 'loading'}>
+      {/* la sección es una grilla de 2 columnas (botones | contenido): el contenido va en un solo bloque */}
+      <div className="donation-contenido">
+        <div className="inventory-table-container" aria-busy={status === 'loading'}>
         {/* los filtros van fuera del estado de carga para que no desaparezcan al cambiarlos */}
         <div className="donation-filters">
           {Object.entries(OPCIONES_FILTRO).map(([clave, opciones]) => (
@@ -305,6 +308,8 @@ export default function DonationSection() {
         {registrando && (
           <DonationPresencialForm onClose={() => setRegistrando(false)} onListo={accionTerminada} />
         )}
+        </div>
+        <DonationEstadisticas recarga={recarga} />
       </div>
     </>
   )

@@ -333,6 +333,7 @@ export async function getAdopciones() {
 export function registrarAdopcion(idAnimal, datos) {
   return postJson(`/animales/${idAnimal}/adopcion`, datos)
 }
+
 // Sube la foto de un animal. Se envía como formulario (multipart/form-data), no como JSON
 export async function subirFotoAnimal(idAnimal, archivo) {
   const formulario = new FormData()
@@ -358,4 +359,15 @@ export async function subirFotoAnimal(idAnimal, archivo) {
   }
 
   return data
+}
+
+// rankings de quienes más han donado (solo donaciones confirmadas)
+export async function getEstadisticasDonaciones() {
+  const datos = await getJson('/donaciones/estadisticas')
+
+  if (!Array.isArray(datos?.porMonto) || !Array.isArray(datos?.porCantidad)) {
+    throw new Error('La respuesta de estadísticas no es válida.')
+  }
+
+  return datos
 }
