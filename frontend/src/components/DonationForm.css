@@ -91,3 +91,46 @@
   gap: 2px;
   font-size: 0.95rem;
 }
+
+/* --- pop-up de confirmar: lista de insumos recibidos --- */
+.modal.donation-modal-confirmar {
+  width: min(720px, 94vw);
+  max-width: none;
+}
+
+.donation-insumo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 12px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 8px;
+}
+
+.donation-insumo legend {
+  padding: 0 6px;
+  color: #315052;
+  font-weight: 700;
+}
+
+.donation-insumo > button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.donation-field select {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  color: #173d3e;
+  background: #fff;
+  font: inherit;
+}
+
+@media (max-width: 560px) {
+  .donation-insumo {
+    grid-template-columns: 1fr;
+  }
+}

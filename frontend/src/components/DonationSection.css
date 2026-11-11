@@ -38,3 +38,36 @@
 .donation-badge--pendiente { background: #fff1c9; color: #7a5300; }
 .donation-badge--agendada { background: #d6e8ff; color: #1d4f91; }
 .donation-badge--confirmada { background: #d4f1de; color: #176b3a; }
+
+/* --- botones de la tabla de donaciones --- */
+.donation-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.donation-accion {
+  padding: 4px 10px;
+  border: 1px solid #19a99f;
+  border-radius: 6px;
+  color: #0f5f59;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.donation-accion:hover,
+.donation-accion:focus-visible {
+  background: #e3f6f4;
+}
+
+.donation-accion--confirmar {
+  color: #fff;
+  background: #19a99f;
+}
+
+.donation-accion--confirmar:hover,
+.donation-accion--confirmar:focus-visible {
+  background: #138a82;
+}

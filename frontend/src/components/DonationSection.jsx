@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import { getDonaciones } from '../services/api.js'
+import { API_BASE_URL, getDonaciones } from '../services/api.js'
+import { ROLES } from '../data/permisos.js'
+import { useSesion } from '../sesion/sesion.js'
+import DonationAgendarModal from './DonationAgendarModal.jsx'
+import DonationConfirmarModal from './DonationConfirmarModal.jsx'
 import './DonationSection.css'
 
 const OPCIONES_FILTRO = {
@@ -40,13 +44,30 @@ function nombreDonante(donacion) {
   return donacion.donante_nombre || donacion.usuario?.nombre_usuario || '—'
 }
 
+// Solo se agendan las de insumos que todavía están pendientes
+const puedeAgendar = (donacion) => donacion.tipo_donacion === 'insumos' && donacion.estado === 'pendiente'
+
+// Mismas reglas que el servidor (esto solo esconde el botón; el servidor responde 403 igual):
+// - insumos: cualquiera con sesión
+// - monetaria: el Admin o el voluntario titular de la cuenta a la que llegó la transferencia
+const puedeConfirmar = (donacion, usuario) => {
+  if (donacion.estado === 'confirmada') return false
+  if (donacion.tipo_donacion === 'insumos') return true
+  return usuario.rol === ROLES.ADMIN || donacion.cuenta?.rut_usuario === usuario.rut
+}
+
 export default function DonationSection() {
+  const usuario = useSesion()
   const [donaciones, setDonaciones] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [filtros, setFiltros] = useState({ estado: '', tipo_donacion: '', origen: '' })
+  // cada vez que cambia este número se vuelve a pedir la lista (después de agendar o confirmar)
+  const [recarga, setRecarga] = useState(0)
+  // acción en curso: null, o { tipo: 'agendar' | 'confirmar', donacion }
+  const [accion, setAccion] = useState(null)
 
-  // se vuelve a pedir la lista cada vez que cambian los filtros
+  // se vuelve a pedir la lista cada vez que cambian los filtros o la recarga
   useEffect(() => {
     let esVigente = true
 
@@ -66,11 +87,19 @@ export default function DonationSection() {
     return () => {
       esVigente = false
     }
-  }, [filtros])
+  }, [filtros, recarga])
 
   const cambiarFiltro = (clave, valor) => {
     setStatus('loading')
     setFiltros((actuales) => ({ ...actuales, [clave]: valor }))
+  }
+
+  const cerrarAccion = () => setAccion(null)
+
+  // la acción salió bien: se cierra el pop-up y se actualiza la tabla
+  const accionTerminada = () => {
+    setAccion(null)
+    setRecarga((n) => n + 1)
   }
 
   return (
@@ -108,14 +137,17 @@ export default function DonationSection() {
                 <th scope="col">Estado</th>
                 <th scope="col">Donante</th>
                 <th scope="col">Detalle</th>
+                <th scope="col">Cuenta</th>
+                <th scope="col">Comprobante</th>
                 <th scope="col">Fecha</th>
                 <th scope="col">Agendada para</th>
+                <th scope="col">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {donaciones.length === 0 ? (
                 <tr>
-                  <td className="inventory-empty" colSpan="8">No hay donaciones para mostrar.</td>
+                  <td className="inventory-empty" colSpan="11">No hay donaciones para mostrar.</td>
                 </tr>
               ) : (
                 donaciones.map((donacion) => (
@@ -130,14 +162,61 @@ export default function DonationSection() {
                     </td>
                     <td>{nombreDonante(donacion)}</td>
                     <td>{detalleDonacion(donacion)}</td>
+                    <td>
+                      {donacion.cuenta ? `${donacion.cuenta.banco} · ${donacion.cuenta.titular_nombre}` : '—'}
+                    </td>
+                    <td>
+                      {donacion.comprobante_url ? (
+                        // el navegador manda la cookie de sesión solo, por eso el enlace funciona
+                        <a
+                          href={`${API_BASE_URL}/donaciones/${donacion.id_donacion}/comprobante`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Ver
+                        </a>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td>{formatoFechaHora(donacion.fecha_donacion)}</td>
                     <td>{formatoDia(donacion.fecha_agendada)}</td>
+                    <td>
+                      <div className="donation-acciones">
+                        {puedeAgendar(donacion) && (
+                          <button
+                            type="button"
+                            className="donation-accion"
+                            onClick={() => setAccion({ tipo: 'agendar', donacion })}
+                          >
+                            Agendar
+                          </button>
+                        )}
+                        {puedeConfirmar(donacion, usuario) && (
+                          <button
+                            type="button"
+                            className="donation-accion donation-accion--confirmar"
+                            onClick={() => setAccion({ tipo: 'confirmar', donacion })}
+                          >
+                            Confirmar
+                          </button>
+                        )}
+                        {!puedeAgendar(donacion) && !puedeConfirmar(donacion, usuario) && '—'}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
+      )}
+
+      {accion?.tipo === 'agendar' && (
+        <DonationAgendarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
+      )}
+      {accion?.tipo === 'confirmar' && (
+        <DonationConfirmarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
       )}
     </div>
   )
