@@ -146,7 +146,6 @@ export const agendarDonacion = async (id, { fecha_agendada }) => {
     throw new HttpError(409, 'Solo las donaciones de insumos se pueden agendar');
   }
   verificarTransicion(donacion.estado, 'agendada');
-  await verificarPermiso(donacion, usuario);
   return prisma.donaciones.update({
     where: { id_donacion: id },
     data: { estado: 'agendada', fecha_agendada },
