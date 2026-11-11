@@ -102,8 +102,8 @@ export default function DonationSection() {
   const [filtros, setFiltros] = useState({ estado: '', tipo_donacion: '', origen: '' })
   // cada vez que cambia este número se vuelve a pedir la lista (después de agendar o confirmar)
   const [recarga, setRecarga] = useState(0)
-  // acción en curso: null, o { tipo: 'agendar' | 'confirmar', donacion }
-  const [accion, setAccion] = 'agendar' | 'confirmar' | 'editar' | 'eliminar'
+  // acción en curso: null, o { tipo: 'agendar' | 'confirmar' | 'editar' | 'eliminar', donacion }
+  const [accion, setAccion] = useState(null)
   // true mientras está abierto el pop-up de registrar una donación presencial
   const [registrando, setRegistrando] = useState(false)
 
@@ -248,7 +248,6 @@ export default function DonationSection() {
             </table>
           </div>
         )}
-        // agendar | confirmar | editar | eliminar
         {accion?.tipo === 'agendar' && (
           <DonationAgendarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
         )}
