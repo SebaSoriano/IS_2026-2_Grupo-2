@@ -63,8 +63,6 @@ const puedeConfirmar = (donacion, usuario) => {
 function DonationAcciones({ donacion, usuario, onAccion }) {
   const agendar = puedeAgendar(donacion)
   const confirmar = puedeConfirmar(donacion, usuario)
-  // editar y eliminar son solo del Admin (el servidor responde 403 a cualquier otro)
-  const administrar = usuario.rol === ROLES.ADMIN
 
   return (
     <div className="donation-acciones">
@@ -78,17 +76,7 @@ function DonationAcciones({ donacion, usuario, onAccion }) {
           Confirmar
         </button>
       )}
-      {administrar && (
-        <>
-          <button type="button" className="donation-accion" onClick={() => onAccion('editar')}>
-            Editar
-          </button>
-          <button type="button" className="donation-accion donation-accion--eliminar" onClick={() => onAccion('eliminar')}>
-            Eliminar
-          </button>
-        </>
-      )}
-      {!agendar && !confirmar && !administrar && '—'}
+      {!agendar && !confirmar && '—'}
     </div>
   )
 }
@@ -106,6 +94,10 @@ export default function DonationSection() {
   const [accion, setAccion] = useState(null)
   // true mientras está abierto el pop-up de registrar una donación presencial
   const [registrando, setRegistrando] = useState(false)
+  // solo Admin edita y elimina
+  const administrar = usuario.rol === ROLES.ADMIN
+  // ids de las donaciones marcadas con la casilla
+  const [seleccionadas, setSeleccionadas] = useState(() => new Set())
 
   // se vuelve a pedir la lista cada vez que cambian los filtros o la recarga
   useEffect(() => {
@@ -136,12 +128,26 @@ export default function DonationSection() {
 
   const cerrarAccion = () => setAccion(null)
 
-  // la acción salió bien: se cierra el pop-up y se actualiza la tabla
+  // la acción salió bien: se cierra el pop-up, se limpia la selección y se actualiza la tabla
   const accionTerminada = () => {
     setAccion(null)
     setRegistrando(false)
+    setSeleccionadas(new Set())
     setRecarga((n) => n + 1)
   }
+
+  const alternarSeleccion = (id) => {
+    setSeleccionadas((actuales) => {
+      const siguientes = new Set(actuales)
+      if (siguientes.has(id)) siguientes.delete(id)
+      else siguientes.add(id)
+      return siguientes
+    })
+  }
+
+  // se calcula desde la lista visible: si un filtro esconde una fila, no cuenta como seleccionada
+  const seleccionadasLista = donaciones.filter((donacion) => seleccionadas.has(donacion.id_donacion))
+  const columnas = administrar ? 13 : 12
 
   return (
     <>
@@ -151,6 +157,27 @@ export default function DonationSection() {
           <button className="area-action" type="button" onClick={() => setRegistrando(true)}>
             Registrar Donación
           </button>
+        )}
+        {/* modificar y eliminar: solo Admin, y según las casillas marcadas (igual que Inventario) */}
+        {administrar && (
+          <>
+            <button
+              className="area-action"
+              type="button"
+              disabled={seleccionadasLista.length !== 1}
+              onClick={() => setAccion({ tipo: 'editar', donacion: seleccionadasLista[0] })}
+            >
+              Modificar Donación
+            </button>
+            <button
+              className="area-action"
+              type="button"
+              disabled={seleccionadasLista.length === 0}
+              onClick={() => setAccion({ tipo: 'eliminar', donaciones: seleccionadasLista })}
+            >
+              Eliminar Donación
+            </button>
+          </>
         )}
       </div>
 
@@ -182,6 +209,11 @@ export default function DonationSection() {
               <caption>Donaciones registradas</caption>
               <thead>
                 <tr>
+                  {administrar && (
+                    <th scope="col">
+                      <span className="visually-hidden">Seleccionar donación</span>
+                    </th>
+                  )}
                   <th scope="col">ID</th>
                   <th scope="col">Tipo</th>
                   <th scope="col">Origen</th>
@@ -199,11 +231,21 @@ export default function DonationSection() {
               <tbody>
                 {donaciones.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="12">No hay donaciones para mostrar.</td>
+                    <td className="inventory-empty" colSpan="{columnas}">No hay donaciones para mostrar.</td>
                   </tr>
                 ) : (
                   donaciones.map((donacion) => (
                     <tr key={donacion.id_donacion}>
+                      {administrar && (
+                        <td>
+                          <input
+                            type="checkbox"
+                            checked={seleccionadas.has(donacion.id_donacion)}
+                            onChange={() => alternarSeleccion(donacion.id_donacion)}
+                            aria-label={`Seleccionar donación ${donacion.id_donacion}`}
+                          />
+                        </td>
+                      )}
                       <td>{donacion.id_donacion}</td>
                       <td>{donacion.tipo_donacion}</td>
                       <td>{donacion.origen}</td>
@@ -258,7 +300,7 @@ export default function DonationSection() {
           <DonationEditarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
         )}
         {accion?.tipo === 'eliminar' && (
-          <DonationEliminarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
+          <DonationEliminarModal donaciones={accion.donaciones} onClose={cerrarAccion} onListo={accionTerminada} />
         )}
         {registrando && (
           <DonationPresencialForm onClose={() => setRegistrando(false)} onListo={accionTerminada} />
