@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { API_BASE_URL, getDonaciones } from '../services/api.js'
 import { ROLES } from '../data/permisos.js'
-import { useSesion } from '../sesion/sesion.js'
+import { usePermisos, useSesion } from '../sesion/sesion.js'
 import DonationAgendarModal from './DonationAgendarModal.jsx'
 import DonationConfirmarModal from './DonationConfirmarModal.jsx'
+import DonationPresencialForm from './DonationFormPresencial.jsx'
+import DonationEditarModal from './DonationEditarModal.jsx'
+import DonationEliminarModal from './DonationEliminarModal.jsx'
 import './DonationSection.css'
 
 const OPCIONES_FILTRO = {
@@ -39,9 +42,9 @@ function detalleDonacion(donacion) {
   return donacion.descripcion_insumos
 }
 
-// las web traen los datos del donante; las presenciales, el voluntario que las registró
+// el donante es opcional en las presenciales: si no dejó su nombre, se muestra como anónimo
 function nombreDonante(donacion) {
-  return donacion.donante_nombre || donacion.usuario?.nombre_usuario || '—'
+  return donacion.donante_nombre || (donacion.origen === 'presencial' ? 'Anónimo' : '—')
 }
 
 // Solo se agendan las de insumos que todavía están pendientes
@@ -56,8 +59,43 @@ const puedeConfirmar = (donacion, usuario) => {
   return usuario.rol === ROLES.ADMIN || donacion.cuenta?.rut_usuario === usuario.rut
 }
 
+// Botones de una fila. onAccion recibe el nombre de la acción elegida
+function DonationAcciones({ donacion, usuario, onAccion }) {
+  const agendar = puedeAgendar(donacion)
+  const confirmar = puedeConfirmar(donacion, usuario)
+  // editar y eliminar son solo del Admin (el servidor responde 403 a cualquier otro)
+  const administrar = usuario.rol === ROLES.ADMIN
+
+  return (
+    <div className="donation-acciones">
+      {agendar && (
+        <button type="button" className="donation-accion" onClick={() => onAccion('agendar')}>
+          Agendar
+        </button>
+      )}
+      {confirmar && (
+        <button type="button" className="donation-accion donation-accion--confirmar" onClick={() => onAccion('confirmar')}>
+          Confirmar
+        </button>
+      )}
+      {administrar && (
+        <>
+          <button type="button" className="donation-accion" onClick={() => onAccion('editar')}>
+            Editar
+          </button>
+          <button type="button" className="donation-accion donation-accion--eliminar" onClick={() => onAccion('eliminar')}>
+            Eliminar
+          </button>
+        </>
+      )}
+      {!agendar && !confirmar && !administrar && '—'}
+    </div>
+  )
+}
+
 export default function DonationSection() {
   const usuario = useSesion()
+  const { puedeAgregar } = usePermisos()
   const [donaciones, setDonaciones] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
@@ -65,7 +103,9 @@ export default function DonationSection() {
   // cada vez que cambia este número se vuelve a pedir la lista (después de agendar o confirmar)
   const [recarga, setRecarga] = useState(0)
   // acción en curso: null, o { tipo: 'agendar' | 'confirmar', donacion }
-  const [accion, setAccion] = useState(null)
+  const [accion, setAccion] = 'agendar' | 'confirmar' | 'editar' | 'eliminar'
+  // true mientras está abierto el pop-up de registrar una donación presencial
+  const [registrando, setRegistrando] = useState(false)
 
   // se vuelve a pedir la lista cada vez que cambian los filtros o la recarga
   useEffect(() => {
@@ -99,125 +139,132 @@ export default function DonationSection() {
   // la acción salió bien: se cierra el pop-up y se actualiza la tabla
   const accionTerminada = () => {
     setAccion(null)
+    setRegistrando(false)
     setRecarga((n) => n + 1)
   }
 
   return (
-    <div className="inventory-table-container" aria-busy={status === 'loading'}>
-      {/* los filtros van fuera del estado de carga para que no desaparezcan al cambiarlos */}
-      <div className="donation-filters">
-        {Object.entries(OPCIONES_FILTRO).map(([clave, opciones]) => (
-          <label key={clave}>
-            <span>{ETIQUETAS_FILTRO[clave]}</span>
-            <select value={filtros[clave]} onChange={(event) => cambiarFiltro(clave, event.target.value)}>
-              <option value="">Todos</option>
-              {opciones.map((opcion) => (
-                <option key={opcion} value={opcion}>{opcion}</option>
-              ))}
-            </select>
-          </label>
-        ))}
+    <>
+      <div className="area-actions area-actions--donaciones" role="group" aria-label="Acciones de donaciones">
+        {/* registrar una donación presencial es agregar un registro: lo pueden hacer todos los roles */}
+        {puedeAgregar && (
+          <button className="area-action" type="button" onClick={() => setRegistrando(true)}>
+            Registrar Donación
+          </button>
+        )}
       </div>
 
-      {status === 'loading' && <p role="status">Cargando donaciones...</p>}
-      {status === 'error' && (
-        <p className="inventory-error" role="alert">
-          No se pudieron cargar las donaciones: {error}
-        </p>
-      )}
-      {status === 'success' && (
-        <div className="inventory-table-scroll">
-          <table className="inventory-table">
-            <caption>Donaciones registradas</caption>
-            <thead>
-              <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Tipo</th>
-                <th scope="col">Origen</th>
-                <th scope="col">Estado</th>
-                <th scope="col">Donante</th>
-                <th scope="col">Detalle</th>
-                <th scope="col">Cuenta</th>
-                <th scope="col">Comprobante</th>
-                <th scope="col">Fecha</th>
-                <th scope="col">Agendada para</th>
-                <th scope="col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {donaciones.length === 0 ? (
-                <tr>
-                  <td className="inventory-empty" colSpan="11">No hay donaciones para mostrar.</td>
-                </tr>
-              ) : (
-                donaciones.map((donacion) => (
-                  <tr key={donacion.id_donacion}>
-                    <td>{donacion.id_donacion}</td>
-                    <td>{donacion.tipo_donacion}</td>
-                    <td>{donacion.origen}</td>
-                    <td>
-                      <span className={`donation-badge donation-badge--${donacion.estado}`}>
-                        {donacion.estado}
-                      </span>
-                    </td>
-                    <td>{nombreDonante(donacion)}</td>
-                    <td>{detalleDonacion(donacion)}</td>
-                    <td>
-                      {donacion.cuenta ? `${donacion.cuenta.banco} · ${donacion.cuenta.titular_nombre}` : '—'}
-                    </td>
-                    <td>
-                      {donacion.comprobante_url ? (
-                        // el navegador manda la cookie de sesión solo, por eso el enlace funciona
-                        <a
-                          href={`${API_BASE_URL}/donaciones/${donacion.id_donacion}/comprobante`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Ver
-                        </a>
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td>{formatoFechaHora(donacion.fecha_donacion)}</td>
-                    <td>{formatoDia(donacion.fecha_agendada)}</td>
-                    <td>
-                      <div className="donation-acciones">
-                        {puedeAgendar(donacion) && (
-                          <button
-                            type="button"
-                            className="donation-accion"
-                            onClick={() => setAccion({ tipo: 'agendar', donacion })}
-                          >
-                            Agendar
-                          </button>
-                        )}
-                        {puedeConfirmar(donacion, usuario) && (
-                          <button
-                            type="button"
-                            className="donation-accion donation-accion--confirmar"
-                            onClick={() => setAccion({ tipo: 'confirmar', donacion })}
-                          >
-                            Confirmar
-                          </button>
-                        )}
-                        {!puedeAgendar(donacion) && !puedeConfirmar(donacion, usuario) && '—'}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      <div className="inventory-table-container" aria-busy={status === 'loading'}>
+        {/* los filtros van fuera del estado de carga para que no desaparezcan al cambiarlos */}
+        <div className="donation-filters">
+          {Object.entries(OPCIONES_FILTRO).map(([clave, opciones]) => (
+            <label key={clave}>
+              <span>{ETIQUETAS_FILTRO[clave]}</span>
+              <select value={filtros[clave]} onChange={(event) => cambiarFiltro(clave, event.target.value)}>
+                <option value="">Todos</option>
+                {opciones.map((opcion) => (
+                  <option key={opcion} value={opcion}>{opcion}</option>
+                ))}
+              </select>
+            </label>
+          ))}
         </div>
-      )}
 
-      {accion?.tipo === 'agendar' && (
-        <DonationAgendarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
-      )}
-      {accion?.tipo === 'confirmar' && (
-        <DonationConfirmarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
-      )}
-    </div>
+        {status === 'loading' && <p role="status">Cargando donaciones...</p>}
+        {status === 'error' && (
+          <p className="inventory-error" role="alert">
+            No se pudieron cargar las donaciones: {error}
+          </p>
+        )}
+        {status === 'success' && (
+          <div className="inventory-table-scroll">
+            <table className="inventory-table">
+              <caption>Donaciones registradas</caption>
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Tipo</th>
+                  <th scope="col">Origen</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Donante</th>
+                  <th scope="col">Recibida por</th>
+                  <th scope="col">Detalle</th>
+                  <th scope="col">Cuenta</th>
+                  <th scope="col">Comprobante</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Agendada para</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {donaciones.length === 0 ? (
+                  <tr>
+                    <td className="inventory-empty" colSpan="12">No hay donaciones para mostrar.</td>
+                  </tr>
+                ) : (
+                  donaciones.map((donacion) => (
+                    <tr key={donacion.id_donacion}>
+                      <td>{donacion.id_donacion}</td>
+                      <td>{donacion.tipo_donacion}</td>
+                      <td>{donacion.origen}</td>
+                      <td>
+                        <span className={`donation-badge donation-badge--${donacion.estado}`}>
+                          {donacion.estado}
+                        </span>
+                      </td>
+                      <td>{nombreDonante(donacion)}</td>
+                      <td>{donacion.usuario?.nombre_usuario ?? '—'}</td>
+                      <td>{detalleDonacion(donacion)}</td>
+                      <td>
+                        {donacion.cuenta ? `${donacion.cuenta.banco} · ${donacion.cuenta.titular_nombre}` : '—'}
+                      </td>
+                      <td>
+                        {donacion.comprobante_url ? (
+                          // el navegador manda la cookie de sesión solo, por eso el enlace funciona
+                          <a
+                            href={`${API_BASE_URL}/donaciones/${donacion.id_donacion}/comprobante`}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Ver
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td>{formatoFechaHora(donacion.fecha_donacion)}</td>
+                      <td>{formatoDia(donacion.fecha_agendada)}</td>
+                      <td>
+                        <DonationAcciones
+                          donacion={donacion}
+                          usuario={usuario}
+                          onAccion={(tipo) => setAccion({ tipo, donacion })}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+        // agendar | confirmar | editar | eliminar
+        {accion?.tipo === 'agendar' && (
+          <DonationAgendarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
+        )}
+        {accion?.tipo === 'confirmar' && (
+          <DonationConfirmarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
+        )}
+        {accion?.tipo === 'editar' && (
+          <DonationEditarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
+        )}
+        {accion?.tipo === 'eliminar' && (
+          <DonationEliminarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
+        )}
+        {registrando && (
+          <DonationPresencialForm onClose={() => setRegistrando(false)} onListo={accionTerminada} />
+        )}
+      </div>
+    </>
   )
 }

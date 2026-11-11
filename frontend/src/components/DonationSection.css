@@ -72,3 +72,13 @@
 .donation-accion--confirmar:focus-visible {
   background: #138a82;
 }
+.donation-accion--eliminar {
+  color: #fff;
+  border-color: #c0392b;
+  background: #c0392b;
+}
+
+.donation-accion--eliminar:hover,
+.donation-accion--eliminar:focus-visible {
+  background: #a93226;
+}

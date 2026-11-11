@@ -57,6 +57,9 @@ export const createDonacionPresencialSchema = z
       .refine((fecha) => fecha <= new Date(), 'La fecha no puede ser futura')
       .optional(),
     insumos: listaInsumos,
+    donante_nombre: z.string().trim().min(1, 'No puede estar vacío').max(100).optional(),
+    donante_correo: z.email('Debe ser un correo válido').max(100).optional(),
+    donante_telefono: z.string().trim().regex(/^\+?\d{8,14}$/, 'Teléfono inválido').optional(),
   })
   .strict()
   .superRefine(reglasPorTipo);
@@ -130,5 +133,5 @@ export const agendarDonacionSchema = z.object({
 
 // PATCH /api/donaciones/:id/confirmar
 export const confirmarDonacionSchema = z.object({
-  insumos: listaInsumos,   // obligatorio si la donación es de insumos (lo revisa el service)
+    insumos: listaInsumos,
 }).strict();
