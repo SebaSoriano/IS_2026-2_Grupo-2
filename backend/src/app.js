@@ -1,19 +1,23 @@
 import express from 'express'
+import cookieParser from 'cookie-parser'
 import indexRouter from './routes/index.routes.js'
 import { errorHandler } from './middlewares/error.middleware.js'
+import { CARPETA_FOTOS_ANIMALES } from './config/uploads.js'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { startExpirationNotifications } from './services/insumo-expiration-notifier.service.js'
 
 const app = express()
 
 app.use(express.json())
-import routes from './routes/index.routes.js';
-
+app.use(cookieParser())
 // Todas las rutas de la API quedan bajo /api
 app.use('/api', indexRouter)
 // En produccion el frontend lo entrega este mismo servidor:
 // asi la pagina y la API comparten dominio y puerto.
+app.use('/uploads/animales', express.static(CARPETA_FOTOS_ANIMALES))
+
 const CARPETA_FRONTEND = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'frontend', 'dist')
 if (fs.existsSync(path.join(CARPETA_FRONTEND, 'index.html'))) {
   app.use(express.static(CARPETA_FRONTEND))
@@ -27,4 +31,7 @@ app.use((req, res) => res.status(404).json({ error: 'Ruta no encontrada' }))
 // para que capture cualquier error que haya ocurrido en los controllers o middlewares previos
 app.use(errorHandler)
 
+startExpirationNotifications()
+
 export default app
+
