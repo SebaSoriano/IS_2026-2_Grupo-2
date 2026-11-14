@@ -11,7 +11,7 @@ import TurnoSelector from './TurnoSelector.jsx'
 import WeekPicker from './WeekPicker.jsx'
 import { diaDeHoy, lunesDe, mesActual, semanaActual } from './calendario.js'
 import { bloquesDelDia, formatearHora, horasDelTurno } from './horas.js'
-import { usePermisos } from '../sesion/sesion.js'
+import { usePermisos, useSesion } from '../sesion/sesion.js'
 
 // estas acciones abren un pop-up para editar turnos; Asistencia cambia la vista y Exportar abre su propio pop-up
 const MODAL_POR_ACCION = {
@@ -32,7 +32,10 @@ export default function ScheduleSection() {
   // - "Añadir turno" crea un turno nuevo: lo ven todos los roles (puedeAgregar)
   // - "Editar turno" y "Borrar turno" cambian uno que ya existe: solo Admin y Veterinaria (puedeEditar)
   // - "Asistencia" y "Exportar" solo muestran información: los ve cualquiera
-  const { puedeAgregar, puedeEditar } = usePermisos()
+  const { puedeAgregar, puedeEditar, puedeAsignarTurnos } = usePermisos()
+  // Veterinaria y Voluntario solo añaden turnos a su nombre: el formulario parte con su persona fija
+  const sesion = useSesion()
+  const personaPropia = sesion ? { rut_usuario: sesion.rut, nombre_usuario: sesion.nombre } : null
   const accionesVisibles = scheduleActions.filter((action) => {
     const modal = MODAL_POR_ACCION[action]
     if (modal === 'crear') return puedeAgregar
@@ -224,6 +227,7 @@ export default function ScheduleSection() {
         <Modal title="Añadir turno" onClose={cerrarModal}>
           <TurnoForm
             dias={dias}
+            personaFija={puedeAsignarTurnos ? null : personaPropia}
             textoBoton="Añadir turno"
             onCancel={cerrarModal}
             onSubmit={(turno) => guardarYRecargar(crearTurno(turno))}
@@ -237,6 +241,7 @@ export default function ScheduleSection() {
             <TurnoForm
               dias={dias}
               turno={turnoElegido}
+              personaFija={puedeAsignarTurnos ? null : turnoElegido.usuario}
               textoBoton="Guardar cambios"
               onCancel={() => setTurnoElegido(null)}
               onSubmit={(turno) => guardarYRecargar(actualizarTurno(turnoElegido.id, turno))}
