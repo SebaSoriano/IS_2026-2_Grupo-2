@@ -4,6 +4,7 @@ import { usuarioPublico } from './usuario.select.js';
 import { obtenerUsuarioPorRut } from './usuario.service.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 import { diaDelHorario, hoy } from '../utils/fechas.js';
+import { ROLES } from '../config/roles.js';
 
 const incluirTurno = { usuario: usuarioPublico, horario: true };
 // ordena por fecha y luego por hora de llegada
@@ -44,7 +45,12 @@ const obtenerTurnoPorId = async (id) => {
 // service para crear un turno en una fecha de hoy en adelante
 // el dia de la semana (horario_id) sale de la fecha
 // si el usuario no existe Prisma lanza P2003 (400) que responde error.middleware.js
-export const crearTurno = async (data) => {
+// solo el Admin puede añadir turnos a nombre de otra persona;
+// Veterinaria y Voluntario solo pueden añadirlos a su propio nombre (sesion = req.usuario: { rut, rol })
+export const crearTurno = async (data, sesion) => {
+    if (sesion?.rol !== ROLES.ADMIN && data.rut_usuario !== sesion?.rut) {
+        throw new HttpError(403, 'Solo puedes añadir turnos a tu nombre');
+    }
     verificarQueNoEsPasado(data.fecha, 'No se pueden añadir turnos en días que ya pasaron');
     await verificarTraslape(data);
     return prisma.turno.create({
@@ -76,8 +82,12 @@ export const obtenerTurnosPorRut = async (rut) => {
 
 // service para editar un turno que aun no pasa, y sin moverlo a una fecha que ya paso
 // se junta lo que llega con lo que ya tenia el turno para revisar las horas completas
-export const actualizarTurno = async (id, data) => {
+// solo el Admin puede cambiar la persona del turno; la Veterinaria edita el resto de los datos
+export const actualizarTurno = async (id, data, sesion) => {
     const turno = await obtenerTurnoPorId(id);
+    if (sesion?.rol !== ROLES.ADMIN && data.rut_usuario && data.rut_usuario !== turno.rut_usuario) {
+        throw new HttpError(403, 'Solo el administrador puede cambiar la persona del turno');
+    }
     verificarQueNoEsPasado(turno.fecha, 'No se puede editar un turno de un día que ya pasó');
 
     const turnoEditado = { ...turno, ...data };

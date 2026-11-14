@@ -8,7 +8,7 @@ import { marcarAsistenciaTurno } from '../services/turno.service.js';
 
 export const crearTurnoController = async (req, res, next) => {
   try {
-    const turno = await crearTurno(req.body);
+    const turno = await crearTurno(req.body, req.usuario);
     res.status(201).json(turno);
   } catch (error) {
     next(error);
@@ -39,7 +39,7 @@ export const obtenerTurnosPorRutController = async (req, res, next) => {
 export const actualizarTurnoController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const turno = await actualizarTurno(id, req.body);
+    const turno = await actualizarTurno(id, req.body, req.usuario);
     res.status(200).json(turno);
   } catch (error) {
     next(error);
