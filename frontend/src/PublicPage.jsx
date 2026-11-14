@@ -1,26 +1,35 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import './PublicPage.css';
 import DonationPanels from './components/DonationPanels.jsx';
 import DonationInsumosForm from './components/DonationFormInsumo.jsx';
 import DonationMonetariaForm from './components/DonationFormMonetaria.jsx';
+import perroImage from './assets/perro.png';
+import gatoImage from './assets/cat.png';
 
-export default function PublicPage (){
+const mascotasEjemplo = [
+  { especie: 'Perro', imagen: perroImage },
+  { especie: 'Gato', imagen: gatoImage },
+  { especie: 'Perro', imagen: perroImage },
+];
+
+export default function PublicPage() {
   const [vistaDonar, setVistaDonar] = useState(null);
   const cerrarDonar = () => setVistaDonar(null);
-  const [filtro, setFiltro] = useState('todos');
-  const [animales, setAnimales] = useState([])
-  const visibles = animales.filter((a) => filtro === 'todos' || /* condición según el filtro */ true)
+
   return (
     <div id="publicpage">
       <header className="navbar">
         <div className="mainlogo">
-          <img src="./logo_straypaws.png" alt="Logo" class="logo" />
+          <img src="/logo_straypaws.png" alt="Logo de Stray Paws" className="logo" />
           <h1 className="title">Huellas sin hogar</h1>
         </div>
         <div className="navbar-actions">
-          <button className="btn-header btn-donar" onClick={() => setVistaDonar('opciones')}>DONAR</button>
-          <button className="btn-header btn-volun">SE VOLUNTARIO</button>
+          <button type="button" className="btn-header btn-donar" onClick={() => setVistaDonar('opciones')}>
+            DONAR
+          </button>
+          <button type="button" className="btn-header btn-volun">SE VOLUNTARIO</button>
           <button
+            type="button"
             className="btn-header btn-intranet"
             onClick={() => window.location.assign('/login')}
           >
@@ -28,68 +37,45 @@ export default function PublicPage (){
           </button>
         </div>
       </header>
-      <div className="filter-container">
-        <select 
-          className="filter-select"
-          onChange={(e) => onFilterChange(e.target.value)}
-          defaultValue="">
-        <FilterBar onFilterChange={setFiltro} />
-          <option value="" disabled hidden>
-            Filtrar por...
-          </option>
-          <option value="todos">Todos</option>
-          <option value="macho">Género: Macho</option>
-          <option value="hembra">Género: Hembra</option>
-          <option value="pequeno">Tamaño: Pequeño</option>
-          <option value="mediano">Tamaño: Mediano</option>
-          <option value="grande">Tamaño: Grande</option>
-        </select>
-      </div>
+
+      <main className="public-pets">
+        <section className="public-pets__intro" aria-labelledby="public-pets-title">
+          <h2 id="public-pets-title">Descubre a tu posible nuevo compañero.</h2>
+          <p>
+            Ellos buscan una familia que los cuide y les brinde un hogar lleno de amor.
+          </p>
+          
+        </section>
+
+        <section className="pet-grid" aria-label="Espacios para las mascotas">
+          {mascotasEjemplo.map((mascota, index) => (
+            <article className="pet-card" key={`${mascota.especie}-${index}`}>
+              <div className="pet-card__photo">
+                <img
+                  src={mascota.imagen}
+                  alt={`Imagen de referencia para una mascota ${mascota.especie.toLowerCase()}`}
+                />
+                
+              </div>
+              <div className="pet-card__details">
+                <p className="pet-card__species">{mascota.especie}</p>
+                <h3>Nombre de la mascota</h3>
+                <p>Edad y otros detalles aparecerán aquí.</p>
+              </div>
+            </article>
+          ))}
+        </section>
+      </main>
+
       {vistaDonar === 'opciones' && (
         <DonationPanels onContinuar={setVistaDonar} onClose={cerrarDonar} />
       )}
-      {vistaDonar === 'insumos' && (<DonationInsumosForm onVolver={() => setVistaDonar('opciones')} onClose={cerrarDonar} />)}
-      {vistaDonar === 'monetaria' && (<DonationMonetariaForm onVolver={() => setVistaDonar('opciones')} onClose={cerrarDonar} />)}
+      {vistaDonar === 'insumos' && (
+        <DonationInsumosForm onVolver={() => setVistaDonar('opciones')} onClose={cerrarDonar} />
+      )}
+      {vistaDonar === 'monetaria' && (
+        <DonationMonetariaForm onVolver={() => setVistaDonar('opciones')} onClose={cerrarDonar} />
+      )}
     </div>
   );
 }
-
-export const Navbar = () => {
-  return (
-    <div id="publicpage">
-      <header className="navbar">
-        <div className="mainlogo">
-          <img src="frontend/public/logo_straypaws.png" alt="Logo" class="logo" />
-          <h1 className="title">Huellas sin hogar</h1>
-        </div>
-        <div className="navbar-actions">
-          <button className="btn-header btn-donar">DONAR</button>
-          <button className="btn-header btn-volun">SE VOLUNTARIO</button>
-          <button className="btn-header btn-intranet">Acceder a Intranet</button>
-        </div>
-      </header>
-    </div>
-  );
-};
-
-export const FilterBar = ({ onFilterChange }) => {
-  return (
-    <div className="filter-container">
-      <select 
-        className="filter-select"
-        onChange={(e) => onFilterChange(e.target.value)}
-        defaultValue=""
-      >
-        <option value="" disabled hidden>
-          Filtrar por...
-        </option>
-        <option value="todos">Todos</option>
-        <option value="macho">Género: Macho</option>
-        <option value="hembra">Género: Hembra</option>
-        <option value="pequeno">Tamaño: Pequeño</option>
-        <option value="mediano">Tamaño: Mediano</option>
-        <option value="grande">Tamaño: Grande</option>
-      </select>
-    </div>
-  );
-};

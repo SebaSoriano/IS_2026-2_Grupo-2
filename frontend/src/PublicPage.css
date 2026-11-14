@@ -1,13 +1,11 @@
-/* Barra de navegacion*/
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #effdff;
+  background-color: #9bd6d3;
   padding: 12px 24px;
 }
 
-/* Titulo y logo*/
 .mainlogo {
   display: flex;
   align-items: center;
@@ -15,26 +13,24 @@
 }
 
 .logo {
-  width: 64px;
-  height: 64px;
+  width: 70px;
+  height: 70px;
 }
 
 .title {
   font-family: sans-serif;
-  font-size: 24px;
+  font-size: 30px;
   font-weight: bold;
   color: #000000;
   margin: 0;
 }
 
-/* Grupo de botones donar y se voluntario*/
 .navbar-actions {
   display: flex;
   gap: 34px;
   align-items: center;
 }
 
-/* Botones de donación y se voluntario*/
 .btn-header {
   border: none;
   border-radius: 6px;
@@ -47,6 +43,7 @@
   height: 64px;
   min-width: 150px;
 }
+
 .btn-donar {
   background-color: #81f5ff;
   color: #0f7482;
@@ -70,41 +67,114 @@
   background-color: #e16e27;
   color: #ffe0a3;
 }
-/*Boton de filtro*/
-.filters{
-  display: block;
-  align-items: center;
-}
-.btn-filter{
-  background-color: #89e9f1;
-  border: none;
-  font-size: 12px;
-  border-radius: 4px;
-  cursor:pointer;
+
+.public-pets {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
 }
 
-.filter-container {
-  background-color: #8ed3c7;
-  padding: 16px 32px;
-  display: flex;
-  align-items: center;
+.public-pets__intro {
+  margin: 0 auto 32px;
+  max-width: 720px;
+  text-align: center;
 }
 
-.filter-select {
-  background-color: #72c3b8;
-  color: #1e3a36;
-  border: none;
-  border-radius: 20px;
-  padding: 8px 20px;
+.public-pets__intro h2 {
+  color: #0f7482;
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  margin: 0 0 12px;
+}
+
+.public-pets__intro p {
+  color: #526b6b;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.public-pets__intro .public-pets__note {
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+.pet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 24px;
+}
+
+.pet-card {
+  overflow: hidden;
+  background-color: #fff;
+  border: 1px solid #d5e7e4;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(18, 62, 64, 0.08);
+}
+
+.pet-card__photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 260px;
+  overflow: hidden;
+  background: #eaf5f2;
+}
+
+.pet-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 16px;
+}
+
+
+.pet-card__details {
+  padding: 18px 20px 20px;
+}
+
+.pet-card__species {
+  color: #0f7482;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.pet-card__details h3 {
+  color: #123e40;
+  font-size: 1.2rem;
+  margin: 0 0 8px;
+}
+
+.pet-card__details > p:last-child {
+  color: #627776;
   font-size: 0.95rem;
-  font-family: inherit;
-  cursor: pointer;
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
+  margin: 0;
 }
 
-.filter-select:hover {
-  background-color: #61b5aa;
+@media (max-width: 700px) {
+  .navbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .navbar-actions {
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .btn-header {
+    flex: 1 1 140px;
+    height: auto;
+    min-height: 48px;
+  }
+
+  .btn-intranet {
+    max-height: none;
+  }
+
+  .public-pets {
+    padding: 36px 16px 48px;
+  }
 }
