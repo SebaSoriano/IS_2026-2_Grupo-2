@@ -9,6 +9,7 @@ import donacionesRoutes from './donaciones.routes.js';
 import cuentasTransfRoutes from './cuentasTransf.routes.js';
 import historialRoutes from './historial.routes.js';
 import usuariosRoutes from './usuario.routes.js';
+import animalesPublicosRoutes from './animalesPublicos.routes.js';
 
 import authRoutes from './authRoutes.js';
 import { requireAuth, requireEdicion } from '../middlewares/auth.middleware.js';
@@ -28,6 +29,9 @@ router.use('/auth', authRoutes);
 // donaciones tiene una ruta pública (POST /web, la usa la página pública),
 // por eso la protección se pone dentro de donaciones.routes.js y no aquí
 router.use('/donaciones', donacionesRoutes);
+
+// Catálogo público de animales; este router se monta sin conSesion.
+router.use('/animalesPublicos', animalesPublicosRoutes);
 
 // ---------- Rutas de la intranet (piden sesión) ----------
 // Cada sección pasa por dos middlewares, en este orden:
