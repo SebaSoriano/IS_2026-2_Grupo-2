@@ -214,3 +214,22 @@ export async function actualizarFotoAnimal(id, archivo) {
 
   return animalModificado;
 }
+
+export async function getAnimalesPublicos() {
+  return prisma.animales.findMany({
+    // Una mascota está disponible si no tiene registros relacionados en "adopciones".
+    where: {
+      adopciones: { none: {} },
+    },
+    // Devolvemos solo la información necesaria para las tarjetas públicas.
+    select: {
+      id_animal: true,
+      nombre_animal: true,
+      especie_animal: true,
+      edad: true,
+      foto_animal: true,
+    },
+    // Muestra primero las mascotas registradas más recientemente.
+    orderBy: { id_animal: 'desc' },
+  });
+}
