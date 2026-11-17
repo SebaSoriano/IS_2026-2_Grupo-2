@@ -14,6 +14,8 @@ const formularioVacio = {
 
 // Opciones para la vía de ingreso
 const viasDeIngreso = ['Rescate', 'Abandono', 'Entrega voluntaria', 'Traslado', 'Otro']
+// Opciones para la especie (el refugio solo recibe perros y gatos)
+const especies = ['Perro', 'Gato']
 // Fotos permitidas (las mismas que acepta el backend) y peso máximo: 3 MB
 const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp']
 const TAMANO_MAXIMO_FOTO = 3 * 1024 * 1024
@@ -95,6 +97,12 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         }
     }, [])
 
+    // Si el animal tiene una especie que no está en la lista (ej: uno antiguo con "perro"), se agrega como opción
+    const opcionesEspecie =
+        formulario.especie_animal && !especies.includes(formulario.especie_animal)
+        ? [formulario.especie_animal, ...especies]
+        : especies
+        
     // Si el animal tiene una vía de ingreso que no está en la lista, se agrega como opción
     const opcionesVia =
         formulario.via_ingreso && !viasDeIngreso.includes(formulario.via_ingreso)
@@ -218,16 +226,19 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
 
             <label className="animal-form__field">
             Especie
-            <input
+            <select
                 name="especie_animal"
-                type="text"
                 value={formulario.especie_animal}
                 onChange={cambiarCampo}
-                placeholder="Ej: perro, gato"
-                minLength={2}
-                maxLength={100}
                 required
-            />
+            >
+                <option value="">Selecciona una opción</option>
+                {opcionesEspecie.map((especie) => (
+                <option value={especie} key={especie}>
+                    {especie}
+                </option>
+                ))}
+            </select>
             {errores.especie_animal && (
                 <span className="animal-form__error">{errores.especie_animal}</span>
             )}
