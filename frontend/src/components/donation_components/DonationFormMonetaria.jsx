@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Modal from '../../schedule/Modal.jsx'
 import { crearDonacionWebConComprobante, getCuentasPublicas } from '../../services/api.js'
-import { Campo, CamposDonante, erroresPorCampo, sinVacios } from './DonationFormPartes.jsx'
+import { Campo, CamposDonante, erroresPorCampo, sinVacios } from '../DonationFormPartes.jsx'
 import './DonationForm.css'
 
 const INICIAL = {
