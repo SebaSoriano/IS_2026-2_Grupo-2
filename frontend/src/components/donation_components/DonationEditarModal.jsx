@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Modal from '../../schedule/Modal.jsx'
 import { actualizarDonacion } from '../../services/api.js'
-import { Campo, erroresPorCampo } from '../DonationFormPartes.jsx'
+import { Campo, erroresPorCampo } from './DonationFormPartes.jsx'
 import './DonationForm.css'
 
 // Campos que tienen su propio aviso de error; cualquier otro error va en un aviso general

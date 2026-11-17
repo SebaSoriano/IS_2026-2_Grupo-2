@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import './PublicPage.css';
-import DonationPanels from '../components/donation_components/DonationPanels.jsx';
-import DonationInsumosForm from '../components/donation_components/DonationFormInsumo.jsx';
-import DonationMonetariaForm from '../components/donation_components/DonationFormMonetaria.jsx';
+import DonationPanels from './components/donation_components/DonationPanels.jsx';
+import DonationInsumosForm from './components/donation_components/DonationFormInsumo.jsx';
+import DonationMonetariaForm from './components/donation_components/DonationFormMonetaria.jsx';
 
 export default function PublicPage (){
   const [vistaDonar, setVistaDonar] = useState(null);

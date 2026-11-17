@@ -1,4 +1,4 @@
-import { Campo } from './Donation components/DonationFormPartes.js'
+import { Campo } from './DonationFormPartes.jsx'
 import './DonationForm.css'
 
 const TIPOS_INSUMO = [

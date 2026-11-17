@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getEstadisticasDonaciones } from '../services/api.js'
+import { getEstadisticasDonaciones } from '../../services/api.js'
 import './DonationStats.css'
 
 const formatoPesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })
