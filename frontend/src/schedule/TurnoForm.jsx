@@ -17,8 +17,10 @@ const horasDeLlegada = rango(HORA_MIN, HORA_MAX - 1)
 // formulario para añadir o editar un turno: persona, semana, dia, hora de llegada y hora de ida opcional
 // la semana parte en la actual (o en la del turno al editar) y no se puede ir a semanas anteriores
 // en la semana actual los dias que ya pasaron quedan bloqueados
-export default function TurnoForm({ dias, turno, textoBoton, onSubmit, onCancel }) {
-  const [usuario, setUsuario] = useState(turno?.usuario ?? null)
+// personaFija: si viene, el turno queda a nombre de esa persona y no se muestra el buscador
+// (Veterinaria y Voluntario solo pueden añadir turnos a su nombre)
+export default function TurnoForm({ dias, turno, personaFija, textoBoton, onSubmit, onCancel }) {
+  const [usuario, setUsuario] = useState(personaFija ?? turno?.usuario ?? null)
   const [semana, setSemana] = useState(() => (turno ? lunesDe(turno.fecha.slice(0, 10)) : semanaActual()))
   const [horarioId, setHorarioId] = useState(turno?.horario_id ?? null)
   const [inicio, setInicio] = useState(turno ? leerHora(turno.hora_inicio) : HORA_PREDETERMINADA)
@@ -69,7 +71,14 @@ export default function TurnoForm({ dias, turno, textoBoton, onSubmit, onCancel 
 
   return (
     <form className="turno-form" onSubmit={enviar} noValidate>
-      <UserSearch usuario={usuario} onSelect={setUsuario} />
+      {personaFija ? (
+        <div>
+          <span className="turno-form__label">Persona</span>
+          <p className="turno-form__input" aria-readonly="true">{personaFija.nombre_usuario}</p>
+        </div>
+      ) : (
+        <UserSearch usuario={usuario} onSelect={setUsuario} />
+      )}
 
       <div>
         <span className="turno-form__label">Semana</span>

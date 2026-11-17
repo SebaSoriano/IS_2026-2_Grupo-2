@@ -23,6 +23,12 @@ export function puedeEditar(usuario) {
   return usuario?.rol === ROLES.ADMIN || usuario?.rol === ROLES.VETERINARIA
 }
 
+// Añadir turnos a nombre de otra persona es solo del Admin;
+// Veterinaria y Voluntario solo pueden añadir turnos a su propio nombre
+export function puedeAsignarTurnos(usuario) {
+  return usuario?.rol === ROLES.ADMIN
+}
+
 // Crear, modificar y eliminar usuarios (la sección Voluntarios) es solo del Admin
 export function puedeGestionarUsuarios(usuario) {
   return usuario?.rol === ROLES.ADMIN
