@@ -1,13 +1,5 @@
-// formato de las fechas de la tabla, por ejemplo "6 mar 2025".
-// timeZone: 'UTC' es importante: el backend guarda las fechas a las 00:00 UTC
-// y en Chile esa hora todavía es el día anterior, así que sin esta opción
-// el 6 de marzo se mostraría como 5 de marzo.
-const formatoFecha = new Intl.DateTimeFormat('es-CL', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
+import { formatearFecha } from '../utils/fechas.js'
+// formatearFecha muestra las fechas en formato chileno DD-MM-AAAA (ver utils/fechas.js)
 
 // Texto de la columna Insumos. Por ahora el backend siempre entrega una lista vacía
 function textoInsumos(insumos) {
@@ -69,7 +61,7 @@ export default function HistorialTabla({
                   <td>{registro.tratamiento}</td>
                   <td>
                     <span className="historial-tabla__fecha">
-                      {formatoFecha.format(new Date(registro.fecha_tratamiento))}
+                      {formatearFecha(registro.fecha_tratamiento)}
                     </span>
                   </td>
                   <td>{registro.veterinario}</td>
