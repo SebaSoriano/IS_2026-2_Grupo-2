@@ -127,6 +127,34 @@
   padding: 16px;
 }
 
+.pet-card__badge {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  border-radius: 20px;
+  background: rgba(18, 62, 64, 0.82);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 6px 10px;
+}
+
+.pet-card__photo-placeholder {
+  color: #627776;
+  font-size: 0.95rem;
+}
+
+.pet-grid__message {
+  grid-column: 1 / -1;
+  color: #526b6b;
+  line-height: 1.6;
+  margin: 0;
+  padding: 24px 12px;
+  text-align: center;
+}
+
+.pet-grid__message--error {
+  color: #a4262c;
+}
 
 .pet-card__details {
   padding: 18px 20px 20px;

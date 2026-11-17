@@ -1,20 +1,57 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './PublicPage.css';
 import DonationPanels from './components/DonationPanels.jsx';
 import DonationInsumosForm from './components/DonationFormInsumo.jsx';
 import DonationMonetariaForm from './components/DonationFormMonetaria.jsx';
 import perroImage from './assets/perro.png';
 import gatoImage from './assets/cat.png';
+import { getAnimalesPublicos } from './services/api.js';
 
-const mascotasEjemplo = [
-  { especie: 'Perro', imagen: perroImage },
-  { especie: 'Gato', imagen: gatoImage },
-  { especie: 'Perro', imagen: perroImage },
-];
+function fotoDeEjemplo(especie) {
+  const especieNormalizada = especie.trim().toLowerCase();
+  if (especieNormalizada.includes('perro')) return perroImage;
+  if (especieNormalizada.includes('gato')) return gatoImage;
+  return null;
+}
+
+function textoEdad(edad) {
+  if (edad === 0) return 'Menos de 1 año';
+  if (edad === 1) return '1 año';
+  return `${edad} años`;
+}
 
 export default function PublicPage() {
   const [vistaDonar, setVistaDonar] = useState(null);
+  const [animales, setAnimales] = useState([]);
+  const [estadoCarga, setEstadoCarga] = useState('cargando');
+  const [errorCarga, setErrorCarga] = useState('');
   const cerrarDonar = () => setVistaDonar(null);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    async function cargarAnimales() {
+      try {
+        const lista = await getAnimalesPublicos();
+        if (cancelado) return;
+
+        setAnimales(lista);
+        setEstadoCarga('listo');
+      } catch (error) {
+        if (cancelado) return;
+
+        setErrorCarga(
+          error instanceof Error ? error.message : 'Ocurrió un error inesperado.',
+        );
+        setEstadoCarga('error');
+      }
+    }
+
+    cargarAnimales();
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   return (
     <div id="publicpage">
@@ -47,23 +84,45 @@ export default function PublicPage() {
           
         </section>
 
-        <section className="pet-grid" aria-label="Espacios para las mascotas">
-          {mascotasEjemplo.map((mascota, index) => (
-            <article className="pet-card" key={`${mascota.especie}-${index}`}>
-              <div className="pet-card__photo">
-                <img
-                  src={mascota.imagen}
-                  alt={`Imagen de referencia para una mascota ${mascota.especie.toLowerCase()}`}
-                />
-                
-              </div>
-              <div className="pet-card__details">
-                <p className="pet-card__species">{mascota.especie}</p>
-                <h3>Nombre de la mascota</h3>
-                <p>Edad y otros detalles aparecerán aquí.</p>
-              </div>
-            </article>
-          ))}
+        <section className="pet-grid" aria-label="Mascotas disponibles para adopción">
+          {estadoCarga === 'cargando' && (
+            <p className="pet-grid__message" role="status">Cargando mascotas...</p>
+          )}
+          {estadoCarga === 'error' && (
+            <p className="pet-grid__message pet-grid__message--error" role="alert">
+              No se pudieron cargar las mascotas: {errorCarga}
+            </p>
+          )}
+          {estadoCarga === 'listo' && animales.length === 0 && (
+            <p className="pet-grid__message">
+              Por el momento no hay mascotas disponibles para adopción.
+            </p>
+          )}
+          {estadoCarga === 'listo' && animales.map((animal) => {
+            const foto = animal.foto_animal || fotoDeEjemplo(animal.especie_animal);
+
+            return (
+              <article className="pet-card" key={animal.id_animal}>
+                <div className="pet-card__photo">
+                  {foto ? (
+                    <>
+                      <img src={foto} alt={`Foto de ${animal.nombre_animal}`} />
+                      {!animal.foto_animal && (
+                        <span className="pet-card__badge">Imagen referencial</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="pet-card__photo-placeholder">Foto no disponible</span>
+                  )}
+                </div>
+                <div className="pet-card__details">
+                  <p className="pet-card__species">{animal.especie_animal}</p>
+                  <h3>{animal.nombre_animal}</h3>
+                  <p>{textoEdad(animal.edad)}</p>
+                </div>
+              </article>
+            );
+          })}
         </section>
       </main>
 

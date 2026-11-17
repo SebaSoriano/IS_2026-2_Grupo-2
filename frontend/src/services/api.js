@@ -113,6 +113,29 @@ export async function getAnimales() {
   return animales
 }
 
+export async function getAnimalesPublicos() {
+  const response = await fetch(`${API_BASE_URL}/animalesPublicos/animales`, {
+    credentials: 'omit',
+  })
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('application/json')) {
+    throw new Error('La API devolvió una respuesta que no es JSON.')
+  }
+
+  const animales = await response.json()
+
+  if (!response.ok) {
+    throw new Error(animales.error ?? `Error HTTP ${response.status}`)
+  }
+
+  if (!Array.isArray(animales)) {
+    throw new Error('La respuesta de la API pública de animales no es válida.')
+  }
+
+  return animales
+}
+
 export function actualizarAnimal(id, animal) {
   return sendJson('PUT', `/animales/${id}`, animal)
 }
