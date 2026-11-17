@@ -87,3 +87,45 @@
 .donation-contenido {
   min-width: 0;
 }
+
+/* fila con los botones de vista a la izquierda y los filtros a la derecha */
+.donation-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end; /* los botones quedan a la altura de los selects */
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.donation-barra .donation-filters {
+  margin-bottom: 0;
+}
+
+.donation-vistas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.donation-vista {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid #19a99f;
+  border-radius: 6px;
+  color: #0f5f59;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.donation-vista:hover,
+.donation-vista:focus-visible {
+  background: #e3f6f4;
+}
+
+.donation-vista[aria-pressed='true'] {
+  color: #fff;
+  background: #19a99f;
+}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { crearDonacionWeb } from '../services/api.js'
+import Modal from '../../schedule/Modal.jsx'
+import { crearDonacionWeb } from '../../services/api.js'
 import { Campo, CamposDonante, erroresPorCampo, sinVacios } from './DonationFormPartes.jsx'
 import './DonationForm.css'
 

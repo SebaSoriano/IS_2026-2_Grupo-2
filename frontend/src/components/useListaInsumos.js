@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { sinVacios } from './DonationFormPartes.jsx'
+import { sinVacios } from './Donation_components/DonationFormPartes.jsx'
 
 const MAXIMO_FILAS = 30 // el servidor no acepta más de 30 insumos por donación
 

@@ -1,4 +1,4 @@
-import Modal from '../schedule/Modal.jsx'
+import Modal from '../../schedule/Modal.jsx'
 import './DonationPanels.css'
 
 const PANELES = [

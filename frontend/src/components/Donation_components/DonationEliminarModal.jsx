@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { eliminarDonacion } from '../services/api.js'
+import Modal from '../../schedule/Modal.jsx'
+import { eliminarDonacion } from '../../services/api.js'
 import './DonationForm.css'
 
 // Pide confirmación antes de borrar una o varias donaciones (solo el Admin)

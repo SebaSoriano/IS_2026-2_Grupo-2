@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { agendarDonacion } from '../services/api.js'
+import Modal from '../../schedule/Modal.jsx'
+import { agendarDonacion } from '../../services/api.js'
 import { Campo, erroresPorCampo } from './DonationFormPartes.jsx'
 import './DonationForm.css'
 

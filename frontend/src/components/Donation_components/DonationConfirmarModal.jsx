@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { confirmarDonacion } from '../services/api.js'
-import DonationListaInsumos from './DonationListaInsumos.jsx'
-import { useListaInsumos } from './useListaInsumos.js'
+import Modal from '../../schedule/Modal.jsx'
+import { confirmarDonacion } from '../../services/api.js'
+import DonationListaInsumos from '../DonationListaInsumos.jsx'
+import { useListaInsumos } from '../useListaInsumos.js'
 import './DonationForm.css'
 
 const formatoPesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })
