@@ -103,6 +103,18 @@ model animales {
 
   historial historial_medico[]
   adopciones adopciones[]
+  // galería de fotos del animal (foto_animal sigue siendo la portada)
+  fotos fotos_animal[]
+}
+
+// Fotos de cada animal. Un animal puede tener varias (carrusel).
+model fotos_animal {
+  id_foto       Int       @id @default(autoincrement())
+  ruta          String    @db.VarChar(255)
+  fecha_subida  DateTime  @default(now())
+  id_animal     Int
+  // onDelete: Cascade → si se elimina el animal, se eliminan también sus filas de fotos
+  animal        animales  @relation(fields: [id_animal], references: [id_animal], onDelete: Cascade)
 }
 
 enum TipoDonacion {
