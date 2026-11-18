@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { eliminarAnimal, getAnimales } from '../services/api.js'
 import AnimalForm from './AnimalForm.jsx'
+import AnimalFiltros from './AnimalFiltros.jsx'
 import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './AnimalSection.css'
 // Se importa para usar los estilos de las tarjetas y de los botones Tabla/Tarjetas
@@ -22,18 +23,41 @@ export default function AnimalSection() {
   // Cómo se muestran los animales: 'tabla' o 'tarjetas'
   const [vista, setVista] = useState('tabla')
 
-  // Cargar los animales una vez, al entrar a la pestaña
+  // Filtros aplicados con "Buscar" ({} = sin filtros)
+  const [filtros, setFiltros] = useState({})
+
+  // Pedir los animales al entrar a la pestaña y cada vez que cambian los filtros.
+  // "cancelado" evita que una respuesta vieja pise a una nueva si se busca dos veces seguidas
+  // (al cambiar los filtros, React ejecuta el return de la búsqueda anterior)
   useEffect(() => {
-    getAnimales()
+    let cancelado = false
+
+    getAnimales(filtros)
       .then((lista) => {
+        if (cancelado) return
         setAnimales(lista)
         setEstado('listo')
       })
       .catch((error) => {
+        if (cancelado) return
         setErrorCarga(error.message)
         setEstado('error')
       })
-  }, [])
+
+    return () => {
+      cancelado = true
+    }
+  }, [filtros])
+
+  // Lo llama AnimalFiltros al apretar "Buscar" o "Limpiar filtros"
+  function buscar(nuevosFiltros) {
+    setFiltros(nuevosFiltros)
+    setSeleccionadoId(null)
+    setMensaje(null)
+  }
+
+  // ¿Hay algún filtro con valor? Sirve para elegir el mensaje cuando la lista sale vacía
+  const hayFiltros = Object.values(filtros).some((valor) => valor !== '')
 
   const animalSeleccionado =
     animales.find((animal) => animal.id_animal === seleccionadoId) ?? null
@@ -147,28 +171,8 @@ export default function AnimalSection() {
       </div>
 
       <div className="animal-table-container" aria-busy={estado === 'cargando'}>
-        {/* Botones Tabla / Tarjetas con las mismas clases de Historial médico.
-            El div de afuera es flex para que "margin-left: auto" los mande a la derecha */}
-        <div style={{ display: 'flex', marginBottom: '12px' }}>
-          <div className="historial-filtros__vistas" role="group" aria-label="Tipo de vista">
-            <button
-              className="historial-filtros__vista"
-              type="button"
-              aria-pressed={vista === 'tabla'}
-              onClick={() => setVista('tabla')}
-            >
-              ☰ Tabla
-            </button>
-            <button
-              className="historial-filtros__vista"
-              type="button"
-              aria-pressed={vista === 'tarjetas'}
-              onClick={() => setVista('tarjetas')}
-            >
-              ▦ Tarjetas
-            </button>
-          </div>
-        </div>
+        {/* Barra de filtros; también trae los botones Tabla / Tarjetas */}
+        <AnimalFiltros onBuscar={buscar} vista={vista} onCambiarVista={setVista} />
 
         {mensaje && (
           <p className={`animal-message animal-message--${mensaje.tipo}`} role="status">

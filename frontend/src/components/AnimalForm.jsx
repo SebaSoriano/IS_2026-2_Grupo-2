@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { actualizarAnimal, crearAnimal, subirFotoAnimal } from '../services/api.js'
+import { VIAS_DE_INGRESO } from '../data/viasIngreso.js'
 import './AnimalForm.css'
 
 // Valores iniciales del formulario
@@ -13,7 +14,7 @@ const formularioVacio = {
 }
 
 // Opciones para la vía de ingreso
-const viasDeIngreso = ['Rescate', 'Abandono', 'Entrega voluntaria', 'Traslado', 'Otro']
+const viasDeIngreso = VIAS_DE_INGRESO
 // Opciones para la especie (el refugio solo recibe perros y gatos)
 const especies = ['Perro', 'Gato']
 // Fotos permitidas (las mismas que acepta el backend) y peso máximo: 3 MB

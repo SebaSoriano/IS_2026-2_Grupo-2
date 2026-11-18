@@ -103,8 +103,19 @@ async function sendJson(method, path, body) {
   return data
 }
 
-export async function getAnimales() {
-  const animales = await getJson('/animales')
+// filtros (opcional): { nombre, especie, via_ingreso, adoptado, edad_min, edad_max }
+// Los campos vacíos no se envían. Ej: { especie: 'perro', edad_max: '3' } → /animales?especie=perro&edad_max=3
+export async function getAnimales(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  const animales = await getJson(query ? `/animales?${query}` : '/animales')
 
   if (!Array.isArray(animales)) {
     throw new Error('La respuesta de la API de animales no es válida.')
