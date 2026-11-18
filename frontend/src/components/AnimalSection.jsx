@@ -216,7 +216,9 @@ export default function AnimalSection() {
                 {animales.length === 0 ? (
                   <tr>
                     <td className="animal-table-empty" colSpan="10">
-                      No hay animales registrados.
+                      {hayFiltros
+                        ? 'No hay animales que coincidan con los filtros.'
+                        : 'No hay animales registrados.'}
                     </td>
                   </tr>
                 ) : (
