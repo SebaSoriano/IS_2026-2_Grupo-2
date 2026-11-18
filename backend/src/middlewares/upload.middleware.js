@@ -35,9 +35,12 @@ function soloImagenes(req, file, cb) {
   }
 }
 
-// Middleware que recibe UN archivo en el campo "foto" y lo deja en req.file
-export const recibirFotoAnimal = multer({
+// Máximo de fotos que se pueden enviar en una sola subida
+const MAXIMO_FOTOS_POR_SUBIDA = 5;
+
+// Middleware que recibe hasta 5 archivos en el campo "fotos" y los deja en req.files (un arreglo)
+export const recibirFotosAnimal = multer({
   storage: almacenamiento,
   fileFilter: soloImagenes,
   limits: { fileSize: TAMANO_MAXIMO },
-}).single('foto');
+}).array('fotos', MAXIMO_FOTOS_POR_SUBIDA);

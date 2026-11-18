@@ -81,6 +81,11 @@ export async function getAllAnimales(filtros) {
       adopciones: {
         select: { fecha_adopcion: true },
       },
+      // fotos para el carrusel, en el orden en que se subieron
+      fotos: {
+        select: { id_foto: true, ruta: true },
+        orderBy: { id_foto: 'asc' },
+      },
     },
   });
 
@@ -162,6 +167,7 @@ export async function deleteAnimal(id) {
       _count: {
         select: { adopciones: true, historial: true },
       },
+      fotos: { select: { ruta: true } },
     },
   });
 
@@ -183,7 +189,11 @@ export async function deleteAnimal(id) {
     where: { id_animal: id },
   });
 
-  // También se borra su foto del disco
+  // También se borran del disco todas sus fotos
+  // (las filas de fotos_animal ya se borraron solas por el onDelete: Cascade)
+  for (const foto of animal.fotos) {
+    await borrarArchivoFoto(foto.ruta);
+  }
   await borrarArchivoFoto(animal.foto_animal);
 
   return animalEliminado;
@@ -205,28 +215,92 @@ async function borrarArchivoFoto(rutaFoto) {
   }
 }
 
-// Guarda la foto de un animal y borra la anterior
-export async function actualizarFotoAnimal(id, archivo) {
-  // Buscar el animal 
+// Máximo de fotos que puede tener un animal
+const MAXIMO_FOTOS = 5;
+
+// Devuelve el animal con sus fotos (lo que necesita el frontend para actualizar la tabla y el carrusel)
+function buscarAnimalConFotos(id) {
+  return prisma.animales.findUnique({
+    where: { id_animal: id },
+    include: {
+      fotos: {
+        select: { id_foto: true, ruta: true },
+        orderBy: { id_foto: 'asc' },
+      },
+    },
+  });
+}
+
+// Agrega una o varias fotos a un animal.
+// Si el animal no tenía portada (foto_animal), la primera foto nueva pasa a ser la portada.
+export async function agregarFotosAnimal(id, archivos) {
   const animal = await prisma.animales.findUnique({
     where: { id_animal: id },
-    select: { foto_animal: true },
+    select: {
+      foto_animal: true,
+      _count: { select: { fotos: true } },
+    },
   });
 
-  // Si no existe, se borra el archivo que multer alcanzó a guardar y se responde 404
+  // Si algo está mal, se borran los archivos que multer alcanzó a guardar en el disco
   if (animal === null) {
-    await borrarArchivoFoto(archivo.filename);
+    for (const archivo of archivos) await borrarArchivoFoto(archivo.filename);
     throw new HttpError(404, 'Animal no encontrado');
   }
+  if (animal._count.fotos + archivos.length > MAXIMO_FOTOS) {
+    for (const archivo of archivos) await borrarArchivoFoto(archivo.filename);
+    throw new HttpError(400, `Un animal puede tener como máximo ${MAXIMO_FOTOS} fotos (ya tiene ${animal._count.fotos})`);
+  }
 
-  // Guardar en la base la ruta pública de la foto nueva
-  const animalModificado = await prisma.animales.update({
-    where: { id_animal: id },
-    data: { foto_animal: `/uploads/animales/${archivo.filename}` },
+  // Ruta pública de cada archivo, ej: /uploads/animales/animal-5-1730600000000-a1b2c3d4.jpg
+  const rutas = archivos.map((archivo) => `/uploads/animales/${archivo.filename}`);
+
+  // Transacción: se guardan las fotos y la portada juntas, o ninguna
+  await prisma.$transaction(async (tx) => {
+    await tx.fotos_animal.createMany({
+      data: rutas.map((ruta) => ({ ruta, id_animal: id })),
+    });
+    if (!animal.foto_animal) {
+      await tx.animales.update({
+        where: { id_animal: id },
+        data: { foto_animal: rutas[0] },
+      });
+    }
   });
 
-  // Borrar del disco la foto anterior si tenía alguna
-  await borrarArchivoFoto(animal.foto_animal);
+  return buscarAnimalConFotos(id);
+}
 
-  return animalModificado;
+// Elimina una foto de un animal.
+// Si era la portada, la portada pasa a ser la siguiente foto (o queda vacía si no quedan).
+export async function eliminarFotoAnimal(id, idFoto) {
+  const foto = await prisma.fotos_animal.findUnique({
+    where: { id_foto: idFoto },
+    include: { animal: { select: { foto_animal: true } } },
+  });
+
+  // La foto debe existir y pertenecer a ese animal
+  if (foto === null || foto.id_animal !== id) {
+    throw new HttpError(404, 'Foto no encontrada');
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.fotos_animal.delete({ where: { id_foto: idFoto } });
+
+    if (foto.animal.foto_animal === foto.ruta) {
+      const siguiente = await tx.fotos_animal.findFirst({
+        where: { id_animal: id },
+        orderBy: { id_foto: 'asc' },
+      });
+      await tx.animales.update({
+        where: { id_animal: id },
+        data: { foto_animal: siguiente ? siguiente.ruta : null },
+      });
+    }
+  });
+
+  // El archivo se borra del disco después de que la base de datos quedó bien
+  await borrarArchivoFoto(foto.ruta);
+
+  return buscarAnimalConFotos(id);
 }

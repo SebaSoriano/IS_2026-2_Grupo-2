@@ -33,12 +33,18 @@ export const deleteAnimal = async (req, res) => {
   res.status(204).send();
 };
 
-// POST /api/animales/:id/foto
-export const subirFotoAnimal = async (req, res) => {
-  // multer deja el archivo en req.file; si no vino ninguno, es un error
-  if (!req.file) {
-    throw new HttpError(400, 'Debe adjuntar una imagen en el campo "foto"');
+// POST /api/animales/:id/fotos
+export const subirFotosAnimal = async (req, res) => {
+  // multer deja los archivos en req.files (un arreglo); si no vino ninguno, es un error
+  if (!req.files || req.files.length === 0) {
+    throw new HttpError(400, 'Debe adjuntar al menos una imagen en el campo "fotos"');
   }
-  const animal = await animalesService.actualizarFotoAnimal(req.params.id, req.file);
+  const animal = await animalesService.agregarFotosAnimal(req.params.id, req.files);
+  res.status(201).json(animal);
+};
+
+// DELETE /api/animales/:id/fotos/:idFoto
+export const eliminarFotoAnimal = async (req, res) => {
+  const animal = await animalesService.eliminarFotoAnimal(req.params.id, req.params.idFoto);
   res.json(animal);
 };
