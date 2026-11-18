@@ -19,9 +19,18 @@ export const updateAnimalSchema = animalSchema
   .partial()
   .refine((datos) => Object.keys(datos).length > 0, 'Debe enviar al menos un campo para modificar');
 
-// GET /api/animales?especie=perro&adoptado=true
-// en la query todo llega como texto, por eso adoptado se transforma de 'true'/'false' a booleano
+// GET /api/animales?nombre=fi&especie=perro&via_ingreso=Rescate&adoptado=false&edad_min=1&edad_max=5
+// En la query todo llega como texto:
+// - adoptado se transforma de 'true'/'false' a booleano
+// - z.coerce.number() convierte "3" en 3 antes de revisar que sea un entero
 export const filterAnimalSchema = z.object({
-  especie:  z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').optional(),
-  adoptado: z.enum(['true', 'false'], 'Debe ser true o false').transform((valor) => valor === 'true').optional(),
-});
+  nombre:      z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').optional(),
+  especie:     z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').optional(),
+  via_ingreso: z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').optional(),
+  adoptado:    z.enum(['true', 'false'], 'Debe ser true o false').transform((valor) => valor === 'true').optional(),
+  edad_min:    z.coerce.number().int('Debe ser un número entero').min(0, 'No puede ser negativa').optional(),
+  edad_max:    z.coerce.number().int('Debe ser un número entero').min(0, 'No puede ser negativa').optional(),
+}).refine(
+  (filtros) => filtros.edad_min === undefined || filtros.edad_max === undefined || filtros.edad_min <= filtros.edad_max,
+  { message: 'La edad mínima no puede ser mayor que la máxima', path: ['edad_min'] },
+);

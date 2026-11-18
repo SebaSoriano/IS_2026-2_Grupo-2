@@ -30,6 +30,22 @@ export async function getAllAnimales(filtros) {
   // "where" son las condiciones de búsqueda. Parte vacío = sin condiciones.
   const where = {};
 
+  // Filtro por nombre (contiene el texto, sin importar mayúsculas)
+  if (filtros.nombre !== undefined) {
+    where.nombre_animal = {
+      contains: filtros.nombre,
+      mode: 'insensitive',
+    };
+  }
+
+  // Filtro por vía de ingreso (igual al texto, sin importar mayúsculas)
+  if (filtros.via_ingreso !== undefined) {
+    where.via_ingreso = {
+      equals: filtros.via_ingreso,
+      mode: 'insensitive',
+    };
+  }
+
   // Filtro por especie
   if (filtros.especie !== undefined) {
     where.especie_animal = {
