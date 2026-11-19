@@ -46,3 +46,10 @@ export const finPeriodo = (texto) => {
     else fin.setUTCFullYear(fin.getUTCFullYear() + 1);
     return fin;
 };
+
+// Escribe una fecha en formato chileno DD-MM-AAAA (ej: 06-03-2025), para los PDF.
+// Se usan los métodos getUTC... porque las fechas se guardan a las 00:00 UTC.
+export const fechaChilena = (fecha) => {
+    const dosDigitos = (numero) => String(numero).padStart(2, '0');
+    return `${dosDigitos(fecha.getUTCDate())}-${dosDigitos(fecha.getUTCMonth() + 1)}-${fecha.getUTCFullYear()}`;
+};
