@@ -167,9 +167,9 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
               name="nombre_animal"
               opciones={opcionesAnimales}
               texto={formulario.nombre_animal}
-              onCambiarTexto={(opcion) => cambiarValores({ nombre_animal: opcion.texto, id_animal: String(opcion.valor) })}
+              onCambiarTexto={(texto) => cambiarValores({ nombre_animal: texto, id_animal: '' })}
               onElegir={(opcion) =>
-                cambiarValores({ nombre_animal: opcion.texto })
+                cambiarValores({ nombre_animal: opcion.texto, id_animal: String(opcion.valor) })
               }
               placeholder="Escribe el nombre del animal"
               error={errorAnimal}
@@ -201,9 +201,8 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
               name="veterinario"
               opciones={opcionesVeterinarios}
               texto={formulario.veterinario}
-              onCambiarTexto={(texto) => cambiarValores({ nombre_animal: texto, id_animal: '' })}
-              onElegir={(opcion) =>
-                cambiarValores({ nombre_animal: opcion.texto, id_animal: String(opcion.valor) })}
+              onCambiarTexto={(texto) => cambiarValores({ veterinario: texto })}
+              onElegir={(opcion) => cambiarValores({ veterinario: opcion.texto })}
               placeholder="Ej: Dra. Sofía González"
               maxLength={100}
               required
