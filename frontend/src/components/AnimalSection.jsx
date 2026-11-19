@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { eliminarAnimal, getAnimales } from '../services/api.js'
 import AnimalForm from './AnimalForm.jsx'
 import AnimalFiltros from './AnimalFiltros.jsx'
+import AnimalCarrusel from './AnimalCarrusel.jsx'
 import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './AnimalSection.css'
 // Se importa para usar los estilos de las tarjetas y de los botones Tabla/Tarjetas
@@ -25,6 +26,8 @@ export default function AnimalSection() {
 
   // Filtros aplicados con "Buscar" ({} = sin filtros)
   const [filtros, setFiltros] = useState({})
+  // true = el popup del carrusel de fotos está abierto
+  const [carruselAbierto, setCarruselAbierto] = useState(false)
 
   // Pedir los animales al entrar a la pestaña y cada vez que cambian los filtros.
   // "cancelado" evita que una respuesta vieja pise a una nueva si se busca dos veces seguidas
@@ -85,11 +88,23 @@ export default function AnimalSection() {
   function cerrarFormulario() {
     setFormularioAbierto(null)
   }
+  
+  // AnimalCarrusel llama a esta función después de eliminar una foto:
+  // se reemplaza el animal en la lista para que la tabla y el carrusel muestren las fotos que quedan
+  function fotoEliminada(animal) {
+    setAnimales(
+      animales.map((actual) =>
+        actual.id_animal === animal.id_animal ? { ...actual, ...animal } : actual,
+      ),
+    )
+    setMensaje({ tipo: 'exito', texto: 'Foto eliminada' })
+  }
 
   // AnimalForm llama a esta función cuando el backend guardó el animal
   function animalGuardado(animal, avisoFoto) {
     if (formularioAbierto === 'crear') {
-      setAnimales([{ ...animal, adoptado: false, adopcion: null }, ...animales])
+      // fotos: [] va primero: si el backend devolvió fotos, las de "animal" la reemplazan
+      setAnimales([{ fotos: [], ...animal, adoptado: false, adopcion: null }, ...animales])
       setMensaje({ tipo: 'exito', texto: `Animal registrado con el id ${animal.id_animal}` })
     } else {
       setAnimales(
@@ -168,6 +183,15 @@ export default function AnimalSection() {
             )}
           </>
         )}
+        {/* Ver las fotos lo puede hacer cualquier rol; eliminarlas solo Admin y Veterinaria */}
+        <button
+          className="area-action"
+          type="button"
+          onClick={() => setCarruselAbierto(true)}
+          disabled={!animalSeleccionado}
+        >
+          Ver Fotos
+        </button>
       </div>
 
       <div className="animal-table-container" aria-busy={estado === 'cargando'}>
@@ -271,6 +295,14 @@ export default function AnimalSection() {
           animal={formularioAbierto === 'modificar' ? animalSeleccionado : null}
           onClose={cerrarFormulario}
           onSaved={animalGuardado}
+        />
+      )}
+            {carruselAbierto && animalSeleccionado && (
+        <AnimalCarrusel
+          animal={animalSeleccionado}
+          puedeEliminar={puedeEditar}
+          onClose={() => setCarruselAbierto(false)}
+          onFotoEliminada={fotoEliminada}
         />
       )}
     </>

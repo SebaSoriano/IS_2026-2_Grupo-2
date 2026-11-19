@@ -310,16 +310,21 @@ export async function getAdopciones() {
 export function registrarAdopcion(idAnimal, datos) {
   return postJson(`/animales/${idAnimal}/adopcion`, datos)
 }
-// Sube la foto de un animal. Se envía como formulario (multipart/form-data), no como JSON
-export async function subirFotoAnimal(idAnimal, archivo) {
+// Sube una o varias fotos de un animal. Se envía como formulario (multipart/form-data), no como JSON.
+// archivos: arreglo de File (los que entrega un <input type="file" multiple>)
+export async function subirFotosAnimal(idAnimal, archivos) {
   const formulario = new FormData()
-  formulario.append('foto', archivo)
+  for (const archivo of archivos) {
+    formulario.append('fotos', archivo) // el mismo nombre de campo que espera multer: .array('fotos')
+  }
 
   // No se pone 'Content-Type': el navegador lo arma solo con el separador que necesita
-  const response = await fetch(`${API_BASE_URL}/animales/${idAnimal}/foto`, {
+  const response = await fetch(`${API_BASE_URL}/animales/${idAnimal}/fotos`, {
     method: 'POST',
+    credentials: 'include',
     body: formulario,
   })
+  revisarSesion(response)
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -335,4 +340,9 @@ export async function subirFotoAnimal(idAnimal, archivo) {
   }
 
   return data
+}
+
+// Elimina una foto de un animal. Devuelve el animal con las fotos que le quedan
+export function eliminarFotoAnimal(idAnimal, idFoto) {
+  return sendJson('DELETE', `/animales/${idAnimal}/fotos/${idFoto}`)
 }
