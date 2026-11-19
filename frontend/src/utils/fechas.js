@@ -32,3 +32,8 @@ export function textoAIso(texto) {
 
   return `${anio}-${mes}-${dia}`
 }
+
+// Las fechas llegan al backend con el formato ISO "AAAA-MM-DD"
+// el formato canadiense funciona justo así, así que lo dejamos
+// de esta forma es más fácil validar fechas
+export const hoyIso = () => new Date().toLocaleDateString('en-CA')
