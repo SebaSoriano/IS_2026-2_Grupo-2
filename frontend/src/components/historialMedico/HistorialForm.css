@@ -18,3 +18,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+.historial-form__fila-datos {
+  padding-bottom: 1.1rem;
+}
+
+/* dentro de esta ventana, el mensaje de error del Autocompletar no empuja lo de abajo */
+.historial-dialog .autocompletar__error {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  white-space: nowrap;
+}
