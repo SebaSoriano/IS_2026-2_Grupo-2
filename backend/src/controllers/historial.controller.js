@@ -27,11 +27,10 @@ const periodoChileno = (texto) =>
 export const getHistorialPdf = async (req, res) => {
   const { registros, total } = await historialService.getHistorialesParaPdf(req.validateQuery);
 
-  const { animal, veterinario, insumo, desde, hasta } = req.query;
+  const { animal, veterinario, desde, hasta } = req.query;
   const descripcionFiltros = [];
   if (animal) descripcionFiltros.push(`Animal: "${animal}"`);
   if (veterinario) descripcionFiltros.push(`Veterinario: "${veterinario}"`);
-  if (insumo) descripcionFiltros.push(`Insumo: "${insumo}"`);
   if (desde) descripcionFiltros.push(`Desde: ${periodoChileno(desde)}`);
   if (hasta) descripcionFiltros.push(`Hasta: ${periodoChileno(hasta)}`);
 
