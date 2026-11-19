@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { eliminarHistorial, getAnimales, getHistoriales } from '../../services/api.js'
+import { descargarHistorialPdf, eliminarHistorial, getAnimales, getHistoriales } from '../../services/api.js'
 import HistorialFiltros from './HistorialFiltros.jsx'
 import HistorialForm from './HistorialForm.jsx'
 import HistorialTabla from './HistorialTabla.jsx'
@@ -40,6 +40,8 @@ export default function HistorialSection() {
   const [estadoAnimales, setEstadoAnimales] = useState('sin-cargar')
   // Al cambiar este número el buscador se reinicia (ver la "key" de HistorialFiltros más abajo)
   const [versionBuscador, setVersionBuscador] = useState(0)
+  // true mientras se genera y descarga el PDF (el botón dice "Exportando...")
+  const [exportando, setExportando] = useState(false)
 
   // Se pide la lista al backend cada vez que cambian los filtros, la página o "recarga".
   // "cancelado" evita un problema clásico: si el usuario busca dos veces seguidas,
@@ -140,6 +142,20 @@ export default function HistorialSection() {
     setRecarga(recarga + 1)
   }
 
+  // Descarga en PDF la tabla con los filtros aplicados (los que se mandaron con "Buscar").
+  // Se descargan todas las páginas de resultados, no solo la que se está viendo.
+  async function exportarPdf() {
+    setMensaje(null)
+    setExportando(true)
+    try {
+      await descargarHistorialPdf(filtros)
+    } catch (error) {
+      setMensaje({ tipo: 'error', texto: `No se pudo exportar: ${error.message}` })
+    } finally {
+      setExportando(false)
+    }
+  }
+
   async function eliminarSeleccionado() {
     if (!registroSeleccionado) return
 
@@ -196,12 +212,25 @@ export default function HistorialSection() {
           >
             Eliminar Registro
           </button>
-          {!registroSeleccionado && (
-            <p className="historial-ayuda">
-              Selecciona un registro en la tabla para modificarlo o eliminarlo.
-            </p>
-          )}
           </>
+        )}
+        {/* "Exportar PDF" lo ven los tres roles (también el Voluntario).
+            Solo exporta la tabla: con la vista de tarjetas queda desactivado,
+            porque no tiene sentido exportar las fotos de los animales */}
+        <button
+          className="area-action"
+          type="button"
+          onClick={exportarPdf}
+          disabled={vista !== 'tabla' || exportando}
+          title={vista !== 'tabla' ? 'Cambia a la vista Tabla para exportar' : 'Descarga la tabla con los filtros aplicados'}
+        >
+          {exportando ? 'Exportando...' : 'Exportar PDF'}
+        </button>
+        {vista !== 'tabla' && (
+          <p className="historial-ayuda">Las tarjetas no se exportan: cambia a la vista Tabla para exportar.</p>
+        )}
+        {puedeEditar && !registroSeleccionado && vista === 'tabla' && (
+          <p className="historial-ayuda">Selecciona un registro en la tabla para modificarlo o eliminarlo.</p>
         )}
       </div>
 
