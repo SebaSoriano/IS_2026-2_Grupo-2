@@ -8,6 +8,12 @@ export const getHistoriales = async (req, res) => {
   res.json(resultado);
 };
 
+// GET /api/historial/veterinarios
+// lista de nombres (texto) para sugerir mientras se escribe el veterinario
+export const getVeterinarios = async (req, res) => {
+  res.json(await historialService.getVeterinarios());
+};
+
 // GET /api/historial/:id
 export const getHistorialById = async (req, res) => {
   const registro = await historialService.getHistorialById(req.params.id);
