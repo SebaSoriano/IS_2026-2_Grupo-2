@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getHistoriales,
   getVeterinarios,
+  getHistorialPdf,
   getHistorialById,
   createHistorial,
   updateHistorial,
@@ -23,6 +24,8 @@ router.get('/', validate(filterHistorialSchema, 'query'), getHistoriales);
 // /veterinarios va ANTES de /:id: Express revisa las rutas en orden y, si fuera después,
 // "veterinarios" se tomaría como si fuera un id (y idParamSchema respondería 400).
 router.get('/veterinarios', getVeterinarios);
+// PDF de la tabla: usa los mismos filtros que GET / (por eso el mismo schema)
+router.get('/pdf', validate(filterHistorialSchema, 'query'), getHistorialPdf);
 router.get('/:id', validate(idParamSchema, 'params'), getHistorialById);
 router.post('/', validate(createHistorialSchema, 'body'), createHistorial);
 router.put('/:id', validate(idParamSchema, 'params'), validate(updateHistorialSchema, 'body'), updateHistorial);
