@@ -3,7 +3,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import PDFDocument from 'pdfkit';
 import { fechaChilena, hoy } from '../utils/fechas.js';
-import { textoRepeticion } from '../utils/repeticiones.js';
 
 // Genera los PDF del historial médico con pdfkit.
 
@@ -21,23 +20,6 @@ const COLORES = {
 const carpetaDeEsteArchivo = path.dirname(fileURLToPath(import.meta.url));
 const RUTA_LOGO = path.join(carpetaDeEsteArchivo, '..', '..', '..', 'frontend', 'public', 'logo_straypaws.png');
 const hayLogo = fs.existsSync(RUTA_LOGO);
-
-// Nombres de los procedimientos del registro, con su repetición si tiene.
-// Ej: "Desparasitación (repetir cada 1 semana, 4 veces), Control General"
-const textoProcedimientos = (registro) =>
-  registro.procedimientos
-    .map((p) => {
-      const repeticion = textoRepeticion(p);
-      return repeticion ? `${p.nombre} (${repeticion})` : p.nombre;
-    })
-    .join(', ');
-
-// Insumos usados con su cantidad, ej: "Salud: Gasas estériles (x2)"
-const nombreInsumo = (i) => (i.descripcion ? `${i.tipo_insumo}: ${i.descripcion}` : i.tipo_insumo);
-const textoInsumos = (registro) =>
-  registro.insumos.length === 0
-    ? 'Sin insumos'
-    : registro.insumos.map((i) => `${nombreInsumo(i)} (×${i.cantidad})`).join(', ');
 
 // Dibuja el encabezado que va arriba de la primera página: logo, título y subtítulo
 const dibujarEncabezado = (doc, titulo, subtitulos) => {
@@ -74,11 +56,12 @@ const numerarPaginas = (doc) => {
 // Columnas de la tabla: título y ancho en puntos. Entre todas suman 770,
 // el ancho de una hoja A4 horizontal (842) menos los márgenes (36 + 36).
 const COLUMNAS = [
-  { titulo: 'Animal', ancho: 95, valor: (r) => r.animal.nombre_animal },
-  { titulo: 'Procedimientos', ancho: 200, valor: textoProcedimientos },
+  { titulo: 'Animal', ancho: 100, valor: (r) => r.animal.nombre_animal },
+  { titulo: 'Tratamiento', ancho: 255, valor: (r) => r.tratamiento },
   { titulo: 'Fecha', ancho: 65, valor: (r) => fechaChilena(r.fecha_tratamiento) },
-  { titulo: 'Veterinario', ancho: 115, valor: (r) => r.veterinario },
-  { titulo: 'Insumos', ancho: 295, valor: textoInsumos },
+  { titulo: 'Veterinario', ancho: 125, valor: (r) => r.veterinario },
+  // observaciones es opcional: si está vacía (null) se escribe un guion
+  { titulo: 'Observaciones', ancho: 225, valor: (r) => r.observaciones || '-' },
 ];
 const RELLENO = 5; // espacio entre el texto y el borde de cada celda
 
