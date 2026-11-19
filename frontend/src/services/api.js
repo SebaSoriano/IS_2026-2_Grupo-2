@@ -103,7 +103,7 @@ async function sendJson(method, path, body) {
   return data
 }
 
-// filtros (opcional): { nombre, especie, via_ingreso, adoptado, edad_min, edad_max }
+// filtros (opcional): { nombre, especie, via_ingreso, estado, edad_min, edad_max }
 // Los campos vacíos no se envían. Ej: { especie: 'perro', edad_max: '3' } → /animales?especie=perro&edad_max=3
 export async function getAnimales(filtros = {}) {
   const parametros = new URLSearchParams()
@@ -126,10 +126,6 @@ export async function getAnimales(filtros = {}) {
 
 export function actualizarAnimal(id, animal) {
   return sendJson('PUT', `/animales/${id}`, animal)
-}
-
-export function eliminarAnimal(id) {
-  return sendJson('DELETE', `/animales/${id}`)
 }
 
 export function crearAnimal(animal) {
