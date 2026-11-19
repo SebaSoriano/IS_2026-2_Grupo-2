@@ -4,6 +4,8 @@ import { hoyIso } from '../utils/fechas.js'
 import CampoFecha from './CampoFecha.jsx'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
 import './AnimalForm.css'
+// tamaño y orden de los campos propios de esta ventana (más ancha que la de animales)
+import './HistorialForm.css'
 
 // valores iniciales del formulario
 const formularioVacio = {
@@ -113,7 +115,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
 
   return (
     <dialog
-      className="animal-dialog"
+      className="animal-dialog historial-dialog"
       ref={dialogRef}
       aria-labelledby="historial-dialog-title"
       onCancel={(event) => {
@@ -144,37 +146,21 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
           </p>
         )}
 
-        <label className="animal-form__field">
-          Animal
-          <select name="id_animal" value={formulario.id_animal} onChange={cambiarCampo} required>
-            <option value="">Selecciona un animal</option>
-            {animales.map((animal) => (
-              <option value={animal.id_animal} key={animal.id_animal}>
-                {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
-              </option>
-            ))}
-          </select>
-          {errores.id_animal && <span className="animal-form__error">{errores.id_animal}</span>}
-        </label>
+        {/* Animal, fecha y veterinario en una misma fila (ver HistorialForm.css) */}
+        <div className="historial-form__fila-datos">
+          <label className="animal-form__field">
+            Animal
+            <select name="id_animal" value={formulario.id_animal} onChange={cambiarCampo} required>
+              <option value="">Selecciona un animal</option>
+              {animales.map((animal) => (
+                <option value={animal.id_animal} key={animal.id_animal}>
+                  {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
+                </option>
+              ))}
+            </select>
+            {errores.id_animal && <span className="animal-form__error">{errores.id_animal}</span>}
+          </label>
 
-        <label className="animal-form__field">
-          Tipo de tratamiento
-          <input
-            name="tratamiento"
-            type="text"
-            value={formulario.tratamiento}
-            onChange={cambiarCampo}
-            placeholder="Ej: Vacuna antirrábica"
-            minLength={2}
-            maxLength={500}
-            required
-          />
-          {errores.tratamiento && (
-            <span className="animal-form__error">{errores.tratamiento}</span>
-          )}
-        </label>
-
-        <div className="animal-form__row">
           <label className="animal-form__field">
             Fecha
             {/* Se escribe como DD-MM-AAAA, pero se guarda en formulario como AAAA-MM-DD.
@@ -208,6 +194,23 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
             )}
           </label>
         </div>
+
+        <label className="animal-form__field">
+          Tipo de tratamiento
+          <input
+            name="tratamiento"
+            type="text"
+            value={formulario.tratamiento}
+            onChange={cambiarCampo}
+            placeholder="Ej: Vacuna antirrábica"
+            minLength={2}
+            maxLength={500}
+            required
+          />
+          {errores.tratamiento && (
+            <span className="animal-form__error">{errores.tratamiento}</span>
+          )}
+        </label>
 
         {/* Espacio reservado para los insumos: se habilita cuando la base de datos
             registre qué insumos se usaron en cada tratamiento */}

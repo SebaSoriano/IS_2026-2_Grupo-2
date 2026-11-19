@@ -1,0 +1,20 @@
+.animal-dialog.historial-dialog {
+  width: min(1100px, calc(100% - 32px));
+  max-height: 92vh;
+}
+
+/* Animal, fecha y veterinario van en una sola fila de tres columnas.
+   La columna de la fecha es más angosta porque el texto DD-MM-AAAA es corto. */
+.historial-form__fila-datos {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* En pantallas angostas (celular) los campos vuelven a ir uno debajo del otro */
+@media (max-width: 760px) {
+  .historial-form__fila-datos {
+    grid-template-columns: 1fr;
+  }
+}
