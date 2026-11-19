@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import Autocompletar from './Autocompletar.jsx'
 import CampoFecha from '../fecha/CampoFecha.jsx'
+import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 
 // Valores iniciales del buscador: todos los campos vacíos significan "sin filtros"
 const filtrosVacios = { animal: '', veterinario: '', desde: '', hasta: '' }
@@ -15,6 +17,14 @@ export default function HistorialFiltros({
   const [filtros, setFiltros] = useState({ ...filtrosVacios, ...valoresIniciales })
   // Cada vez que se limpian los filtros este número sube y los campos de fecha se crean de nuevo
   const [versionFechas, setVersionFechas] = useState(0)
+
+  // Listas para la búsqueda con predicción de los campos Animal y Veterinario
+  const { opcionesAnimales, opcionesVeterinarios } = useSugerenciasHistorial()
+
+  // Cambia un solo campo del buscador sin tocar los demás (lo usan los Autocompletar)
+  function cambiarValor(campo, valor) {
+    setFiltros({ ...filtros, [campo]: valor })
+  }
 
   function cambiarCampo(event) {
     setFiltros({ ...filtros, [event.target.name]: event.target.value })
@@ -41,13 +51,17 @@ export default function HistorialFiltros({
       aria-label="Buscar en el historial médico"
       onSubmit={buscar}
     >
+      {/* Animal y Veterinario sugieren nombres mientras se escribe (ver Autocompletar.jsx).
+          Igual se puede buscar un texto que no esté en la lista: el backend busca
+          ese texto en cualquier parte del nombre. */}
       <label className="historial-filtros__campo">
         Animal
-        <input
+        <Autocompletar
           name="animal"
-          type="search"
-          value={filtros.animal}
-          onChange={cambiarCampo}
+          opciones={opcionesAnimales}
+          texto={filtros.animal}
+          onCambiarTexto={(texto) => cambiarValor('animal', texto)}
+          onElegir={(opcion) => cambiarValor('animal', opcion.texto)}
           placeholder="Ej: Chocolito"
           maxLength={100}
         />
@@ -55,11 +69,12 @@ export default function HistorialFiltros({
 
       <label className="historial-filtros__campo">
         Veterinario
-        <input
+        <Autocompletar
           name="veterinario"
-          type="search"
-          value={filtros.veterinario}
-          onChange={cambiarCampo}
+          opciones={opcionesVeterinarios}
+          texto={filtros.veterinario}
+          onCambiarTexto={(texto) => cambiarValor('veterinario', texto)}
+          onElegir={(opcion) => cambiarValor('veterinario', opcion.texto)}
           placeholder="Ej: González"
           maxLength={100}
         />

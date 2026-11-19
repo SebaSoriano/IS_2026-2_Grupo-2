@@ -371,3 +371,14 @@ export async function getEstadisticasDonaciones() {
 
   return datos
 }
+
+// Nombres de veterinarios (texto) para sugerirlos mientras se escribe en el historial médico
+export async function getVeterinariosHistorial() {
+  const veterinarios = await getJson('/historial/veterinarios')
+
+  if (!Array.isArray(veterinarios)) {
+    throw new Error('La respuesta de la API de veterinarios no es válida.')
+  }
+
+  return veterinarios
+}
