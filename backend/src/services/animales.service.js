@@ -5,22 +5,6 @@ import path from 'path';
 import { CARPETA_FOTOS_ANIMALES } from '../config/uploads.js';
 
 
-// Agrega "adoptado" y "adopcion" a un animal
-function marcarAdopcion(animal) {
-  // ¿El animal tiene al menos una adopción guardada?
-  if (animal.adopciones.length > 0) {
-    animal.adoptado = true;
-    animal.adopcion = animal.adopciones[0];
-  } else {
-    animal.adoptado = false;
-    animal.adopcion = null;
-  }
-
-  delete animal.adopciones;
-  return animal;
-}
-
-
 // Lista de animales (con filtros opcionales)
 export async function getAllAnimales(filtros) {
   // Si no llegaron filtros, usamos un objeto vacío
@@ -54,14 +38,11 @@ export async function getAllAnimales(filtros) {
     };
   }
 
-  // Filtro por adoptado / no adoptado
-  if (filtros.adoptado === true) {
-    where.adopciones = { some: {} };
+  // Filtro por estado (disponible, en_proceso, adoptado o fallecido)
+  if (filtros.estado !== undefined) {
+    where.estado_animal = filtros.estado;
   }
-  if (filtros.adoptado === false) {
-    where.adopciones = { none: {} };
-  }
-
+  
   // Filtro por edad
   if (filtros.edad_min !== undefined || filtros.edad_max !== undefined) {
     where.edad = {};
@@ -78,9 +59,6 @@ export async function getAllAnimales(filtros) {
     where: where,
     orderBy: { id_animal: 'desc' },
     include: {
-      adopciones: {
-        select: { fecha_adopcion: true },
-      },
       // fotos para el carrusel, en el orden en que se subieron
       fotos: {
         select: { id_foto: true, ruta: true },
@@ -89,13 +67,7 @@ export async function getAllAnimales(filtros) {
     },
   });
 
-  // Recorremos la lista y marcamos cada animal como adoptado o no
-  const resultado = [];
-  for (const animal of animales) {
-    resultado.push(marcarAdopcion(animal));
-  }
-
-  return resultado;
+  return animales;
 }
 
 //------------------------------------------------------------
@@ -120,12 +92,8 @@ export async function getAnimalById(id) {
     },
   });
 
-  // Si no existe, devolvemos null y el controller responde 404
-  if (animal === null) {
-    return null;
-  }
-
-  return marcarAdopcion(animal);
+  // Si no existe, devuelve null y el controller responde 404
+  return animal;
 }
 
 //------------------------------------------------------------
@@ -145,58 +113,40 @@ export async function createAnimal(datos) {
 // 4. Modificar un animal
 
 export async function updateAnimal(id, datos) {
-  // Si el id no existe, Prisma lanza un error (P2025)
-  // y error.middleware.js lo convierte en una respuesta 404.
-  const animalModificado = await prisma.animales.update({
-    where: { id_animal: id },
-    data: datos,
-  });
+  // Si viene un estado nuevo, se revisa el estado actual del animal
+  if (datos.estado_animal !== undefined) {
+    const animal = await prisma.animales.findUnique({
+      where: { id_animal: id },
+      select: { estado_animal: true },
+    });
 
-  return animalModificado;
-}
+    if (animal === null) {
+      throw new HttpError(404, 'Animal no encontrado');
+    }
 
-// ------------------------------------------------------------
-
-// 5. Eliminar un animal
-
-export async function deleteAnimal(id) {
-  // Busca al animal y cuenta sus adopciones e historial
-  const animal = await prisma.animales.findUnique({
-    where: { id_animal: id },
-    include: {
-      _count: {
-        select: { adopciones: true, historial: true },
-      },
-      fotos: { select: { ruta: true } },
-    },
-  });
-
-  // Si no existe, error 404
-  if (animal === null) {
-    throw new HttpError(404, 'Animal no encontrado');
+    // Un animal en proceso de adopción o adoptado no se cambia desde aquí
+    if (animal.estado_animal === 'en_proceso' || animal.estado_animal === 'adoptado') {
+      throw new HttpError(409, 'El estado de un animal en proceso de adopción o adoptado se cambia desde la sección Adopción');
+    }
   }
 
-  // Si tiene adopciones o historial, no se puede borrar
-  const cantidadAdopciones = animal._count.adopciones;
-  const cantidadHistorial = animal._count.historial;
+  // Transacción: se modifica el animal y, si falleció, se rechazan sus solicitudes pendientes
+  return prisma.$transaction(async (tx) => {
+    // Si el id no existe, Prisma lanza un error (P2025) y error.middleware.js responde 404
+    const animalModificado = await tx.animales.update({
+      where: { id_animal: id },
+      data: datos,
+    });
 
-  if (cantidadAdopciones > 0 || cantidadHistorial > 0) {
-    throw new HttpError(409, 'No se puede eliminar un animal con adopciones o historial médico');
-  }
+    if (datos.estado_animal === 'fallecido') {
+      await tx.solicitudes_adopcion.updateMany({
+        where: { id_animal: id, estado: 'pendiente' },
+        data: { estado: 'rechazada' },
+      });
+    }
 
-  // Si pasó todas las revisiones, se elimina
-  const animalEliminado = await prisma.animales.delete({
-    where: { id_animal: id },
+    return animalModificado;
   });
-
-  // También se borran del disco todas sus fotos
-  // (las filas de fotos_animal ya se borraron solas por el onDelete: Cascade)
-  for (const foto of animal.fotos) {
-    await borrarArchivoFoto(foto.ruta);
-  }
-  await borrarArchivoFoto(animal.foto_animal);
-
-  return animalEliminado;
 }
 
 //------------------------------------------------------------
