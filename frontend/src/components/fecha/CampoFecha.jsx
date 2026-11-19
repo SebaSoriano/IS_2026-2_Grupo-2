@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { isoATexto, textoAIso } from '../utils/fechas.js'
+import { isoATexto, textoAIso } from '../../utils/fechas.js'
 import './CampoFecha.css'
 
 // pone los guiones mientras se escribe "06032025" -> "06-03-2025".

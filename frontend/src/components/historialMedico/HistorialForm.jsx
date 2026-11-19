@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarHistorial, crearHistorial } from '../services/api.js'
-import { hoyIso } from '../utils/fechas.js'
-import Autocompletar from './Autocompletar.jsx'
+import { actualizarHistorial, crearHistorial } from '../../services/api.js'
+import { hoyIso } from '../../utils/fechas.js'
+import Autocompletar from '../Autocompletar.jsx'
 import CampoFecha from '../fecha/CampoFecha.jsx'
 import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
-import './AnimalForm.css'
+import '../AnimalForm.css'
 // tamaño y orden de los campos propios de esta ventana (más ancha que la de animales)
 import './HistorialForm.css'
 

@@ -1,4 +1,4 @@
-import { formatearFecha } from '../utils/fechas.js'
+import { formatearFecha } from '../../utils/fechas.js'
 // formatearFecha muestra las fechas en formato chileno DD-MM-AAAA (ver utils/fechas.js)
 
 // Texto de la columna Insumos. Por ahora el backend siempre entrega una lista vacía

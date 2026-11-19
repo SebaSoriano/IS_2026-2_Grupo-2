@@ -1,5 +1,5 @@
-import fotoGato from '../assets/cat.png'
-import fotoPerro from '../assets/perro.png'
+import fotoGato from '../../assets/cat.png'
+import fotoPerro from '../../assets/perro.png'
 
 // foto de ejemplo según la especie. La tabla "animales" todavía no guarda fotos
 function fotoDeEjemplo(especie) {

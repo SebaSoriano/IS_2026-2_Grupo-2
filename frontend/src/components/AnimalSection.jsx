@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { eliminarAnimal, getAnimales } from '../services/api.js'
 import AnimalForm from './AnimalForm.jsx'
-import HistorialTarjetas from './HistorialTarjetas.jsx'
+import HistorialTarjetas from './historialMedico/HistorialTarjetas.jsx'
 import './AnimalSection.css'
 // Se importa para usar los estilos de las tarjetas y de los botones Tabla/Tarjetas
-import './HistorialSection.css'
+import './historialMedico/HistorialSection.css'
 import { usePermisos } from '../sesion/sesion.js'
 
 export default function AnimalSection() {

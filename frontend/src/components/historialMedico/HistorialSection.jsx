@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { eliminarHistorial, getAnimales, getHistoriales } from '../services/api.js'
+import { eliminarHistorial, getAnimales, getHistoriales } from '../../services/api.js'
 import HistorialFiltros from './HistorialFiltros.jsx'
 import HistorialForm from './HistorialForm.jsx'
 import HistorialTabla from './HistorialTabla.jsx'
 import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './HistorialSection.css'
-import { usePermisos } from '../sesion/sesion.js'
+import { usePermisos } from '../../sesion/sesion.js'
 
 // Cantidad de registros por página. El backend acepta entre 1 y 100.
 const REGISTROS_POR_PAGINA = 15

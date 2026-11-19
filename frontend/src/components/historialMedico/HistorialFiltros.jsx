@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Autocompletar from './Autocompletar.jsx'
+import Autocompletar from '../Autocompletar.jsx'
 import CampoFecha from '../fecha/CampoFecha.jsx'
 import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 
