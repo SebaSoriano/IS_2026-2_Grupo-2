@@ -54,6 +54,26 @@ export const getHistoriales = async (filtros) => {
 };
 
 
+// Máximo de registros que se ponen en el PDF de la tabla (unas 40 páginas).
+// Si hay más, el PDF incluye los más recientes y lo avisa en el encabezado.
+export const MAXIMO_REGISTROS_PDF = 1000;
+
+// Registros para exportar a PDF: los mismos filtros y el mismo orden que la tabla,
+// pero sin páginas (todos los que coinciden, hasta MAXIMO_REGISTROS_PDF).
+export const getHistorialesParaPdf = async (filtros) => {
+  const where = construirFiltros(filtros);
+  const [total, registros] = await Promise.all([
+    prisma.historial_medico.count({ where }),
+    prisma.historial_medico.findMany({
+      where,
+      orderBy: [{ fecha_tratamiento: 'desc' }, { id_historial: 'desc' }],
+      take: MAXIMO_REGISTROS_PDF,
+      include: { animal: animalResumen },
+    }),
+  ]);
+  return { total, registros };
+};
+
 // Detalle de un registro médico. Si no existe, findUnique devuelve null
 // y responde 404.
 export const getHistorialById = async (id) => {
