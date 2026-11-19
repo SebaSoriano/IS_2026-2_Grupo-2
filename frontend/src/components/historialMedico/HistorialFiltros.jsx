@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import CampoFecha from './CampoFecha.jsx'
+import CampoFecha from '../fecha/CampoFecha.jsx'
 
 // Valores iniciales del buscador: todos los campos vacíos significan "sin filtros"
 const filtrosVacios = { animal: '', veterinario: '', desde: '', hasta: '' }

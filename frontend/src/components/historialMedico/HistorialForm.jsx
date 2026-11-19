@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { actualizarHistorial, crearHistorial, getAnimales } from '../services/api.js'
 import { hoyIso } from '../utils/fechas.js'
-import CampoFecha from './CampoFecha.jsx'
+import CampoFecha from '../fecha/CampoFecha.jsx'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
 import './AnimalForm.css'
 // tamaño y orden de los campos propios de esta ventana (más ancha que la de animales)
