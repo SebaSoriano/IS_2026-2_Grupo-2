@@ -169,7 +169,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
               texto={formulario.nombre_animal}
               onCambiarTexto={(texto) => cambiarValores({ nombre_animal: texto, id_animal: '' })}
               onElegir={(opcion) =>
-                cambiarValores({ nombre_animal: opcion.texto, id_animal: String(opcion.valor) })
+                cambiarValores({ nombre_animal: opcion.texto })
               }
               placeholder="Escribe el nombre del animal"
               error={errorAnimal}
