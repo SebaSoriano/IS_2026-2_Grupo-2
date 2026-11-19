@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { API_BASE_URL, getDonaciones } from '../../services/api.js'
 import { ROLES } from '../../data/permisos.js'
 import { usePermisos, useSesion } from '../../sesion/sesion.js'
 import DonationAgendarModal from './DonationAgendarModal.jsx'
@@ -9,7 +8,9 @@ import DonationEditarModal from './DonationEditarModal.jsx'
 import DonationEliminarModal from './DonationEliminarModal.jsx'
 import DonationStats from './DonationStats.jsx'
 import './DonationSection.css'
-
+import { getDonaciones } from '../../services/api.js'
+import DonationDetalleModal from './DonationDetalleModal.jsx'
+import { detalleDonacion, formatoDia, formatoFechaHora, nombreDonante } from './DonationFormato.js'
 const OPCIONES_FILTRO = {
   estado: ['pendiente', 'agendada', 'confirmada'],
   origen: ['presencial', 'web'],
@@ -20,31 +21,6 @@ const ETIQUETAS_FILTRO = {
   origen: 'Origen',
 }
 
-const formatoPesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })
-
-// fecha_donacion es un instante exacto: se muestra en la hora del navegador
-function formatoFechaHora(valor) {
-  if (!valor) return '—'
-  return new Intl.DateTimeFormat('es-CL', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(valor))
-}
-
-// fecha_agendada se guarda como día a las 00:00 UTC: se muestra en UTC para que no retroceda un día
-function formatoDia(valor) {
-  if (!valor) return '—'
-  return new Intl.DateTimeFormat('es-CL', { timeZone: 'UTC' }).format(new Date(valor))
-}
-
-function detalleDonacion(donacion) {
-  if (donacion.tipo_donacion === 'monetaria') {
-    return `${formatoPesos.format(donacion.monto_donacion)} · ${donacion.metodo_pago}`
-  }
-  return donacion.descripcion_insumos
-}
-
-// el donante es opcional en las presenciales: si no dejó su nombre, se muestra como anónimo
-function nombreDonante(donacion) {
-  return donacion.donante_nombre || (donacion.origen === 'presencial' ? 'Anónimo' : '—')
-}
 
 // 3 vistas, donaciones monetarias, de insumos y estadisticas.
 const VISTAS = [
@@ -53,78 +29,41 @@ const VISTAS = [
   { clave: 'estadisticas', etiqueta: 'Estadísticas' },
 ]
 
+const celdaFecha = (d) => formatoFechaHora(d.fecha_donacion)
 const celdaEstado = (d) => (
   <span className={`donation-badge donation-badge--${d.estado}`}>{d.estado}</span>
 )
-const celdaRecibidaPor = (d) => d.usuario?.nombre_usuario ?? '—'
-const celdaFecha = (d) => formatoFechaHora(d.fecha_donacion)
 
-// cada columna: título y cómo se dibuja su celda a partir de la donación
+// el nombre es un botón: así se puede abrir el detalle con el teclado
+const celdaDonante = (d, abrir) => (
+  <button type="button" className="donation-fila__abrir" onClick={() => abrir(d)}>
+    {nombreDonante(d)}
+  </button>
+)
+
+// en la tabla solo va lo representativo; el resto está en el modal de detalle
 const COLUMNAS = {
   monetaria: [
-    { titulo: 'Donante', celda: nombreDonante },
-    { titulo: 'Recibida por', celda: celdaRecibidaPor },
-    { titulo: 'Monto y método', celda: detalleDonacion },
-    {
-      titulo: 'Cuenta',
-      celda: (d) => (d.cuenta ? `${d.cuenta.banco} · ${d.cuenta.titular_nombre}` : '—'),
-    },
-    {
-      titulo: 'Comprobante',
-      celda: (d) =>
-        d.comprobante_url ? (
-          <a href={`${API_BASE_URL}/donaciones/${d.id_donacion}/comprobante`} target="_blank" rel="noreferrer">
-            Ver
-          </a>
-        ) : (
-          '—'
-        ),
-    },
+    { titulo: 'Donante', celda: celdaDonante },
+    { titulo: 'Monto y método', celda: (d) => detalleDonacion(d) },
     { titulo: 'Fecha', celda: celdaFecha },
     { titulo: 'Estado', celda: celdaEstado },
   ],
   insumos: [
-    { titulo: 'Donante', celda: nombreDonante },
-    { titulo: 'Recibida por', celda: celdaRecibidaPor },
-    { titulo: 'Detalle', celda: detalleDonacion },
+    { titulo: 'Donante', celda: celdaDonante },
+    {
+      titulo: 'Detalle',
+      celda: (d) => (
+        <div className="donation-celda-detalle" title={d.descripcion_insumos}>
+          {d.descripcion_insumos}
+        </div>
+      ),
+    },
     { titulo: 'Fecha', celda: celdaFecha },
-    { titulo: 'Agendada para', celda: (d) => formatoDia(d.fecha_agendada) },
     { titulo: 'Estado', celda: celdaEstado },
   ],
 }
-// Solo se agendan las de insumos que todavía están pendientes
-const puedeAgendar = (donacion) => donacion.tipo_donacion === 'insumos' && donacion.estado === 'pendiente'
 
-// Mismas reglas que el servidor (esto solo esconde el botón; el servidor responde 403 igual):
-// - insumos: cualquiera con sesión
-// - monetaria: el Admin o el voluntario titular de la cuenta a la que llegó la transferencia
-const puedeConfirmar = (donacion, usuario) => {
-  if (donacion.estado === 'confirmada') return false
-  if (donacion.tipo_donacion === 'insumos') return true
-  return usuario.rol === ROLES.ADMIN || donacion.cuenta?.rut_usuario === usuario.rut
-}
-
-// Botones de una fila. onAccion recibe el nombre de la acción elegida
-function DonationAcciones({ donacion, usuario, onAccion }) {
-  const agendar = puedeAgendar(donacion)
-  const confirmar = puedeConfirmar(donacion, usuario)
-
-  return (
-    <div className="donation-acciones">
-      {agendar && (
-        <button type="button" className="donation-accion" onClick={() => onAccion('agendar')}>
-          Agendar
-        </button>
-      )}
-      {confirmar && (
-        <button type="button" className="donation-accion donation-accion--confirmar" onClick={() => onAccion('confirmar')}>
-          Confirmar
-        </button>
-      )}
-      {!agendar && !confirmar && '—'}
-    </div>
-  )
-}
 
 export default function DonationSection() {
   const usuario = useSesion()
@@ -139,6 +78,8 @@ export default function DonationSection() {
   const [recarga, setRecarga] = useState(0)
   // acción en curso: null, o { tipo: 'agendar' | 'confirmar' | 'editar' | 'eliminar', donacion }
   const [accion, setAccion] = useState(null)
+  // donación abierta en el modal de detalle (null si no hay ninguna)
+const [detalle, setDetalle] = useState(null)
   // true mientras está abierto el pop-up de registrar una donación presencial
   const [registrando, setRegistrando] = useState(false)
   // solo Admin edita y elimina
@@ -203,7 +144,7 @@ export default function DonationSection() {
   // se calcula desde la lista visible: si un filtro esconde una fila, no cuenta como seleccionada
   const seleccionadasLista = donaciones.filter((donacion) => seleccionadas.has(donacion.id_donacion))
   const columnasVista = COLUMNAS[vista] ?? []
-  const totalColumnas = columnasVista.length + 1 + (administrar ? 1 : 0) // +1 por "Acciones"
+  const totalColumnas = columnasVista.length + (administrar ? 1 : 0)
 
   return (
     <>
@@ -297,7 +238,6 @@ export default function DonationSection() {
                     {columnasVista.map((columna) => (
                       <th key={columna.titulo} scope="col">{columna.titulo}</th>
                     ))}
-                    <th scope="col">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -307,9 +247,9 @@ export default function DonationSection() {
                     </tr>
                   ) : (
                     donaciones.map((donacion) => (
-                      <tr key={donacion.id_donacion}>
+                      <tr key={donacion.id_donacion} className="donation-fila" onClick={() => setDetalle(donacion)}>
                         {administrar && (
-                          <td>
+                          <td onClick={(event) => event.stopPropagation()}>
                             <input
                               type="checkbox"
                               checked={seleccionadas.has(donacion.id_donacion)}
@@ -319,15 +259,8 @@ export default function DonationSection() {
                           </td>
                         )}
                         {columnasVista.map((columna) => (
-                          <td key={columna.titulo}>{columna.celda(donacion)}</td>
+                          <td key={columna.titulo}>{columna.celda(donacion, setDetalle)}</td>
                         ))}
-                        <td>
-                          <DonationAcciones
-                            donacion={donacion}
-                            usuario={usuario}
-                            onAccion={(tipo) => setAccion({ tipo, donacion })}
-                          />
-                        </td>
                       </tr>
                     ))
                   )}
@@ -350,6 +283,18 @@ export default function DonationSection() {
           )}
           {registrando && (
             <DonationPresencialForm onClose={() => setRegistrando(false)} onListo={accionTerminada} />
+          )}
+          {detalle && (
+            <DonationDetalleModal
+              donacion={detalle}
+              usuario={usuario}
+              onClose={() => setDetalle(null)}
+              onAccion={(tipo) => {
+                // se cierra el detalle y se abre el pop-up de la acción elegida
+                setAccion({ tipo, donacion: detalle })
+                setDetalle(null)
+              }}
+            />
           )}
         </div>
       </div>

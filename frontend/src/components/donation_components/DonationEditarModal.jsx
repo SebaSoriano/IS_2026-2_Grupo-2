@@ -3,7 +3,7 @@ import Modal from '../../schedule/Modal.jsx'
 import { actualizarDonacion } from '../../services/api.js'
 import { Campo, erroresPorCampo } from './DonationFormPartes.jsx'
 import './DonationForm.css'
-
+import { nombreDonante } from './DonationFormato.js'
 // Campos que tienen su propio aviso de error; cualquier otro error va en un aviso general
 const CAMPOS_CON_AVISO = [
   'monto_donacion',
@@ -89,7 +89,7 @@ export default function DonationEditarModal({ donacion, onClose, onListo }) {
   }
 
   return (
-    <Modal title={`Editar donación #${donacion.id_donacion}`} onClose={onClose}>
+    <Modal title={`Editar donación de ${nombreDonante(donacion)}`} onClose={onClose}>
       <form className="donation-form" onSubmit={enviar}>
         {!esMonetaria && donacion.insumos?.length > 0 && (
           <p className="donation-form__nota">

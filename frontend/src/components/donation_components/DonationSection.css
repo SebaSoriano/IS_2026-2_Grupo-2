@@ -129,3 +129,80 @@
   color: #fff;
   background: #19a99f;
 }
+
+/* fila clicable: abre el detalle */
+.donation-fila {
+  cursor: pointer;
+}
+
+.donation-fila:hover td {
+  background: #e3f6f4;
+}
+
+.donation-fila__abrir {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.donation-fila__abrir:focus-visible {
+  outline: 2px solid #19a99f;
+  outline-offset: 2px;
+}
+
+/* descripción larga de insumos: una línea con "..." */
+.donation-celda-detalle {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- pop-up de detalle --- */
+.modal.donation-modal-detalle {
+  width: min(640px, 94vw);
+  max-width: none;
+}
+
+.donation-detalle {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0 0 16px;
+}
+
+.donation-detalle dt {
+  color: #315052;
+  font-weight: 700;
+}
+
+.donation-detalle dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.donation-detalle__seccion {
+  margin-bottom: 16px;
+}
+
+.donation-detalle__seccion h3 {
+  margin: 0 0 8px;
+  color: #315052;
+  font-size: 1rem;
+}
+
+.donation-detalle__comprobante {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  margin-bottom: 8px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+}

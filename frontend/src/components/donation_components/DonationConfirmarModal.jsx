@@ -2,9 +2,9 @@ import { useState } from 'react'
 import Modal from '../../schedule/Modal.jsx'
 import { confirmarDonacion } from '../../services/api.js'
 import DonationListaInsumos from './DonationListaInsumos.jsx'
-import { useListaInsumos } from '../useListaInsumos.js'
+import { useListaInsumos } from './useListaInsumos.js'
 import './DonationForm.css'
-
+import { nombreDonante } from './DonationFormato.js'
 const formatoPesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })
 
 // Confirmar = "ya recibí esto". En monetaria basta con confirmar;
@@ -35,7 +35,7 @@ export default function DonationConfirmarModal({ donacion, onClose, onListo }) {
 
   return (
     <Modal
-      title={`Confirmar donación #${donacion.id_donacion}`}
+      title={`Confirmar donación de ${nombreDonante(donacion)}`}
       onClose={onClose}
       className="donation-modal-confirmar"
     >

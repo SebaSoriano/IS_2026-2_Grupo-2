@@ -3,7 +3,7 @@ import Modal from '../../schedule/Modal.jsx'
 import { crearDonacionPresencial } from '../../services/api.js'
 import { Campo, erroresPorCampo, sinVacios } from './DonationFormPartes.jsx'
 import DonationListaInsumos from './DonationListaInsumos.jsx'
-import { useListaInsumos } from '../useListaInsumos.js'
+import { useListaInsumos } from './useListaInsumos.js'
 import './DonationForm.css'
 
 const INICIAL = {
