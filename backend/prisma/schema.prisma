@@ -101,11 +101,15 @@ model animales {
   especie_animal        String            @db.VarChar(100)
   observaciones_animal  String?
   foto_animal           String?           @db.VarChar(255)
+  // disponible, en_proceso (de adopción), adoptado o fallecido
+  estado_animal         EstadoAnimal      @default(disponible)
 
   historial historial_medico[]
   adopciones adopciones[]
   // galería de fotos del animal (foto_animal sigue siendo la portada)
   fotos fotos_animal[]
+  // solicitudes de adopción que se hicieron por este animal
+  solicitudes solicitudes_adopcion[]
 }
 
 // Fotos de cada animal. Un animal puede tener varias (carrusel).
@@ -168,12 +172,48 @@ model donaciones {
 
 model adoptante {
   id_adoptante              Int         @id @default(autoincrement())
+  // opcional en la base de datos porque los adoptantes antiguos no lo tenían; la API lo exige
+  nombre_adoptante          String?     @db.VarChar(100)
   direccion                 String
   telefono                  String
   correo                    String
   fecha_nacimiento          DateTime
   observaciones_adoptante   String?
   adopciones adopciones[]
+  solicitudes solicitudes_adopcion[]
+}
+
+// Solicitud de adopción: une a un adoptante con el animal que le interesa
+// y guarda en qué parte del proceso va.
+model solicitudes_adopcion {
+  id_solicitud     Int              @id @default(autoincrement())
+  fecha_solicitud  DateTime         @default(now())
+  estado           EstadoSolicitud  @default(pendiente)
+  // hora de la visita al refugio (se completa al agendarla)
+  fecha_visita     DateTime?
+
+  id_animal        Int
+  animal           animales         @relation(fields: [id_animal], references: [id_animal])
+
+  id_adoptante     Int
+  adoptante        adoptante        @relation(fields: [id_adoptante], references: [id_adoptante])
+}
+
+// Estados de un animal
+enum EstadoAnimal {
+  disponible
+  en_proceso
+  adoptado
+  fallecido
+}
+
+// Estados de una solicitud de adopción:
+// pendiente (recién llegó), en_proceso (visita agendada o ingresada a mano), rechazada, adoptada
+enum EstadoSolicitud {
+  pendiente
+  en_proceso
+  rechazada
+  adoptada
 }
 
 model adopciones {

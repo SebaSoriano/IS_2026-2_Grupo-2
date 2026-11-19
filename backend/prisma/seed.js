@@ -18,6 +18,7 @@ async function main() {
     console.log('Poblacion de datos iniciada \n -Limpiando datos anteriores.');
     await prisma.turno.deleteMany();
     await prisma.adopciones.deleteMany();
+    await prisma.solicitudes_adopcion.deleteMany();
     await prisma.donaciones.deleteMany();
     await prisma.cuenta_transferencia.deleteMany();
     await prisma.historial_medico.deleteMany();
