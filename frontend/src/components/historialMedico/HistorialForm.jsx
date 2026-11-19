@@ -201,8 +201,9 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
               name="veterinario"
               opciones={opcionesVeterinarios}
               texto={formulario.veterinario}
-              onCambiarTexto={(texto) => cambiarValores({ veterinario: texto })}
-              onElegir={(opcion) => cambiarValores({ veterinario: opcion.texto })}
+              onCambiarTexto={(texto) => cambiarValores({ nombre_animal: texto, id_animal: '' })}
+              onElegir={(opcion) =>
+                cambiarValores({ nombre_animal: opcion.texto, id_animal: String(opcion.valor) })}
               placeholder="Ej: Dra. Sofía González"
               maxLength={100}
               required
