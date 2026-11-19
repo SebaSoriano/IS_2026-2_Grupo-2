@@ -283,6 +283,49 @@ export function eliminarHistorial(id) {
   return sendJson('DELETE', `/historial/${id}`)
 }
 
+// Descarga un archivo (por ejemplo un PDF) que genera el backend.
+// No sirve getJson porque la respuesta no es JSON: se lee como "blob" (datos binarios),
+// se crea una dirección temporal para ese blob (URL.createObjectURL) y se "hace click"
+// en un enlace invisible con el atributo download, que es lo que inicia la descarga.
+// El nombre del archivo se toma del header Content-Disposition que manda el backend.
+async function descargarArchivo(path, nombrePorDefecto) {
+  const response = await fetch(`${API_BASE_URL}${path}`, { credentials: 'include' })
+  revisarSesion(response)
+
+  if (!response.ok) {
+    // si el backend respondió con un error, viene en JSON como siempre
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error ?? `Error HTTP ${response.status}`)
+  }
+
+  const disposicion = response.headers.get('content-disposition') ?? ''
+  const nombre = /filename="([^"]+)"/.exec(disposicion)?.[1] ?? nombrePorDefecto
+  const url = URL.createObjectURL(await response.blob())
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombre
+  document.body.append(enlace)
+  enlace.click()
+  enlace.remove()
+  // se libera la dirección temporal para no dejar el archivo ocupando memoria
+  URL.revokeObjectURL(url)
+}
+
+// PDF de la tabla del historial médico con los filtros aplicados (no las tarjetas).
+// Arma la parte "?animal=...&desde=..." igual que getHistoriales, sin los filtros vacíos.
+export function descargarHistorialPdf(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  return descargarArchivo(query ? `/historial/pdf?${query}` : '/historial/pdf', 'historial-medico.pdf')
+}
+
 export async function getUsuarios() {
   const usuarios = await getJson('/usuarios')
 
