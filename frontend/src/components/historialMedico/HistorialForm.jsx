@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { actualizarHistorial, crearHistorial, getAnimales } from '../services/api.js'
+import { hoyIso } from '../utils/fechas.js'
+import CampoFecha from './CampoFecha.jsx'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
 import './AnimalForm.css'
 
@@ -23,10 +25,6 @@ function formularioDesdeRegistro(registro) {
     observaciones: registro.observaciones ?? '',
   }
 }
-
-// fecha de hoy en formato AAAA-MM-DD, para que el calendario no deje elegir días futuros.
-// el formato 'en-CA' (Canadá) escribe las fechas justo como AAAA-MM-DD.
-const hoy = () => new Date().toLocaleDateString('en-CA')
 
 // popup para registrar o modificar un registro médico.
 // Si recibe un registro, se está modificando; si recibe null, se está creando uno nuevo.
@@ -152,7 +150,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
             <option value="">Selecciona un animal</option>
             {animales.map((animal) => (
               <option value={animal.id_animal} key={animal.id_animal}>
-                {animal.nombre_animal} ({animal.especie_animal})
+                {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
               </option>
             ))}
           </select>
@@ -179,12 +177,13 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
         <div className="animal-form__row">
           <label className="animal-form__field">
             Fecha
-            <input
+            {/* Se escribe como DD-MM-AAAA, pero se guarda en formulario como AAAA-MM-DD.
+                max={hoyIso()} no deja elegir días futuros */}
+            <CampoFecha
               name="fecha_tratamiento"
-              type="date"
               value={formulario.fecha_tratamiento}
               onChange={cambiarCampo}
-              max={hoy()}
+              max={hoyIso()}
               required
             />
             {errores.fecha_tratamiento && (
@@ -214,7 +213,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
             registre qué insumos se usaron en cada tratamiento */}
         <label className="animal-form__field">
           Insumos utilizados
-          <input type="text" placeholder="Pendiente" disabled />
+          <input type="text" placeholder="Pendiente: aún no se registran en la base de datos" disabled />
         </label>
 
         <label className="animal-form__field">
