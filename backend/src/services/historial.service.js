@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
+import { ROLES } from '../config/roles.js';
 
 // datos del animal que se adjuntan a cada registro médico.
 const animalResumen = { select: { id_animal: true, nombre_animal: true, especie_animal: true } };
@@ -93,3 +94,21 @@ export const updateHistorial = async (id, datos) => {
 // elimina un registro médico
 export const deleteHistorial = (id) =>
   prisma.historial_medico.delete({ where: { id_historial: id } });
+
+// nombres de veterinarios para la búsqueda con predicción del frontend.
+// junta dos fuentes, porque el veterinario de un registro es un texto libre
+export const getVeterinarios = async () => {
+  const [enHistorial, usuarios] = await Promise.all([
+    prisma.historial_medico.findMany({ distinct: ['veterinario'], select: { veterinario: true } }),
+    prisma.usuario.findMany({
+      where: { rol: { nombre: ROLES.VETERINARIA } },
+      select: { nombre_usuario: true },
+    }),
+  ]);
+
+  const nombres = new Set([
+    ...enHistorial.map((registro) => registro.veterinario),
+    ...usuarios.map((usuario) => usuario.nombre_usuario),
+  ]);
+  return [...nombres].sort((a, b) => a.localeCompare(b, 'es'));
+};
