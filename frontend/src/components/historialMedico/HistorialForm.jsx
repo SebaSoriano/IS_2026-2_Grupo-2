@@ -167,7 +167,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
               name="nombre_animal"
               opciones={opcionesAnimales}
               texto={formulario.nombre_animal}
-              onCambiarTexto={(texto) => cambiarValores({ nombre_animal: texto, id_animal: '' })}
+              onCambiarTexto={(opcion) => cambiarValores({ nombre_animal: opcion.texto, id_animal: String(opcion.valor) })}
               onElegir={(opcion) =>
                 cambiarValores({ nombre_animal: opcion.texto })
               }
