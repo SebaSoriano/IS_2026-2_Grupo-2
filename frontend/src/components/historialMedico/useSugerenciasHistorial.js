@@ -29,9 +29,10 @@ export function useSugerenciasHistorial() {
     // animales completos (con id, especie, etc.), para quien necesite más datos
     animales,
     // valor = id del animal, texto = nombre (lo que se busca), detalle = especie (gris a la derecha)
-    opcionesAnimales: animales.map((animal) => ({
+        opcionesAnimales: animales.map((animal) => ({
+      valor: animal.id_animal,
       texto: animal.nombre_animal,
-      detalle: `${animal.especie_animal}`,
+      detalle: animal.especie_animal,
     })),
     // los veterinarios son solo nombres, así que el nombre sirve como valor y como texto
     opcionesVeterinarios: veterinarios.map((nombre) => ({ valor: nombre, texto: nombre })),
