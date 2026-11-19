@@ -1,0 +1,85 @@
+/* position: relative hace que la lista de sugerencias (position: absolute)
+   se ubique justo debajo de este campo y no en otra parte de la página */
+.autocompletar {
+  position: relative;
+  display: grid;
+  gap: 4px;
+}
+
+/* El campo y lo que vaya a su derecha (por ejemplo, el botón "Añadir") en la misma fila */
+.autocompletar__fila {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.autocompletar .autocompletar__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.autocompletar [aria-invalid='true'] {
+  border-color: #a32121;
+}
+
+/* La lista flota encima del resto (z-index) y tiene su propia barra de desplazamiento
+   si las sugerencias no caben (max-height + overflow-y: auto) */
+.autocompletar__lista {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  z-index: 20;
+  box-sizing: border-box;
+  min-width: 100%;
+  max-width: min(420px, 90vw);
+  max-height: 240px;
+  margin: 0;
+  padding: 4px 0;
+  overflow-y: auto;
+  border: 1px solid #3ba5a3;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 8px 16px #174d4c40;
+  list-style: none;
+}
+
+/* Si el campo tiene un mensaje de error debajo, la lista se pega al campo y no al mensaje */
+.autocompletar:has(.autocompletar__error) .autocompletar__lista {
+  top: 40px;
+}
+
+.autocompletar__opcion {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 10px;
+  color: #173d3e;
+  font-size: 0.9rem;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Opción marcada con las flechas o con el mouse: mismo celeste de las filas seleccionadas */
+.autocompletar__opcion.is-activa {
+  background: #dcf8f5;
+}
+
+/* La parte que coincide con lo escrito se ve en negrita y sin el fondo amarillo de <mark> */
+.autocompletar__opcion mark {
+  color: inherit;
+  background: transparent;
+  font-weight: 700;
+}
+
+.autocompletar__detalle {
+  flex: none;
+  color: #536d6e;
+  font-size: 0.8rem;
+}
+
+.autocompletar__error {
+  color: #a32121;
+  font-size: 0.8rem;
+  font-weight: 400;
+}
