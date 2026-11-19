@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { formatearFecha } from '../utils/fechas.js'
 
 // Valores iniciales del buscador: todos los campos vacíos significan "sin filtros"
 const filtrosVacios = { animal: '', veterinario: '', desde: '', hasta: '' }
