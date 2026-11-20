@@ -48,21 +48,6 @@ const insumoDonado = z.object({
 }).strict();
 
 const listaInsumos = z.array(insumoDonado).min(1, 'Indica al menos un insumo').max(30).optional();
-// POST /api/donaciones (lo registra un voluntario)
-export const createDonacionPresencialSchema = z
-  .object({
-    ...camposDonacion,
-    fecha_donacion: z.coerce
-      .date({ error: 'Debe ser una fecha válida (AAAA-MM-DD)' })
-      .refine((fecha) => fecha <= new Date(), 'La fecha no puede ser futura')
-      .optional(),
-    insumos: listaInsumos,
-    donante_nombre: z.string().trim().min(1, 'No puede estar vacío').max(100).optional(),
-    donante_correo: z.email('Debe ser un correo válido').max(100).optional(),
-    donante_telefono: z.string().trim().regex(/^\+?\d{8,14}$/, 'Teléfono inválido').optional(),
-  })
-  .strict()
-  .superRefine(reglasPorTipo);
 
 // POST /api/donaciones/web (formulario público del donante)
 // Un formulario con archivo (multipart) manda todo como texto
@@ -72,6 +57,24 @@ const montoDesdeFormulario = z.coerce
   .positive('Debe ser mayor a 0')
   .max(100_000_000, 'El monto es demasiado alto')
   .optional();
+// POST /api/donaciones (lo registra un voluntario)
+// POST /api/donaciones (lo registra un voluntario). Puede venir como JSON o, con comprobante, como multipart
+export const createDonacionPresencialSchema = z
+  .object({
+    ...camposDonacion,
+    monto_donacion: montoDesdeFormulario,
+    fecha_donacion: z.coerce
+      .date({ error: 'Debe ser una fecha válida (AAAA-MM-DD)' })
+      .refine((fecha) => fecha <= new Date(), 'La fecha no puede ser futura')
+      .optional(),
+    insumos: listaInsumos,
+    donante_nombre: z.string().trim().min(1, 'No puede estar vacío').max(100).optional(),
+    donante_correo: z.email('Debe ser un correo válido').max(100).optional(),
+    donante_telefono: z.string().trim().regex(/^\+?\d{8,14}$/, 'Teléfono inválido').optional(),
+  })
+  .omit({ comprobante_url: true }) // el comprobante llega como archivo, no como texto
+  .strict()
+  .superRefine(reglasPorTipo);
 
 // Reglas propias de la web: solo transferencias, y hay que indicar a qué cuenta se transfirió
 const reglasWeb = (datos, ctx) => {

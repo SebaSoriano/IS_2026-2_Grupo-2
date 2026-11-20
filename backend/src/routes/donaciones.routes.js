@@ -33,7 +33,7 @@ router.get('/estadisticas', c.getEstadisticas);
 router.get('/:id', id, c.getDonacionById);
 router.get('/:id/comprobante', id, c.getComprobante);
 
-router.post('/', validate(createDonacionPresencialSchema), c.createDonacionPresencial);
+router.post('/', recibirComprobante, validate(createDonacionPresencialSchema), c.createDonacionPresencial);
 
 router.patch('/:id/agendar', id, validate(agendarDonacionSchema), c.agendarDonacion);
 router.patch('/:id/confirmar', id, validate(confirmarDonacionSchema), c.confirmarDonacion);

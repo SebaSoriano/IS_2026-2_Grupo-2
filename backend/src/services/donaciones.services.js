@@ -50,19 +50,44 @@ const verificarPermiso = async (donacion, usuario) => {
 const filasDeInsumo = (insumos, id_donacion, rut_usuario) =>
   insumos.map((insumo) => ({ ...insumo, id_donacion, rut_usuario, fecha_ingreso: new Date() }));
 
-// Registro presencial: ya está recibida, así que nace confirmada
-export const createDonacionPresencial = async ({ insumos, ...datos }, usuario) => {
+// El comprobante va solo con transferencia: es obligatorio ahí y no se acepta en efectivo ni en insumos
+const verificarComprobantePresencial = (datos, archivo) => {
+  const conTransferencia = datos.tipo_donacion === 'monetaria' && datos.metodo_pago === 'transferencia';
+  if (conTransferencia && !archivo) throw new HttpError(400, 'Adjunta el comprobante de la transferencia (JPG o PNG)');
+  if (!conTransferencia && archivo) throw new HttpError(400, 'El comprobante solo aplica a transferencias');
+};
+
+// Registro presencial: ya está recibida, así que nace confirmada. archivo = req.file de multer (o undefined)
+export const createDonacionPresencial = async ({ insumos, ...datos }, usuario, archivo) => {
   verificarInsumos(datos.tipo_donacion, insumos);
+  verificarComprobantePresencial(datos, archivo);
   const fecha = datos.fecha_donacion ?? new Date();
 
-  // Transacción: o se guarda la donación Y sus insumos, o no se guarda nada
-  return prisma.$transaction(async (tx) => {
-    const { id_donacion } = await tx.donaciones.create({
-      data: { ...datos, rut_usuario: usuario.rut, origen: 'presencial', estado: 'confirmada', fecha_donacion: fecha, fecha_confirmacion: fecha },
+  // El archivo se guarda cuando todo lo demás ya pasó las validaciones
+  const comprobante_url = archivo ? await guardarComprobante(archivo) : undefined;
+
+  try {
+    // Transacción: o se guarda la donación Y sus insumos, o no se guarda nada
+    return await prisma.$transaction(async (tx) => {
+      const { id_donacion } = await tx.donaciones.create({
+        data: {
+          ...datos,
+          comprobante_url,
+          rut_usuario: usuario.rut,
+          origen: 'presencial',
+          estado: 'confirmada',
+          fecha_donacion: fecha,
+          fecha_confirmacion: fecha,
+        },
+      });
+      if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id_donacion, usuario.rut) });
+      return tx.donaciones.findUnique({ where: { id_donacion }, include: incluir });
     });
-    if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id_donacion, usuario.rut) });
-    return tx.donaciones.findUnique({ where: { id_donacion }, include: incluir });
-  });
+  } catch (error) {
+    // si la base de datos falla, no se deja un archivo huérfano en disco
+    if (comprobante_url) await borrarComprobante(comprobante_url);
+    throw error;
+  }
 };
 
 // Formulario público: nace pendiente, el estado y el origen los decide el servidor, no el cliente

@@ -61,3 +61,14 @@ export function CamposDonante({ valores, errores, onChange }) {
     </>
   )
 }
+
+export const TIPOS_COMPROBANTE = ['image/jpeg', 'image/png']
+export const TAMANO_MAXIMO_COMPROBANTE = 5 * 1024 * 1024 // 5 MB, igual que el servidor
+
+// Comodidad para el usuario: el servidor vuelve a validar todo igual
+export function errorDeArchivo(archivo) {
+  if (!archivo) return ''
+  if (!TIPOS_COMPROBANTE.includes(archivo.type)) return 'Debe ser una imagen JPG o PNG'
+  if (archivo.size > TAMANO_MAXIMO_COMPROBANTE) return 'El archivo no puede superar los 5 MB'
+  return ''
+}
