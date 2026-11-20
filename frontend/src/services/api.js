@@ -103,8 +103,19 @@ async function sendJson(method, path, body) {
   return data
 }
 
-export async function getAnimales() {
-  const animales = await getJson('/animales')
+// filtros (opcional): { nombre, especie, via_ingreso, adoptado, edad_min, edad_max }
+// Los campos vacíos no se envían. Ej: { especie: 'perro', edad_max: '3' } → /animales?especie=perro&edad_max=3
+export async function getAnimales(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  const animales = await getJson(query ? `/animales?${query}` : '/animales')
 
   if (!Array.isArray(animales)) {
     throw new Error('La respuesta de la API de animales no es válida.')
@@ -165,7 +176,8 @@ export function eliminarTurno(id) {
   return sendJson('DELETE', `/turnos/${id}`)
 }
 
-// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes (cada uno dice si llego a la hora)
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes
+// cada turno trae hora_llegada y estado ('a-tiempo', 'tarde', 'ausente' o 'pendiente')
 export async function getAsistencias(mes) {
   const usuarios = await getJson(`/asistencias?mes=${mes}`)
 
@@ -176,9 +188,20 @@ export async function getAsistencias(mes) {
   return usuarios
 }
 
-// marca (true) o desmarca (false) que el usuario llego a la hora a un turno
-export function marcarAsistenciaTurno(id, llego_a_la_hora) {
-  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
+// Admin o Veterinaria corrigen la asistencia a mano: true la deja como llegada a la hora, false borra la llegada
+export function marcarAsistenciaTurno(id, llego) {
+  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego })
+}
+
+// turno en que la persona de la sesion puede apretar "Llegué" ahora, o null si no tiene ninguno
+export async function getTurnoParaLlegada() {
+  const { turno } = await getJson('/turnos/llegada')
+  return turno
+}
+
+// registra la llegada de la persona de la sesion a su turno actual (la hora la pone el servidor)
+export function registrarLlegada() {
+  return postJson('/turnos/llegada', {})
 }
 
 // filtros: { estado, tipo_donacion, origen }; los vacíos no se mandan
@@ -376,17 +399,21 @@ export async function getAdopciones() {
 export function registrarAdopcion(idAnimal, datos) {
   return postJson(`/animales/${idAnimal}/adopcion`, datos)
 }
-
-// Sube la foto de un animal. Se envía como formulario (multipart/form-data), no como JSON
-export async function subirFotoAnimal(idAnimal, archivo) {
+// Sube una o varias fotos de un animal. Se envía como formulario (multipart/form-data), no como JSON.
+// archivos: arreglo de File (los que entrega un <input type="file" multiple>)
+export async function subirFotosAnimal(idAnimal, archivos) {
   const formulario = new FormData()
-  formulario.append('foto', archivo)
+  for (const archivo of archivos) {
+    formulario.append('fotos', archivo) // el mismo nombre de campo que espera multer: .array('fotos')
+  }
 
   // No se pone 'Content-Type': el navegador lo arma solo con el separador que necesita
-  const response = await fetch(`${API_BASE_URL}/animales/${idAnimal}/foto`, {
+  const response = await fetch(`${API_BASE_URL}/animales/${idAnimal}/fotos`, {
     method: 'POST',
+    credentials: 'include',
     body: formulario,
   })
+  revisarSesion(response)
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -415,6 +442,7 @@ export async function getEstadisticasDonaciones() {
   return datos
 }
 
+<<<<<<< HEAD
 // Nombres de veterinarios (texto) para sugerirlos mientras se escribe en el historial médico
 export async function getVeterinariosHistorial() {
   const veterinarios = await getJson('/historial/veterinarios')
@@ -424,4 +452,9 @@ export async function getVeterinariosHistorial() {
   }
 
   return veterinarios
+=======
+// Elimina una foto de un animal. Devuelve el animal con las fotos que le quedan
+export function eliminarFotoAnimal(idAnimal, idFoto) {
+  return sendJson('DELETE', `/animales/${idAnimal}/fotos/${idFoto}`)
+>>>>>>> d8389ce4596c0a7cbe8011ab13e0a1238837d8e6
 }

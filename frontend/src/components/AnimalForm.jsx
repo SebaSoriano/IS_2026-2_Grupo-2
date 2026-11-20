@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarAnimal, crearAnimal, subirFotoAnimal } from '../services/api.js'
+import { actualizarAnimal, crearAnimal, subirFotosAnimal } from '../services/api.js'
+import { VIAS_DE_INGRESO } from '../data/viasIngreso.js'
 import './AnimalForm.css'
 
 // Valores iniciales del formulario
@@ -13,10 +14,13 @@ const formularioVacio = {
 }
 
 // Opciones para la vía de ingreso
-const viasDeIngreso = ['Rescate', 'Abandono', 'Entrega voluntaria', 'Traslado', 'Otro']
+const viasDeIngreso = VIAS_DE_INGRESO
+// Opciones para la especie (el refugio solo recibe perros y gatos)
+const especies = ['Perro', 'Gato']
 // Fotos permitidas (las mismas que acepta el backend) y peso máximo: 3 MB
 const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp']
 const TAMANO_MAXIMO_FOTO = 3 * 1024 * 1024
+const MAXIMO_FOTOS_POR_SUBIDA = 5
 
 // Convierte un animal de la base de datos en los valores del formulario
 function formularioDesdeAnimal(animal) {
@@ -41,47 +45,77 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
     const [mensajeError, setMensajeError] = useState('')
     const [enviando, setEnviando] = useState(false)
     
-    // Foto: el archivo elegido y la imagen que se muestra como vista previa
-    const fotoActual = esEdicion ? animal.foto_animal ?? null : null
-    const [archivoFoto, setArchivoFoto] = useState(null)
-    const [vistaPrevia, setVistaPrevia] = useState(fotoActual)
+    // Fotos nuevas: los archivos elegidos y sus vistas previas (direcciones "blob:" temporales)
+    const cantidadFotosActuales = esEdicion ? animal.fotos?.length ?? 0 : 0
+    const [archivosFotos, setArchivosFotos] = useState([])
+    const [vistasPrevias, setVistasPrevias] = useState([])
     const [errorFoto, setErrorFoto] = useState('')
 
-    // Libera la memoria de la vista previa cuando cambia o se cierra el popup
+    // Libera la memoria de las vistas previas cuando cambian o se cierra el popup
     useEffect(() => {
         return () => {
-            if (vistaPrevia && vistaPrevia.startsWith('blob:')) {
-                URL.revokeObjectURL(vistaPrevia)
-            }
+            for (const vista of vistasPrevias) URL.revokeObjectURL(vista)
         }
-    }, [vistaPrevia])
+    }, [vistasPrevias])
 
-    // Se ejecuta cuando el usuario elige un archivo
-    function seleccionarFoto(event) {
-        const archivo = event.target.files[0]
+    // Se ejecuta cuando el usuario elige uno o varios archivos
+    function seleccionarFotos(event) {
+        // files no es un arreglo normal; Array.from lo convierte para poder usar .find y .map
+        const archivos = Array.from(event.target.files)
         setErrorFoto('')
 
-        // Si canceló la selección, se vuelve a la foto que tenía
-        if (!archivo) {
-            setArchivoFoto(null)
-            setVistaPrevia(fotoActual)
-            return
+        let error = ''
+        if (archivos.length > MAXIMO_FOTOS_POR_SUBIDA) {
+            error = `Puedes subir como máximo ${MAXIMO_FOTOS_POR_SUBIDA} fotos a la vez`
+        } else if (archivos.find((archivo) => !TIPOS_FOTO.includes(archivo.type))) {
+            error = 'Las fotos deben ser imágenes JPG, PNG o WEBP'
+        } else if (archivos.find((archivo) => archivo.size > TAMANO_MAXIMO_FOTO)) {
+            error = 'Cada foto puede pesar como máximo 3 MB'
         }
 
-        if (!TIPOS_FOTO.includes(archivo.type)) {
-            setErrorFoto('La foto debe ser una imagen JPG, PNG o WEBP')
+        if (error) {
+            setErrorFoto(error)
+            setArchivosFotos([])
+            setVistasPrevias([])
             event.target.value = ''
             return
         }
 
-        if (archivo.size > TAMANO_MAXIMO_FOTO) {
-            setErrorFoto('La foto no puede pesar más de 3 MB')
+        setArchivosFotos(archivos)
+        setVistasPrevias(archivos.map((archivo) => URL.createObjectURL(archivo)))
+    }
+    // Libera la memoria de las vistas previas cuando cambian o se cierra el popup
+    useEffect(() => {
+        return () => {
+            for (const vista of vistasPrevias) URL.revokeObjectURL(vista)
+        }
+    }, [vistasPrevias])
+
+    // Se ejecuta cuando el usuario elige uno o varios archivos
+    function seleccionarFotos(event) {
+        // files no es un arreglo normal; Array.from lo convierte para poder usar .find y .map
+        const archivos = Array.from(event.target.files)
+        setErrorFoto('')
+
+        let error = ''
+        if (archivos.length > MAXIMO_FOTOS_POR_SUBIDA) {
+            error = `Puedes subir como máximo ${MAXIMO_FOTOS_POR_SUBIDA} fotos a la vez`
+        } else if (archivos.find((archivo) => !TIPOS_FOTO.includes(archivo.type))) {
+            error = 'Las fotos deben ser imágenes JPG, PNG o WEBP'
+        } else if (archivos.find((archivo) => archivo.size > TAMANO_MAXIMO_FOTO)) {
+            error = 'Cada foto puede pesar como máximo 3 MB'
+        }
+
+        if (error) {
+            setErrorFoto(error)
+            setArchivosFotos([])
+            setVistasPrevias([])
             event.target.value = ''
             return
         }
 
-        setArchivoFoto(archivo)
-        setVistaPrevia(URL.createObjectURL(archivo))
+        setArchivosFotos(archivos)
+        setVistasPrevias(archivos.map((archivo) => URL.createObjectURL(archivo)))
     }
 
     // Referencia al <dialog> para poder abrirlo
@@ -95,6 +129,12 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         }
     }, [])
 
+    // Si el animal tiene una especie que no está en la lista (ej: uno antiguo con "perro"), se agrega como opción
+    const opcionesEspecie =
+        formulario.especie_animal && !especies.includes(formulario.especie_animal)
+        ? [formulario.especie_animal, ...especies]
+        : especies
+        
     // Si el animal tiene una vía de ingreso que no está en la lista, se agrega como opción
     const opcionesVia =
         formulario.via_ingreso && !viasDeIngreso.includes(formulario.via_ingreso)
@@ -135,13 +175,13 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         } else {
             animalGuardado = await crearAnimal(datos)
         }
-        // Si se eligió una foto, la sube
+        // Si se eligieron fotos, se suben (el backend devuelve el animal con todas sus fotos)
         let avisoFoto = null
-        if (archivoFoto !== null) {
+        if (archivosFotos.length > 0) {
             try {
-                animalGuardado = await subirFotoAnimal(animalGuardado.id_animal, archivoFoto)
+                animalGuardado = await subirFotosAnimal(animalGuardado.id_animal, archivosFotos)
             } catch (errorSubida) {
-                // El animal ya se guardó; solo falló la foto
+                // El animal ya se guardó; solo fallaron las fotos
                 avisoFoto = errorSubida.message
             }
         }
@@ -218,16 +258,19 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
 
             <label className="animal-form__field">
             Especie
-            <input
+            <select
                 name="especie_animal"
-                type="text"
                 value={formulario.especie_animal}
                 onChange={cambiarCampo}
-                placeholder="Ej: perro, gato"
-                minLength={2}
-                maxLength={100}
                 required
-            />
+            >
+                <option value="">Selecciona una opción</option>
+                {opcionesEspecie.map((especie) => (
+                <option value={especie} key={especie}>
+                    {especie}
+                </option>
+                ))}
+            </select>
             {errores.especie_animal && (
                 <span className="animal-form__error">{errores.especie_animal}</span>
             )}
@@ -302,18 +345,33 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
             )}
             </label>
             <div className="animal-form__field">
-            Foto (opcional)
-            {vistaPrevia && (
-                <img className="animal-form__preview" src={vistaPrevia} alt="Vista previa de la foto" />
+            Agregar fotos (opcional)
+            {esEdicion && (
+                <span className="animal-form__help">
+                Este animal tiene {cantidadFotosActuales} de 5 fotos. Para verlas o eliminarlas usa "Ver Fotos".
+                </span>
+            )}
+            {vistasPrevias.length > 0 && (
+                <div className="animal-form__previews">
+                {vistasPrevias.map((vista, posicion) => (
+                    <img
+                    className="animal-form__preview"
+                    src={vista}
+                    alt={`Vista previa de la foto ${posicion + 1}`}
+                    key={vista}
+                    />
+                ))}
+                </div>
             )}
             <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                onChange={seleccionarFoto}
+                multiple
+                onChange={seleccionarFotos}
                 disabled={enviando}
-                aria-label="Elegir foto del animal"
+                aria-label="Elegir fotos del animal"
             />
-            <span className="animal-form__help">JPG, PNG o WEBP, máximo 3 MB.</span>
+            <span className="animal-form__help">JPG, PNG o WEBP, máximo 3 MB cada una, hasta 5 por vez.</span>
             {errorFoto && <span className="animal-form__error">{errorFoto}</span>}
             </div>
 
