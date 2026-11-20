@@ -96,85 +96,102 @@ export default function AttendanceSection({ cambiosTurnos }) {
       {/* error al marcar o desmarcar un turno */}
       {estado === 'success' && error && <p className="inventory-error" role="alert">{error}</p>}
 
-      <div className="attendance-table-scroll">
-        <table className="attendance-table">
-          <caption className="visually-hidden">Asistencia de {nombreDelMes(mes)}</caption>
+      {/* bloque 1: RUT y Nombre, fijo a la izquierda y fuera del scroll */}
+      {/* bloque 2: mes fijo y centrado; debajo, lo único con scroll horizontal son las semanas y días */}
+      {/* son dos tablas separadas: las filas se alinean con alturas fijas (variables --asistencia-* en el CSS) */}
+      <div className="attendance-grid">
+        <table className="attendance-table attendance-staff">
+          <caption className="visually-hidden">Staff de la asistencia</caption>
           <thead>
             <tr>
-              <th scope="col" rowSpan="3" className="attendance-table__rut">RUT</th>
-              <th scope="col" rowSpan="3" className="attendance-table__nombre">Nombre</th>
-              <th scope="colgroup" colSpan={dias.length} className="attendance-table__mes">
-                <div className="month-picker">
-                  <button type="button" onClick={() => cambiarMes(-1)} aria-label="Mes anterior">‹</button>
-                  <span aria-live="polite">{nombreDelMes(mes)}</span>
-                  <button type="button" onClick={() => cambiarMes(1)} aria-label="Mes siguiente">›</button>
-                </div>
-              </th>
-            </tr>
-            <tr>
-              {semanas.map((semana, i) => (
-                <th scope="colgroup" colSpan={semana.length} className="attendance-table__semana" key={semana[0].fecha}>
-                  Semana {i + 1}
-                </th>
-              ))}
-            </tr>
-            <tr>
-              {dias.map((dia) => (
-                <th
-                  scope="col"
-                  key={dia.fecha}
-                  className={`attendance-table__dia${dia.diaSemana === 1 ? ' inicio-semana' : ''}${dia.fecha === hoy ? ' is-hoy' : ''}`}
-                >
-                  <span>{DIAS_CORTOS[dia.diaSemana - 1]}</span>
-                  <span>{dia.numero}</span>
-                </th>
-              ))}
+              <th scope="col" className="attendance-table__rut">RUT</th>
+              <th scope="col" className="attendance-table__nombre">Nombre</th>
             </tr>
           </thead>
           <tbody>
-            {estado === 'loading' && (
-              <tr>
-                <td colSpan={dias.length + 2} className="attendance-table__mensaje" role="status">
-                  Cargando asistencia...
-                </td>
-              </tr>
-            )}
-            {estado === 'success' && usuarios.length === 0 && (
-              <tr>
-                <td colSpan={dias.length + 2} className="attendance-table__mensaje">No hay staff registrado.</td>
-              </tr>
-            )}
             {estado === 'success' &&
-              usuarios.map((usuario) => {
-                // fecha ("AAAA-MM-DD") -> turnos de ese dia
-                const turnosPorDia = new Map()
-                for (const turno of usuario.turnos) {
-                  const fecha = turno.fecha.slice(0, 10)
-                  turnosPorDia.set(fecha, [...(turnosPorDia.get(fecha) ?? []), turno])
-                }
-                return (
-                  <tr key={usuario.rut_usuario}>
-                    <td className="attendance-table__rut">{usuario.rut_usuario}</td>
-                    <th scope="row" className="attendance-table__nombre">{usuario.nombre_usuario}</th>
-                    {dias.map((dia) => (
-                      <CeldaAsistencia
-                        key={dia.fecha}
-                        dia={dia}
-                        turnos={turnosPorDia.get(dia.fecha) ?? []}
-                        esFuturo={dia.fecha > hoy}
-                        guardando={guardando}
-                        nombre={usuario.nombre_usuario}
-                        soloLectura={!puedeEditar}
-                        onAlternar={alternarTurno}
-                        onAbrir={() => setDiaAbierto({ rut: usuario.rut_usuario, nombre: usuario.nombre_usuario, dia })}
-                      />
-                    ))}
-                  </tr>
-                )
-              })}
+              usuarios.map((usuario) => (
+                <tr key={usuario.rut_usuario}>
+                  <td className="attendance-table__rut">{usuario.rut_usuario}</td>
+                  <th scope="row" className="attendance-table__nombre">{usuario.nombre_usuario}</th>
+                </tr>
+              ))}
           </tbody>
         </table>
+
+        <div className="attendance-dias">
+          <div className="attendance-mes">
+            <div className="month-picker">
+              <button type="button" onClick={() => cambiarMes(-1)} aria-label="Mes anterior">‹</button>
+              <span aria-live="polite">{nombreDelMes(mes)}</span>
+              <button type="button" onClick={() => cambiarMes(1)} aria-label="Mes siguiente">›</button>
+            </div>
+          </div>
+
+          <div className="attendance-table-scroll">
+            <table className="attendance-table">
+              <caption className="visually-hidden">Asistencia de {nombreDelMes(mes)}</caption>
+              <thead>
+                <tr className="attendance-table__fila-semana">
+                  {semanas.map((semana, i) => (
+                    <th scope="colgroup" colSpan={semana.length} className="attendance-table__semana" key={semana[0].fecha}>
+                      Semana {i + 1}
+                    </th>
+                  ))}
+                </tr>
+                <tr className="attendance-table__fila-dia">
+                  {dias.map((dia) => (
+                    <th
+                      scope="col"
+                      key={dia.fecha}
+                      className={`attendance-table__dia${dia.diaSemana === 1 ? ' inicio-semana' : ''}${dia.fecha === hoy ? ' is-hoy' : ''}`}
+                    >
+                      <span>{DIAS_CORTOS[dia.diaSemana - 1]}</span>
+                      <span>{dia.numero}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {estado === 'success' &&
+                  usuarios.map((usuario) => {
+                    // fecha ("AAAA-MM-DD") -> turnos de ese dia
+                    const turnosPorDia = new Map()
+                    for (const turno of usuario.turnos) {
+                      const fecha = turno.fecha.slice(0, 10)
+                      turnosPorDia.set(fecha, [...(turnosPorDia.get(fecha) ?? []), turno])
+                    }
+                    return (
+                      <tr key={usuario.rut_usuario}>
+                        {dias.map((dia) => (
+                          <CeldaAsistencia
+                            key={dia.fecha}
+                            dia={dia}
+                            turnos={turnosPorDia.get(dia.fecha) ?? []}
+                            esFuturo={dia.fecha > hoy}
+                            guardando={guardando}
+                            nombre={usuario.nombre_usuario}
+                            soloLectura={!puedeEditar}
+                            onAlternar={alternarTurno}
+                            onAbrir={() => setDiaAbierto({ rut: usuario.rut_usuario, nombre: usuario.nombre_usuario, dia })}
+                          />
+                        ))}
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
+      {/* fuera de las tablas para no descuadrar las filas de ambos bloques */}
+      {estado === 'loading' && (
+        <p className="attendance-table__mensaje" role="status">Cargando asistencia...</p>
+      )}
+      {estado === 'success' && usuarios.length === 0 && (
+        <p className="attendance-table__mensaje">No hay staff registrado.</p>
+      )}
 
       <ul className="attendance-legend" aria-label="Simbología">
         <li><span className="attendance-legend__muestra is-presente">✓</span> Llegó a la hora</li>

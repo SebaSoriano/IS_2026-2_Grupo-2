@@ -707,28 +707,86 @@
   margin: 0;
 }
 
-.attendance-table-scroll {
-  overflow-x: auto;
-  border: 1px solid #b3d4d4;
+/* alturas compartidas: las filas de las dos tablas (staff y días) deben medir lo mismo para quedar alineadas */
+.attendance {
+  --asistencia-mes: 52px;
+  --asistencia-semana: 34px;
+  --asistencia-dia: 48px;
+  --asistencia-fila: 44px;
+  --asistencia-borde: #b3d4d4;
 }
 
+/* bloque 1 (staff) a la izquierda y bloque 2 (mes + días) a la derecha */
+.attendance-grid {
+  display: flex;
+  border: 1px solid var(--asistencia-borde);
+  border-bottom: 0; /* el borde inferior lo pone la última fila */
+}
+
+/* columna derecha: ocupa el resto; min-width 0 deja que el scroll quede adentro */
+.attendance-dias {
+  flex: 1;
+  min-width: 0;
+  border-left: 2px solid #5fb4b1;
+}
+
+/* solo semanas y días se desplazan en horizontal */
+.attendance-table-scroll {
+  overflow-x: auto;
+}
+
+/* separate + spacing 0: cada fila mide exactamente su height (con collapse los bordes la descuadran) */
 .attendance-table {
-  min-width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   color: #173d3e;
+}
+
+.attendance-table-scroll .attendance-table {
+  min-width: 100%;
 }
 
 .attendance-table th,
 .attendance-table td {
-  border: 1px solid #b3d4d4;
+  border-right: 1px solid var(--asistencia-borde);
+  border-bottom: 1px solid var(--asistencia-borde);
   text-align: center;
 }
 
-.attendance-table__mes {
-  padding: 8px;
+/* la última columna no repite el borde del contenedor */
+.attendance-table tr > :last-child {
+  border-right: 0;
+}
+
+.attendance-table__fila-semana {
+  height: var(--asistencia-semana);
+}
+
+.attendance-table__fila-dia {
+  height: var(--asistencia-dia);
+}
+
+.attendance-table tbody tr {
+  height: var(--asistencia-fila);
+}
+
+/* encabezado del staff = alto del mes + semana + día */
+.attendance-staff thead tr {
+  height: calc(var(--asistencia-mes) + var(--asistencia-semana) + var(--asistencia-dia));
+}
+
+/* bloque 2: fuera del scroll, así el selector queda fijo y centrado en lo visible */
+.attendance-mes {
+  box-sizing: border-box;
+  height: var(--asistencia-mes);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #fff;
   background: #17a3b5;
+  border-bottom: 1px solid var(--asistencia-borde);
   font-size: 22px;
+  font-weight: 700;
 }
 
 .month-picker {
@@ -740,6 +798,7 @@
 
 .month-picker span {
   min-width: 200px;
+  text-align: center;
 }
 
 .month-picker button {
@@ -766,8 +825,9 @@
   white-space: nowrap;
 }
 
+/* 1px que se suma al borde derecho de la celda anterior: línea de 2px entre semanas */
 .attendance-table__semana + .attendance-table__semana {
-  border-left: 2px solid #5fb4b1;
+  border-left: 1px solid #5fb4b1;
 }
 
 .attendance-table__dia {
@@ -794,14 +854,12 @@
 
 /* linea mas marcada donde empieza cada semana (lunes) */
 .attendance-table .inicio-semana {
-  border-left: 2px solid #5fb4b1;
+  border-left: 1px solid #5fb4b1;
 }
 
-/* RUT y nombre quedan fijos a la izquierda al hacer scroll horizontal */
+/* RUT y nombre: ya no necesitan sticky, su tabla está fuera del scroll */
 .attendance-table .attendance-table__rut,
 .attendance-table .attendance-table__nombre {
-  position: sticky;
-  z-index: 1;
   padding: 8px 12px;
   background: #fff;
   text-align: left;
@@ -809,20 +867,16 @@
 }
 
 .attendance-table__rut {
-  left: 0;
   min-width: 96px;
 }
 
 .attendance-table__nombre {
-  left: 120px;
   min-width: 160px;
   font-weight: 400;
-  box-shadow: 2px 0 0 #d8eeee;
 }
 
 .attendance-table thead .attendance-table__rut,
 .attendance-table thead .attendance-table__nombre {
-  z-index: 2;
   color: #fff;
   background: #17a3b5;
   font-weight: 700;
@@ -834,7 +888,7 @@
 }
 
 .attendance-cell {
-  height: 40px;
+  /* el alto lo da la fila (--asistencia-fila) */
   padding: 0;
   /* centra el ✓ y el conteo cuando la celda no tiene botón (Voluntario, solo lectura) */
   text-align: center;
@@ -843,7 +897,7 @@
 .attendance-cell button {
   display: block;
   width: 100%;
-  height: 40px;
+  height: calc(var(--asistencia-fila) - 1px); /* alto de la fila menos su borde inferior */
   border: 0;
   background: transparent;
   font: inherit;
