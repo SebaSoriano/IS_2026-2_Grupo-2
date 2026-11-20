@@ -65,7 +65,8 @@ model Horario{
 // horario_id es el dia de la semana de la fecha (lo calcula el backend), sirve para agrupar en el horario semanal
 // hora_inicio es el bloque de una hora en que llega (ej: "08:00")
 // hora_fin es la hora en que se va, es opcional (si no viene, el turno dura solo ese bloque)
-// llego_a_la_hora es la asistencia del turno (por ahora no se guarda tarde ni ausente)
+// hora_llegada es la hora ("HH:MM") en que la persona apreto "Llegué"; null si aun no registra su llegada
+// si llego a la hora, tarde o no vino se calcula con hora_llegada (ver estadoAsistencia en turno.service.js)
 model Turno {
   id Int @id @default(autoincrement())
   rut_usuario String
@@ -73,7 +74,7 @@ model Turno {
   horario_id Int
   hora_inicio String @db.VarChar(5)
   hora_fin String? @db.VarChar(5)
-  llego_a_la_hora Boolean @default(false)
+  hora_llegada String? @db.VarChar(5)
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
   horario Horario @relation(fields: [horario_id], references: [id])
 
