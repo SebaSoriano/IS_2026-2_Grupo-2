@@ -268,3 +268,8 @@
 .donation-filters__limpiar:disabled {
   visibility: hidden;
 }
+
+/* en Estadísticas los filtros no se ven, pero siguen ocupando su lugar para que los botones no se muevan */
+.donation-filters--oculto {
+  visibility: hidden;
+}

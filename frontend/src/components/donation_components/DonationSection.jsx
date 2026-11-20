@@ -215,9 +215,11 @@ const [detalle, setDetalle] = useState(null)
                 </button>
               ))}
             </div>
-            
-            {vista !== 'estadisticas' && (
-              <div className="donation-filters">
+
+              <div
+                className={`donation-filters${vista === 'estadisticas' ? ' donation-filters--oculto' : ''}`}
+                aria-hidden={vista === 'estadisticas'}
+              >
                 {Object.entries(OPCIONES_FILTRO).map(([clave, opciones]) => (
                   <label key={clave}>
                     <span>{ETIQUETAS_FILTRO[clave]}</span>
@@ -274,7 +276,7 @@ const [detalle, setDetalle] = useState(null)
                   Limpiar filtros
                 </button>
               </div>
-            )}
+            
           </div>
           {vista === 'insumos' && filtros.categoria_insumo && (
             <p className="donation-nota">
