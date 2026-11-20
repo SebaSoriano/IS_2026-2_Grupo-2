@@ -11,6 +11,7 @@ import './DonationSection.css'
 import { getDonaciones } from '../../services/api.js'
 import DonationDetalleModal from './DonationDetalleModal.jsx'
 import { detalleDonacion, formatoDia, formatoFechaHora, nombreDonante } from './DonationFormato.js'
+import { CATEGORIAS_INSUMO } from '../../data/categoriasInsumo.js'
 const OPCIONES_FILTRO = {
   estado: ['pendiente', 'agendada', 'confirmada'],
   origen: ['presencial', 'web'],
@@ -21,6 +22,12 @@ const ETIQUETAS_FILTRO = {
   origen: 'Origen',
 }
 
+const FILTROS_VACIOS = { estado: '', origen: '', categoria_insumo: '', fecha_desde: '', fecha_hasta: '' }
+
+const rangoDeFechas = ({ fecha_desde, fecha_hasta }) => ({
+  fecha_desde: fecha_desde ? new Date(`${fecha_desde}T00:00:00`).toISOString() : '',
+  fecha_hasta: fecha_hasta ? new Date(`${fecha_hasta}T23:59:59.999`).toISOString() : '',
+})
 
 // 3 vistas, donaciones monetarias, de insumos y estadisticas.
 const VISTAS = [
@@ -72,7 +79,7 @@ export default function DonationSection() {
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [vista, setVista] = useState('monetaria')
-  const [filtros, setFiltros] = useState({ estado: '', origen: '' })
+ const [filtros, setFiltros] = useState(FILTROS_VACIOS)
   
   // cada vez que cambia este número se vuelve a pedir la lista (después de agendar o confirmar)
   const [recarga, setRecarga] = useState(0)
@@ -93,7 +100,13 @@ const [detalle, setDetalle] = useState(null)
 
     let esVigente = true
 
-    getDonaciones({ ...filtros, tipo_donacion: vista })
+    getDonaciones({
+      ...filtros,
+      ...rangoDeFechas(filtros),
+      // la categoría solo existe en insumos
+      categoria_insumo: vista === 'insumos' ? filtros.categoria_insumo : '',
+      tipo_donacion: vista,
+    })
       .then((data) => {
         if (!esVigente) return
         setDonaciones(data)
@@ -120,6 +133,12 @@ const [detalle, setDetalle] = useState(null)
   const cambiarFiltro = (clave, valor) => {
     setStatus('loading')
     setFiltros((actuales) => ({ ...actuales, [clave]: valor }))
+  }
+  const hayFiltros = Object.values(filtros).some(Boolean)
+
+  const limpiarFiltros = () => {
+    setStatus('loading')
+    setFiltros(FILTROS_VACIOS)
   }
 
   const cerrarAccion = () => setAccion(null)
@@ -210,12 +229,71 @@ const [detalle, setDetalle] = useState(null)
                     </select>
                   </label>
                 ))}
+                {vista !== 'estadisticas' && (
+                  <div className="donation-filters">
+                    {Object.entries(OPCIONES_FILTRO).map(([clave, opciones]) => (
+                      <label key={clave}>
+                        <span>{ETIQUETAS_FILTRO[clave]}</span>
+                        <select value={filtros[clave]} onChange={(event) => cambiarFiltro(clave, event.target.value)}>
+                          <option value="">Todos</option>
+                          {opciones.map((opcion) => (
+                            <option key={opcion} value={opcion}>{opcion}</option>
+                          ))}
+                        </select>
+                      </label>
+                    ))}
+
+                    {vista === 'insumos' && (
+                      <label>
+                        <span>Categoría</span>
+                        <select
+                          value={filtros.categoria_insumo}
+                          onChange={(event) => cambiarFiltro('categoria_insumo', event.target.value)}
+                        >
+                          <option value="">Todas</option>
+                          {CATEGORIAS_INSUMO.map((categoria) => (
+                            <option key={categoria} value={categoria}>{categoria}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                    <label>
+                      <span>Desde</span>
+                      <input
+                        type="date"
+                        value={filtros.fecha_desde}
+                        max={filtros.fecha_hasta || undefined}
+                        onChange={(event) => cambiarFiltro('fecha_desde', event.target.value)}
+                      />
+                    </label>
+                    <label>
+                      <span>Hasta</span>
+                      <input
+                        type="date"
+                        value={filtros.fecha_hasta}
+                        min={filtros.fecha_desde || undefined}
+                        onChange={(event) => cambiarFiltro('fecha_hasta', event.target.value)}
+                      />
+                    </label>
+
+                    {hayFiltros && (
+                      <button type="button" className="donation-filters__limpiar" onClick={limpiarFiltros}>
+                        Limpiar filtros
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
-
+          {vista === 'insumos' && filtros.categoria_insumo && (
+            <p className="donation-nota">
+              La categoría se conoce cuando los insumos ya fueron recibidos: las donaciones pendientes o agendadas
+              no aparecen al filtrar por categoría.
+            </p>
+          )}
           {vista === 'estadisticas' && <DonationStats recarga={recarga} />}
-
           {vista !== 'estadisticas' && status === 'loading' && <p role="status">Cargando donaciones...</p>}
           {vista !== 'estadisticas' && status === 'error' && (
             <p className="inventory-error" role="alert">

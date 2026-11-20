@@ -102,12 +102,20 @@ export const createDonacionWebSchema = z
   .superRefine(reglasPorTipo)
   .superRefine(reglasWeb);
 
-// GET /api/donaciones?estado=&tipo_donacion=&origen=
+// GET /api/donaciones?estado=&tipo_donacion=&origen=&fecha_desde=&fecha_hasta=&categoria_insumo=
 export const filtrosDonacionSchema = z.object({
   estado: z.enum(ESTADOS_DONACION).optional(),
   tipo_donacion: z.enum(TIPOS_DONACION).optional(),
   origen: z.enum(ORIGENES_DONACION).optional(),
-}).strict();
+  // instantes ISO: el navegador manda el inicio y el fin del día en su propia hora
+  fecha_desde: z.coerce.date({ error: 'Debe ser una fecha válida' }).optional(),
+  fecha_hasta: z.coerce.date({ error: 'Debe ser una fecha válida' }).optional(),
+  categoria_insumo: tipoInsumo.optional(),
+}).strict()
+  .refine(
+    (d) => !d.fecha_desde || !d.fecha_hasta || d.fecha_desde <= d.fecha_hasta,
+    { message: '"Desde" no puede ser posterior a "Hasta"', path: ['fecha_desde'] },
+  );
 
 // PATCH /api/donaciones/:id (el tipo no se puede cambiar: si se equivocó, se borra y se registra de nuevo)
 const { tipo_donacion, ...camposEditables } = camposDonacion;

@@ -104,12 +104,26 @@ export const deleteDonacion = async (id_donacion) => {
   if (donacion.comprobante_url) await borrarComprobante(donacion.comprobante_url);
 };
 
-export const getAllDonaciones = (filtros = {}) =>
-  prisma.donaciones.findMany({
-    where: filtros,
+export const getAllDonaciones = ({ fecha_desde, fecha_hasta, categoria_insumo, ...filtros } = {}) => {
+  const where = { ...filtros };
+
+  // rango sobre la fecha en que se recibió o registró la donación
+  if (fecha_desde || fecha_hasta) {
+    where.fecha_donacion = {
+      ...(fecha_desde && { gte: fecha_desde }),
+      ...(fecha_hasta && { lte: fecha_hasta }),
+    };
+  }
+
+  // "alguna de sus filas de insumo es de esa categoría" (las monetarias no tienen filas, así que quedan fuera)
+  if (categoria_insumo) where.insumos = { some: { tipo_insumo: categoria_insumo } };
+
+  return prisma.donaciones.findMany({
+    where,
     orderBy: { fecha_donacion: 'desc' },
     include: incluir,
   });
+};
 
 export const getDonacionById = async (id) => {
   const donacion = await prisma.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });

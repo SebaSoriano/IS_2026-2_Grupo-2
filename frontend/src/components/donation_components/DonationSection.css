@@ -206,3 +206,43 @@
   border: 1px solid #9bd6d3;
   border-radius: 6px;
 }
+
+/* las fechas se ven igual que los selects */
+.donation-filters input[type='date'] {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+  color: #173d3e;
+  background: #fff;
+  font: inherit;
+}
+
+.donation-filters input[type='date']:focus-visible {
+  outline: 2px solid #19a99f;
+  outline-offset: 2px;
+}
+
+.donation-filters__limpiar {
+  align-self: flex-end;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #19a99f;
+  border-radius: 6px;
+  color: #0f5f59;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.donation-filters__limpiar:hover,
+.donation-filters__limpiar:focus-visible {
+  background: #e3f6f4;
+}
+
+.donation-nota {
+  margin: 0 0 12px;
+  color: #315052;
+  font-size: 0.9rem;
+}
