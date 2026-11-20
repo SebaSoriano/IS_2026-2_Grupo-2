@@ -442,7 +442,6 @@ export async function getEstadisticasDonaciones() {
   return datos
 }
 
-<<<<<<< HEAD
 // Nombres de veterinarios (texto) para sugerirlos mientras se escribe en el historial médico
 export async function getVeterinariosHistorial() {
   const veterinarios = await getJson('/historial/veterinarios')
@@ -452,9 +451,9 @@ export async function getVeterinariosHistorial() {
   }
 
   return veterinarios
-=======
+}
+
 // Elimina una foto de un animal. Devuelve el animal con las fotos que le quedan
 export function eliminarFotoAnimal(idAnimal, idFoto) {
   return sendJson('DELETE', `/animales/${idAnimal}/fotos/${idFoto}`)
->>>>>>> d8389ce4596c0a7cbe8011ab13e0a1238837d8e6
 }
