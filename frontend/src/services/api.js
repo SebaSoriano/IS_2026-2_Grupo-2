@@ -165,7 +165,8 @@ export function eliminarTurno(id) {
   return sendJson('DELETE', `/turnos/${id}`)
 }
 
-// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes (cada uno dice si llego a la hora)
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes
+// cada turno trae hora_llegada y estado ('a-tiempo', 'tarde', 'ausente' o 'pendiente')
 export async function getAsistencias(mes) {
   const usuarios = await getJson(`/asistencias?mes=${mes}`)
 
@@ -176,9 +177,20 @@ export async function getAsistencias(mes) {
   return usuarios
 }
 
-// marca (true) o desmarca (false) que el usuario llego a la hora a un turno
-export function marcarAsistenciaTurno(id, llego_a_la_hora) {
-  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
+// Admin o Veterinaria corrigen la asistencia a mano: true la deja como llegada a la hora, false borra la llegada
+export function marcarAsistenciaTurno(id, llego) {
+  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego })
+}
+
+// turno en que la persona de la sesion puede apretar "Llegué" ahora, o null si no tiene ninguno
+export async function getTurnoParaLlegada() {
+  const { turno } = await getJson('/turnos/llegada')
+  return turno
+}
+
+// registra la llegada de la persona de la sesion a su turno actual (la hora la pone el servidor)
+export function registrarLlegada() {
+  return postJson('/turnos/llegada', {})
 }
 
 // filtros: { estado, tipo_donacion, origen }; los vacíos no se mandan
