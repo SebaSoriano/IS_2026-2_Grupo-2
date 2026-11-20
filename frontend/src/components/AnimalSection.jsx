@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { eliminarAnimal, getAnimales } from '../services/api.js'
 import AnimalForm from './AnimalForm.jsx'
+import AnimalFiltros from './AnimalFiltros.jsx'
+import AnimalCarrusel from './AnimalCarrusel.jsx'
 import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './AnimalSection.css'
 // Se importa para usar los estilos de las tarjetas y de los botones Tabla/Tarjetas
@@ -23,18 +25,43 @@ export default function AnimalSection() {
   // Cómo se muestran los animales: 'tabla' o 'tarjetas'
   const [vista, setVista] = useState('tabla')
 
-  // Cargar los animales una vez, al entrar a la pestaña
+  // Filtros aplicados con "Buscar" ({} = sin filtros)
+  const [filtros, setFiltros] = useState({})
+  // true = el popup del carrusel de fotos está abierto
+  const [carruselAbierto, setCarruselAbierto] = useState(false)
+
+  // Pedir los animales al entrar a la pestaña y cada vez que cambian los filtros.
+  // "cancelado" evita que una respuesta vieja pise a una nueva si se busca dos veces seguidas
+  // (al cambiar los filtros, React ejecuta el return de la búsqueda anterior)
   useEffect(() => {
-    getAnimales()
+    let cancelado = false
+
+    getAnimales(filtros)
       .then((lista) => {
+        if (cancelado) return
         setAnimales(lista)
         setEstado('listo')
       })
       .catch((error) => {
+        if (cancelado) return
         setErrorCarga(error.message)
         setEstado('error')
       })
-  }, [])
+
+    return () => {
+      cancelado = true
+    }
+  }, [filtros])
+
+  // Lo llama AnimalFiltros al apretar "Buscar" o "Limpiar filtros"
+  function buscar(nuevosFiltros) {
+    setFiltros(nuevosFiltros)
+    setSeleccionadoId(null)
+    setMensaje(null)
+  }
+
+  // ¿Hay algún filtro con valor? Sirve para elegir el mensaje cuando la lista sale vacía
+  const hayFiltros = Object.values(filtros).some((valor) => valor !== '')
 
   const animalSeleccionado =
     animales.find((animal) => animal.id_animal === seleccionadoId) ?? null
@@ -62,11 +89,23 @@ export default function AnimalSection() {
   function cerrarFormulario() {
     setFormularioAbierto(null)
   }
+  
+  // AnimalCarrusel llama a esta función después de eliminar una foto:
+  // se reemplaza el animal en la lista para que la tabla y el carrusel muestren las fotos que quedan
+  function fotoEliminada(animal) {
+    setAnimales(
+      animales.map((actual) =>
+        actual.id_animal === animal.id_animal ? { ...actual, ...animal } : actual,
+      ),
+    )
+    setMensaje({ tipo: 'exito', texto: 'Foto eliminada' })
+  }
 
   // AnimalForm llama a esta función cuando el backend guardó el animal
   function animalGuardado(animal, avisoFoto) {
     if (formularioAbierto === 'crear') {
-      setAnimales([{ ...animal, adoptado: false, adopcion: null }, ...animales])
+      // fotos: [] va primero: si el backend devolvió fotos, las de "animal" la reemplazan
+      setAnimales([{ fotos: [], ...animal, adoptado: false, adopcion: null }, ...animales])
       setMensaje({ tipo: 'exito', texto: `Animal registrado con el id ${animal.id_animal}` })
     } else {
       setAnimales(
@@ -147,31 +186,20 @@ export default function AnimalSection() {
             )}
           </>
         )}
+        {/* Ver las fotos lo puede hacer cualquier rol; eliminarlas solo Admin y Veterinaria */}
+        <button
+          className="area-action"
+          type="button"
+          onClick={() => setCarruselAbierto(true)}
+          disabled={!animalSeleccionado}
+        >
+          Ver Fotos
+        </button>
       </div>
 
       <div className="animal-table-container" aria-busy={estado === 'cargando'}>
-        {/* Botones Tabla / Tarjetas con las mismas clases de Historial médico.
-            El div de afuera es flex para que "margin-left: auto" los mande a la derecha */}
-        <div style={{ display: 'flex', marginBottom: '12px' }}>
-          <div className="historial-filtros__vistas" role="group" aria-label="Tipo de vista">
-            <button
-              className="historial-filtros__vista"
-              type="button"
-              aria-pressed={vista === 'tabla'}
-              onClick={() => setVista('tabla')}
-            >
-              ☰ Tabla
-            </button>
-            <button
-              className="historial-filtros__vista"
-              type="button"
-              aria-pressed={vista === 'tarjetas'}
-              onClick={() => setVista('tarjetas')}
-            >
-              ▦ Tarjetas
-            </button>
-          </div>
-        </div>
+        {/* Barra de filtros; también trae los botones Tabla / Tarjetas */}
+        <AnimalFiltros onBuscar={buscar} vista={vista} onCambiarVista={setVista} />
 
         {mensaje && (
           <p className={`animal-message animal-message--${mensaje.tipo}`} role="status">
@@ -215,7 +243,9 @@ export default function AnimalSection() {
                 {animales.length === 0 ? (
                   <tr>
                     <td className="animal-table-empty" colSpan="10">
-                      No hay animales registrados.
+                      {hayFiltros
+                        ? 'No hay animales que coincidan con los filtros.'
+                        : 'No hay animales registrados.'}
                     </td>
                   </tr>
                 ) : (
@@ -268,6 +298,14 @@ export default function AnimalSection() {
           animal={formularioAbierto === 'modificar' ? animalSeleccionado : null}
           onClose={cerrarFormulario}
           onSaved={animalGuardado}
+        />
+      )}
+            {carruselAbierto && animalSeleccionado && (
+        <AnimalCarrusel
+          animal={animalSeleccionado}
+          puedeEliminar={puedeEditar}
+          onClose={() => setCarruselAbierto(false)}
+          onFotoEliminada={fotoEliminada}
         />
       )}
     </>

@@ -152,7 +152,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
             <option value="">Selecciona un animal</option>
             {animales.map((animal) => (
               <option value={animal.id_animal} key={animal.id_animal}>
-                {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
+                {animal.nombre_animal} ({animal.especie_animal})
               </option>
             ))}
           </select>
@@ -214,7 +214,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
             registre qué insumos se usaron en cada tratamiento */}
         <label className="animal-form__field">
           Insumos utilizados
-          <input type="text" placeholder="Pendiente: aún no se registran en la base de datos" disabled />
+          <input type="text" placeholder="Pendiente" disabled />
         </label>
 
         <label className="animal-form__field">

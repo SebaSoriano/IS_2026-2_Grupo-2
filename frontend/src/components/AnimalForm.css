@@ -132,3 +132,14 @@
   font-size: 0.875rem;
   font-weight: 400;
 }
+/* Varias vistas previas una al lado de la otra */
+.animal-form__previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.animal-form__previews .animal-form__preview {
+  width: 88px;
+  height: 88px;
+}

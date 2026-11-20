@@ -25,7 +25,7 @@ export const errorHandler = (err, req, res, next) => {
             return res.status(400).json({ error: 'La foto no puede pesar más de 3 MB' });
         }
         if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-            return res.status(400).json({ error: 'Debe enviar una sola foto en el campo "foto"' });
+            return res.status(400).json({ error: 'Puede enviar como máximo 5 fotos, en el campo "fotos"' });
         }
         return res.status(400).json({ error: `Error al subir el archivo: ${err.message}` });
     }
