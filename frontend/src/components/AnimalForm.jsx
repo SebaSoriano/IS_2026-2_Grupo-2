@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { actualizarAnimal, crearAnimal, subirFotosAnimal } from '../services/api.js'
 import { VIAS_DE_INGRESO } from '../data/viasIngreso.js'
+import { ESTADOS_ANIMAL } from '../data/estados.js'
 import './AnimalForm.css'
 
 // Valores iniciales del formulario
@@ -22,6 +23,10 @@ const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp']
 const TAMANO_MAXIMO_FOTO = 3 * 1024 * 1024
 const MAXIMO_FOTOS_POR_SUBIDA = 5
 
+// Desde este formulario el estado solo se puede cambiar entre estos dos.
+// "En proceso" y "Adoptado" los maneja la sección Adopción.
+const ESTADOS_EDITABLES = ['disponible', 'fallecido']
+
 // Convierte un animal de la base de datos en los valores del formulario
 function formularioDesdeAnimal(animal) {
     return {
@@ -31,6 +36,7 @@ function formularioDesdeAnimal(animal) {
         edad: String(animal.edad),
         peso_animal: String(animal.peso_animal),
         observaciones_animal: animal.observaciones_animal ?? '',
+        estado_animal: animal.estado_animal,
     }
 }
 
@@ -134,7 +140,10 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         formulario.especie_animal && !especies.includes(formulario.especie_animal)
         ? [formulario.especie_animal, ...especies]
         : especies
-        
+
+    // Solo se puede cambiar el estado al modificar un animal disponible o fallecido
+    const puedeCambiarEstado = esEdicion && ESTADOS_EDITABLES.includes(animal.estado_animal)
+
     // Si el animal tiene una vía de ingreso que no está en la lista, se agrega como opción
     const opcionesVia =
         formulario.via_ingreso && !viasDeIngreso.includes(formulario.via_ingreso)
@@ -166,6 +175,11 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
             edad: Number(formulario.edad),
             peso_animal: Number(formulario.peso_animal),
             observaciones_animal: formulario.observaciones_animal,
+        }
+        
+        // El estado solo se envía al modificar y si se puede cambiar desde aquí
+        if (puedeCambiarEstado) {
+            datos.estado_animal = formulario.estado_animal
         }
 
         try {
@@ -330,8 +344,31 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
             </label>
             </div>
 
+            {/* Estado: solo al modificar. Si está en proceso o adoptado se muestra sin poder cambiarlo */}
+            {esEdicion && (
+                <label className="animal-form__field">
+                Estado
+                {puedeCambiarEstado ? (
+                    <select name="estado_animal" value={formulario.estado_animal} onChange={cambiarCampo}>
+                    {ESTADOS_EDITABLES.map((estado) => (
+                        <option value={estado} key={estado}>
+                        {ESTADOS_ANIMAL[estado]}
+                        </option>
+                    ))}
+                    </select>
+                ) : (
+                    <span className="animal-form__help">
+                    {ESTADOS_ANIMAL[animal.estado_animal]}: este estado se cambia desde la sección Adopción.
+                    </span>
+                )}
+                {errores.estado_animal && (
+                    <span className="animal-form__error">{errores.estado_animal}</span>
+                )}
+                </label>
+            )}
+
             <label className="animal-form__field">
-            Estado general y observaciones
+            Estado de salud y observaciones
             <textarea
                 name="observaciones_animal"
                 value={formulario.observaciones_animal}

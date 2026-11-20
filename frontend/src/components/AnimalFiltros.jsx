@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { VIAS_DE_INGRESO } from '../data/viasIngreso.js'
+import { ESTADOS_ANIMAL } from '../data/estados.js'
 
 // Valores iniciales: todos vacíos significa "sin filtros"
 const filtrosVacios = {
   nombre: '',
   especie: '',
   via_ingreso: '',
-  adoptado: '',
+  estado: '',
   edad_min: '',
   edad_max: '',
 }
@@ -75,13 +76,17 @@ export default function AnimalFiltros({ onBuscar, vista, onCambiarVista }) {
         </select>
       </label>
 
-      {/* El backend espera adoptado=true o adoptado=false; '' significa "no filtrar" */}
+      {/* Object.entries convierte { disponible: 'Disponible', ... } en [['disponible', 'Disponible'], ...]:
+          la clave es lo que se envía al backend y el texto es lo que se ve. '' = no filtrar */}
       <label className="historial-filtros__campo">
         Estado
-        <select name="adoptado" value={filtros.adoptado} onChange={cambiarCampo}>
+        <select name="estado" value={filtros.estado} onChange={cambiarCampo}>
           <option value="">Todos</option>
-          <option value="false">Disponibles</option>
-          <option value="true">Adoptados</option>
+          {Object.entries(ESTADOS_ANIMAL).map(([valor, texto]) => (
+            <option value={valor} key={valor}>
+              {texto}
+            </option>
+          ))}
         </select>
       </label>
 

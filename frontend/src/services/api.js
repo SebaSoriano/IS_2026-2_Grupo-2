@@ -103,7 +103,7 @@ async function sendJson(method, path, body) {
   return data
 }
 
-// filtros (opcional): { nombre, especie, via_ingreso, adoptado, edad_min, edad_max }
+// filtros (opcional): { nombre, especie, via_ingreso, estado, edad_min, edad_max }
 // Los campos vacíos no se envían. Ej: { especie: 'perro', edad_max: '3' } → /animales?especie=perro&edad_max=3
 export async function getAnimales(filtros = {}) {
   const parametros = new URLSearchParams()
@@ -151,10 +151,6 @@ export function actualizarAnimal(id, animal) {
   return sendJson('PUT', `/animales/${id}`, animal)
 }
 
-export function eliminarAnimal(id) {
-  return sendJson('DELETE', `/animales/${id}`)
-}
-
 export function crearAnimal(animal) {
   return postJson('/animales', animal)
 }
@@ -199,7 +195,8 @@ export function eliminarTurno(id) {
   return sendJson('DELETE', `/turnos/${id}`)
 }
 
-// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes (cada uno dice si llego a la hora)
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes
+// cada turno trae hora_llegada y estado ('a-tiempo', 'tarde', 'ausente' o 'pendiente')
 export async function getAsistencias(mes) {
   const usuarios = await getJson(`/asistencias?mes=${mes}`)
 
@@ -210,9 +207,20 @@ export async function getAsistencias(mes) {
   return usuarios
 }
 
-// marca (true) o desmarca (false) que el usuario llego a la hora a un turno
-export function marcarAsistenciaTurno(id, llego_a_la_hora) {
-  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
+// el Admin corrige la asistencia a mano: true la deja como llegada a la hora, false borra la llegada
+export function marcarAsistenciaTurno(id, llego) {
+  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego })
+}
+
+// turno en que la persona de la sesion puede apretar "Llegué" ahora, o null si no tiene ninguno
+export async function getTurnoParaLlegada() {
+  const { turno } = await getJson('/turnos/llegada')
+  return turno
+}
+
+// registra la llegada de la persona de la sesion a su turno actual (la hora la pone el servidor)
+export function registrarLlegada() {
+  return postJson('/turnos/llegada', {})
 }
 
 // filtros: { estado, tipo_donacion, origen }; los vacíos no se mandan
@@ -317,6 +325,49 @@ export function eliminarHistorial(id) {
   return sendJson('DELETE', `/historial/${id}`)
 }
 
+// Descarga un archivo (por ejemplo un PDF) que genera el backend.
+// No sirve getJson porque la respuesta no es JSON: se lee como "blob" (datos binarios),
+// se crea una dirección temporal para ese blob (URL.createObjectURL) y se "hace click"
+// en un enlace invisible con el atributo download, que es lo que inicia la descarga.
+// El nombre del archivo se toma del header Content-Disposition que manda el backend.
+async function descargarArchivo(path, nombrePorDefecto) {
+  const response = await fetch(`${API_BASE_URL}${path}`, { credentials: 'include' })
+  revisarSesion(response)
+
+  if (!response.ok) {
+    // si el backend respondió con un error, viene en JSON como siempre
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error ?? `Error HTTP ${response.status}`)
+  }
+
+  const disposicion = response.headers.get('content-disposition') ?? ''
+  const nombre = /filename="([^"]+)"/.exec(disposicion)?.[1] ?? nombrePorDefecto
+  const url = URL.createObjectURL(await response.blob())
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombre
+  document.body.append(enlace)
+  enlace.click()
+  enlace.remove()
+  // se libera la dirección temporal para no dejar el archivo ocupando memoria
+  URL.revokeObjectURL(url)
+}
+
+// PDF de la tabla del historial médico con los filtros aplicados (no las tarjetas).
+// Arma la parte "?animal=...&desde=..." igual que getHistoriales, sin los filtros vacíos.
+export function descargarHistorialPdf(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  return descargarArchivo(query ? `/historial/pdf?${query}` : '/historial/pdf', 'historial-medico.pdf')
+}
+
 export async function getUsuarios() {
   const usuarios = await getJson('/usuarios')
 
@@ -341,16 +392,6 @@ export function actualizarUsuario(rut, datos) {
 export function eliminarUsuario(rut) {
   return sendJson('DELETE', `/usuarios/${rut}`)}
 
-// Busca los animales que todavía no han sido adoptados
-export async function getAnimalesDisponibles() {
-  const animales = await getJson('/animales?adoptado=false')
-
-  if (!Array.isArray(animales)) {
-    throw new Error('La respuesta de la API de animales no es válida.')
-  }
-
-  return animales
-}
 
 // Historial de adopciones, de la más reciente a la más antigua
 export async function getAdopciones() {
@@ -363,10 +404,65 @@ export async function getAdopciones() {
   return adopciones
 }
 
-// Registra la adopción de un animal (crea también al adoptante)
-export function registrarAdopcion(idAnimal, datos) {
-  return postJson(`/animales/${idAnimal}/adopcion`, datos)
+// ----- Solicitudes de adopción -----
+
+// Pública: datos de un animal disponible, para mostrarlo en el formulario de la página pública
+export function getAnimalParaAdoptar(idAnimal) {
+  return getJson(`/adopciones/animales/${idAnimal}`)
 }
+
+// Pública: envía los datos del adoptante y el animal que le interesa
+export function enviarSolicitudAdopcion(datos) {
+  return postJson('/adopciones/solicitudes', datos)
+}
+
+// Intranet: solicitudes abiertas (pendientes y en proceso)
+export async function getSolicitudesAdopcion() {
+  const solicitudes = await getJson('/adopciones/solicitudes')
+
+  if (!Array.isArray(solicitudes)) {
+    throw new Error('La respuesta de la API de solicitudes no es válida.')
+  }
+
+  return solicitudes
+}
+
+// Intranet: ingresa a mano un adoptante con el animal asignado (queda "en proceso")
+export function registrarSolicitudManual(datos) {
+  return postJson('/adopciones/solicitudes/manual', datos)
+}
+
+// Intranet: adoptantes registrados en la base de datos
+export async function getAdoptantes() {
+  const adoptantes = await getJson('/adopciones/adoptantes')
+
+  if (!Array.isArray(adoptantes)) {
+    throw new Error('La respuesta de la API de adoptantes no es válida.')
+  }
+
+  return adoptantes
+}
+
+// Intranet: inicia una adopción con un adoptante existente. datos: { id_adoptante, id_animal }
+export function registrarSolicitudExistente(datos) {
+  return postJson('/adopciones/solicitudes/existente', datos)
+}
+
+// Intranet: agenda (o cambia) la hora de visita. fecha_visita: "2026-11-20T15:30"
+export function agendarVisita(idSolicitud, fecha_visita) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/visita`, { fecha_visita })
+}
+
+// Intranet: rechaza una solicitud
+export function rechazarSolicitud(idSolicitud) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/rechazar`)
+}
+
+// Intranet: marca la adopción como hecha (crea la adopción con la fecha de hoy)
+export function marcarAdoptado(idSolicitud) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/adoptar`)
+}
+
 // Sube una o varias fotos de un animal. Se envía como formulario (multipart/form-data), no como JSON.
 // archivos: arreglo de File (los que entrega un <input type="file" multiple>)
 export async function subirFotosAnimal(idAnimal, archivos) {
@@ -408,6 +504,17 @@ export async function getEstadisticasDonaciones() {
   }
 
   return datos
+}
+
+// Nombres de veterinarios (texto) para sugerirlos mientras se escribe en el historial médico
+export async function getVeterinariosHistorial() {
+  const veterinarios = await getJson('/historial/veterinarios')
+
+  if (!Array.isArray(veterinarios)) {
+    throw new Error('La respuesta de la API de veterinarios no es válida.')
+  }
+
+  return veterinarios
 }
 
 // Elimina una foto de un animal. Devuelve el animal con las fotos que le quedan

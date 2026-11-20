@@ -5,7 +5,6 @@ import {
     getAnimalById,
     createAnimal,
     updateAnimal,
-    deleteAnimal,
     subirFotosAnimal,
     eliminarFotoAnimal
 } from "../controllers/animales.controller.js";
@@ -16,8 +15,6 @@ import {
     filterAnimalSchema,
 }from "../schemas/animales.schema.js";
 import { idParamSchema, fotoParamSchema } from "../schemas/idParam.schema.js";
-import { createAdopcion } from "../controllers/adopciones.controller.js";
-import { createAdopcionSchema } from "../schemas/adopciones.schema.js";
 
 const router = Router();
 
@@ -25,10 +22,7 @@ router.get("/", validate(filterAnimalSchema, "query"), getAnimales);
 router.get("/:id", validate(idParamSchema, "params"), getAnimalById);
 router.post("/", validate(createAnimalSchema, "body"), createAnimal);
 router.put("/:id", validate(idParamSchema, "params"), validate(updateAnimalSchema, "body"), updateAnimal);
-router.delete("/:id", validate(idParamSchema, "params"), deleteAnimal);
-
-// La adopción es una acción sobre un animal concreto, por eso va anidada
-router.post("/:id/adopcion", validate(idParamSchema, "params"), validate(createAdopcionSchema, "body"), createAdopcion);
+// Los animales no se eliminan, si el animal fallece, se marca con el estado "fallecido" (PUT)
 
 // Fotos del animal (carrusel)
 // Subir una o varias fotos (multipart/form-data, campo "fotos", hasta 5 por vez)

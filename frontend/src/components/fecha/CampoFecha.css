@@ -1,0 +1,61 @@
+/* Campo de fecha DD-MM-AAAA: el texto y el botón del calendario van en la misma fila */
+.campo-fecha {
+  display: grid;
+  gap: 4px;
+}
+
+/* position: relative permite ubicar el calendario escondido justo debajo del campo,
+   así el calendario del navegador se abre en ese lugar y no en una esquina de la página */
+.campo-fecha__fila {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+/* "min-width: 0" deja que el texto se achique si falta espacio, en vez de empujar el botón */
+.campo-fecha .campo-fecha__texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.campo-fecha__boton {
+  flex: none;
+  padding: 0 8px;
+  border: 1px solid #9bd6d3;
+  border-radius: 5px;
+  background: #c3eeee;
+  font: inherit;
+  cursor: pointer;
+}
+
+.campo-fecha__boton:hover,
+.campo-fecha__boton:focus-visible {
+  background: #19efa0;
+}
+
+/* El input type="date" queda invisible (opacity 0) y sin recibir clicks (pointer-events: none).
+   No se usa display: none porque en algunos navegadores showPicker() no funciona
+   con un campo que no está en la página. */
+.campo-fecha .campo-fecha__calendario {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.campo-fecha [aria-invalid='true'] {
+  border-color: #a32121;
+}
+
+.campo-fecha__error {
+  max-width: 220px;
+  color: #a32121;
+  font-size: 0.8rem;
+  font-weight: 400;
+}

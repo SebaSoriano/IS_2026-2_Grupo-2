@@ -27,12 +27,6 @@ export const updateAnimal = async (req, res) => {
   res.json(animal);
 };
 
-// DELETE /api/animales/:id
-export const deleteAnimal = async (req, res) => {
-  await animalesService.deleteAnimal(req.params.id);
-  res.status(204).send();
-};
-
 // POST /api/animales/:id/fotos
 export const subirFotosAnimal = async (req, res) => {
   // multer deja los archivos en req.files (un arreglo); si no vino ninguno, es un error

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { eliminarAnimal, getAnimales } from '../services/api.js'
+import { getAnimales } from '../services/api.js'
+import { ESTADOS_ANIMAL } from '../data/estados.js'
 import AnimalForm from './AnimalForm.jsx'
 import AnimalFiltros from './AnimalFiltros.jsx'
 import AnimalCarrusel from './AnimalCarrusel.jsx'
-import HistorialTarjetas from './HistorialTarjetas.jsx'
+import HistorialTarjetas from './historialMedico/HistorialTarjetas.jsx'
 import './AnimalSection.css'
 // Se importa para usar los estilos de las tarjetas y de los botones Tabla/Tarjetas
-import './HistorialSection.css'
+import './historialMedico/HistorialSection.css'
 import { usePermisos } from '../sesion/sesion.js'
 
 export default function AnimalSection() {
@@ -105,7 +106,8 @@ export default function AnimalSection() {
   function animalGuardado(animal, avisoFoto) {
     if (formularioAbierto === 'crear') {
       // fotos: [] va primero: si el backend devolvió fotos, las de "animal" la reemplazan
-      setAnimales([{ fotos: [], ...animal, adoptado: false, adopcion: null }, ...animales])
+      // (el backend ya devuelve estado_animal: 'disponible')
+      setAnimales([{ fotos: [], ...animal }, ...animales])
       setMensaje({ tipo: 'exito', texto: `Animal registrado con el id ${animal.id_animal}` })
     } else {
       setAnimales(
@@ -125,27 +127,6 @@ export default function AnimalSection() {
     }
 
     setFormularioAbierto(null)
-  }
-
-  async function eliminarSeleccionado() {
-    if (!animalSeleccionado) return
-
-    const confirmado = window.confirm(
-      `¿Eliminar el animal ${animalSeleccionado.id_animal} (${animalSeleccionado.especie_animal})?`,
-    )
-    if (!confirmado) return
-
-    setMensaje(null)
-    try {
-      await eliminarAnimal(animalSeleccionado.id_animal)
-      setAnimales(
-        animales.filter((animal) => animal.id_animal !== animalSeleccionado.id_animal),
-      )
-      setSeleccionadoId(null)
-      setMensaje({ tipo: 'exito', texto: 'Animal eliminado' })
-    } catch (error) {
-      setMensaje({ tipo: 'error', texto: error.message })
-    }
   }
 
   return (
@@ -170,17 +151,10 @@ export default function AnimalSection() {
             >
               Modificar Animal
             </button>
-            <button
-              className="area-action"
-              type="button"
-              onClick={eliminarSeleccionado}
-              disabled={!animalSeleccionado}
-            >
-              Eliminar Animal
-            </button>
+
             {!animalSeleccionado && (
               <p className="animal-actions-help">
-                Selecciona un animal para modificarlo o eliminarlo. Apriétalo otra vez
+                Selecciona un animal para modificarlo o ver sus fotos. Apriétalo otra vez
                 para deseleccionarlo.
               </p>
             )}
@@ -282,7 +256,12 @@ export default function AnimalSection() {
                       <td>{animal.via_ingreso}</td>
                       <td>{animal.edad}</td>
                       <td>{animal.peso_animal}</td>
-                      <td>{animal.adoptado ? 'Adoptado' : 'Disponible'}</td>
+                      <td>
+                        {/* la clase cambia el color según el estado (ver AnimalSection.css) */}
+                        <span className={`animal-estado animal-estado--${animal.estado_animal}`}>
+                          {ESTADOS_ANIMAL[animal.estado_animal] ?? animal.estado_animal}
+                        </span>
+                      </td>
                       <td>{animal.observaciones_animal || '—'}</td>
                     </tr>
                   ))

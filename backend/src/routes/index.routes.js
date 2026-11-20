@@ -30,6 +30,10 @@ router.use('/auth', authRoutes);
 // por eso la protección se pone dentro de donaciones.routes.js y no aquí
 router.use('/donaciones', donacionesRoutes);
 
+// adopciones también tiene rutas públicas (ver el animal y enviar una solicitud),
+// por eso la protección se pone dentro de adopciones.routes.js y no aquí
+router.use('/adopciones', adopcionesRoutes);
+
 // Catálogo público de animales; este router se monta sin conSesion.
 router.use('/animalesPublicos', animalesPublicosRoutes);
 
@@ -47,7 +51,6 @@ router.use('/animales', conSesion, animalesRoutes);
 router.use('/turnos', conSesion, turnosRoutes);
 router.use('/horarios', conSesion, horariosRoutes);
 router.use('/asistencias', conSesion, asistenciasRoutes);
-router.use('/adopciones', conSesion, adopcionesRoutes);
 router.use('/historial', conSesion, historialRoutes);
 // en usuarios, además, modificar y eliminar es solo del Admin (ver usuario.routes.js)
 router.use('/usuarios', conSesion, usuariosRoutes);
