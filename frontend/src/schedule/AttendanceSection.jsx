@@ -45,13 +45,13 @@ const claseDelDia = (turnos) => {
 
 // tabla de asistencia del mes elegido: mes, luego semanas y debajo los dias
 // a la izquierda el staff; en cada dia se ven sus turnos de esa fecha:
-//  - con 1 turno: el color dice si llego a la hora, tarde o no vino; Admin y Veterinaria pueden corregirlo con un click
+//  - con 1 turno: el color dice si llego a la hora, tarde o no vino; solo el Admin puede corregirlo con un click
 //  - con 2 o mas: muestra a/b (turnos con llegada / turnos del dia) y el click abre un pop-up para corregir cada uno
 // la llegada la registra cada persona con el boton "Llegué" del horario
 // cambiosTurnos cambia cuando se añade, edita o borra un turno, para recargar la tabla
 export default function AttendanceSection({ cambiosTurnos }) {
-  // el Voluntario ve la asistencia, pero no puede marcarla: las celdas se muestran sin botón
-  const { puedeEditar } = usePermisos()
+  // solo el Admin corrige la asistencia; Veterinaria y Voluntario la ven sin botón en las celdas
+  const { puedeCorregirAsistencia } = usePermisos()
   const [mes, setMes] = useState(mesActual)
   const [usuarios, setUsuarios] = useState([])
   const [estado, setEstado] = useState('loading')
@@ -200,7 +200,7 @@ export default function AttendanceSection({ cambiosTurnos }) {
                             esFuturo={dia.fecha > hoy}
                             guardando={guardando}
                             nombre={usuario.nombre_usuario}
-                            soloLectura={!puedeEditar}
+                            soloLectura={!puedeCorregirAsistencia}
                             onAlternar={alternarTurno}
                             onAbrir={() => setDiaAbierto({ rut: usuario.rut_usuario, nombre: usuario.nombre_usuario, dia })}
                           />
@@ -227,7 +227,7 @@ export default function AttendanceSection({ cambiosTurnos }) {
         <li><span className="attendance-legend__muestra is-tarde">✓</span> Llegó tarde (más de 25 min)</li>
         <li><span className="attendance-legend__muestra is-ausente" /> No registró llegada</li>
         <li><span className="attendance-legend__muestra is-parcial">a/b</span> Registró llegada en <em>a</em> de sus <em>b</em> turnos del día (cuando tiene 2 o más)</li>
-        <li><span className="attendance-legend__muestra is-turno" /> {puedeEditar ? 'Turno aún sin llegada (click para corregir)' : 'Turno aún sin llegada'}</li>
+        <li><span className="attendance-legend__muestra is-turno" /> {puedeCorregirAsistencia ? 'Turno aún sin llegada (click para corregir)' : 'Turno aún sin llegada'}</li>
         <li><span className="attendance-legend__muestra is-sin-turno" /> Sin turno</li>
       </ul>
 
@@ -268,7 +268,7 @@ export default function AttendanceSection({ cambiosTurnos }) {
 }
 
 // una celda por usuario y dia: solo se puede corregir en dias con turno de hoy o anteriores
-// con soloLectura (Voluntario) se muestra el mismo color y contenido, pero sin botón para hacer click
+// con soloLectura (Veterinaria y Voluntario) se muestra el mismo color y contenido, pero sin botón para hacer click
 function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, soloLectura, onAlternar, onAbrir }) {
   const inicioSemana = dia.diaSemana === 1 ? ' inicio-semana' : ''
   const descripcion = `${nombre}, ${DIAS_CORTOS[dia.diaSemana - 1]} ${dia.numero}`
