@@ -55,8 +55,6 @@
 .btn-intranet {
   background-color: #96d0da;
   color: #0f7482;
-  padding: 10px 5px 10px 5px;
-  max-height: 32px;
 }
 
 .btn-donar:hover {
@@ -66,6 +64,11 @@
 .btn-volun:hover {
   background-color: #e16e27;
   color: #ffe0a3;
+}
+
+.btn-intranet:hover {
+  background-color: #0f7482;
+  color: #b1f3f9;
 }
 
 .public-pets {
