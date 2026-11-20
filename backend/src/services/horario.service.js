@@ -10,7 +10,7 @@ export const obtenerHorarios = async (semana = hoy()) => {
     const lunes = lunesDeLaSemana(semana);
     const lunesSiguiente = sumarDias(lunes, 7);
 
-    const horarios = await prisma.horario.findMany({
+    const horarios = await prisma.diaSemana.findMany({
         orderBy: { id: 'asc' },
         include: {
             turnos: {
