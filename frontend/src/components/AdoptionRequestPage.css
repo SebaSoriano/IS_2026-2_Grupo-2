@@ -1,0 +1,110 @@
+/* Página pública /adoptar */
+
+.adoptar {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 16px;
+  color: #173d3e;
+  background: #effdff;
+  font-family: sans-serif;
+}
+
+.adoptar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 640px;
+  margin: 0 auto 16px;
+}
+
+.adoptar__logo {
+  height: 56px;
+}
+
+.adoptar__volver {
+  color: #0f7482;
+  font-weight: 700;
+}
+
+/* Recuadro blanco centrado con el contenido */
+.adoptar__tarjeta {
+  display: grid;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 8px 24px #174d4c26;
+}
+
+.adoptar__tarjeta h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.adoptar__tarjeta p {
+  margin: 0;
+}
+
+/* Foto y nombre del animal, uno al lado del otro */
+.adoptar__animal {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.adoptar__foto {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.adoptar__formulario {
+  display: grid;
+  gap: 14px;
+}
+
+.adoptar__campo {
+  display: grid;
+  gap: 6px;
+  color: #315052;
+  font-weight: 700;
+}
+
+.adoptar__campo input,
+.adoptar__campo textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #9bd6d3;
+  border-radius: 5px;
+  color: #173d3e;
+  font: inherit;
+  font-weight: 400;
+}
+
+.adoptar__error {
+  color: #a32121;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.adoptar__boton {
+  justify-self: start;
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 6px;
+  color: #064c3e;
+  background: #19efa0;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.adoptar__boton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
