@@ -42,7 +42,7 @@ export default function Auth() {
     useEffect(() => {
         obtenerSesion()
             .then((usuario) => {
-                if (usuario) window.location.replace('/adopcion')
+                if (usuario) window.location.replace('/intranet/horario')
             })
             // si el servidor no responde se queda en el login, que mostrará el error al intentar entrar
             .catch(() => {})
@@ -66,7 +66,7 @@ export default function Auth() {
             if (ok) {
                 // login correcto: el backend ya guardó la cookie con el token, se entra a la intranet
                 // no se desbloquea el botón porque la página se va a cambiar
-                window.location.assign('/adopcion')
+                window.location.assign('/intranet/horario')
                 return
             }
             // el backend rechazó el login: se muestra el motivo

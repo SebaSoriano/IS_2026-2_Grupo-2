@@ -1,4 +1,6 @@
 import * as historialService from '../services/historial.service.js';
+import { enviarPdfTabla } from '../services/historial-pdf.service.js';
+import { fechaChilena } from '../utils/fechas.js';
 
 // los controladores solo reciben la petición, llaman al servicio y responden
 
@@ -6,6 +8,37 @@ import * as historialService from '../services/historial.service.js';
 export const getHistoriales = async (req, res) => {
   const resultado = await historialService.getHistoriales(req.validateQuery);
   res.json(resultado);
+};
+
+// GET /api/historial/veterinarios
+// lista de nombres (texto) para sugerir mientras se escribe el veterinario
+export const getVeterinarios = async (req, res) => {
+  res.json(await historialService.getVeterinarios());
+};
+
+// "2025-03-06" -> "06-03-2025". Los periodos más cortos ("2025" o "2025-03") se dejan igual.
+const periodoChileno = (texto) =>
+  texto.length === 10 ? fechaChilena(new Date(`${texto}T00:00:00.000Z`)) : texto;
+
+// GET /api/historial/pdf
+// Descarga la tabla del historial en PDF, con los mismos filtros que la tabla de la página.
+// Para describir los filtros en el PDF se usa req.query (lo que escribió la persona), porque en
+// req.validateQuery las fechas ya vienen convertidas (por ejemplo, "hasta" está corrido al día siguiente).
+export const getHistorialPdf = async (req, res) => {
+  const { registros, total } = await historialService.getHistorialesParaPdf(req.validateQuery);
+
+  const { animal, veterinario, desde, hasta } = req.query;
+  const descripcionFiltros = [];
+  if (animal) descripcionFiltros.push(`Animal: "${animal}"`);
+  if (veterinario) descripcionFiltros.push(`Veterinario: "${veterinario}"`);
+  if (desde) descripcionFiltros.push(`Desde: ${periodoChileno(desde)}`);
+  if (hasta) descripcionFiltros.push(`Hasta: ${periodoChileno(hasta)}`);
+
+  // Content-Type le dice al navegador que es un PDF.
+  // Content-Disposition "attachment" hace que se descargue con ese nombre de archivo.
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="historial-medico-${fechaChilena(new Date())}.pdf"`);
+  enviarPdfTabla(res, { registros, descripcionFiltros, total });
 };
 
 // GET /api/historial/:id

@@ -172,7 +172,8 @@ export function eliminarTurno(id) {
   return sendJson('DELETE', `/turnos/${id}`)
 }
 
-// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes (cada uno dice si llego a la hora)
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes
+// cada turno trae hora_llegada y estado ('a-tiempo', 'tarde', 'ausente' o 'pendiente')
 export async function getAsistencias(mes) {
   const usuarios = await getJson(`/asistencias?mes=${mes}`)
 
@@ -183,9 +184,20 @@ export async function getAsistencias(mes) {
   return usuarios
 }
 
-// marca (true) o desmarca (false) que el usuario llego a la hora a un turno
-export function marcarAsistenciaTurno(id, llego_a_la_hora) {
-  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
+// el Admin corrige la asistencia a mano: true la deja como llegada a la hora, false borra la llegada
+export function marcarAsistenciaTurno(id, llego) {
+  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego })
+}
+
+// turno en que la persona de la sesion puede apretar "Llegué" ahora, o null si no tiene ninguno
+export async function getTurnoParaLlegada() {
+  const { turno } = await getJson('/turnos/llegada')
+  return turno
+}
+
+// registra la llegada de la persona de la sesion a su turno actual (la hora la pone el servidor)
+export function registrarLlegada() {
+  return postJson('/turnos/llegada', {})
 }
 
 // filtros: { estado, tipo_donacion, origen }; los vacíos no se mandan
@@ -288,6 +300,49 @@ export function actualizarHistorial(id, registro) {
 
 export function eliminarHistorial(id) {
   return sendJson('DELETE', `/historial/${id}`)
+}
+
+// Descarga un archivo (por ejemplo un PDF) que genera el backend.
+// No sirve getJson porque la respuesta no es JSON: se lee como "blob" (datos binarios),
+// se crea una dirección temporal para ese blob (URL.createObjectURL) y se "hace click"
+// en un enlace invisible con el atributo download, que es lo que inicia la descarga.
+// El nombre del archivo se toma del header Content-Disposition que manda el backend.
+async function descargarArchivo(path, nombrePorDefecto) {
+  const response = await fetch(`${API_BASE_URL}${path}`, { credentials: 'include' })
+  revisarSesion(response)
+
+  if (!response.ok) {
+    // si el backend respondió con un error, viene en JSON como siempre
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error ?? `Error HTTP ${response.status}`)
+  }
+
+  const disposicion = response.headers.get('content-disposition') ?? ''
+  const nombre = /filename="([^"]+)"/.exec(disposicion)?.[1] ?? nombrePorDefecto
+  const url = URL.createObjectURL(await response.blob())
+  const enlace = document.createElement('a')
+  enlace.href = url
+  enlace.download = nombre
+  document.body.append(enlace)
+  enlace.click()
+  enlace.remove()
+  // se libera la dirección temporal para no dejar el archivo ocupando memoria
+  URL.revokeObjectURL(url)
+}
+
+// PDF de la tabla del historial médico con los filtros aplicados (no las tarjetas).
+// Arma la parte "?animal=...&desde=..." igual que getHistoriales, sin los filtros vacíos.
+export function descargarHistorialPdf(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  return descargarArchivo(query ? `/historial/pdf?${query}` : '/historial/pdf', 'historial-medico.pdf')
 }
 
 export async function getUsuarios() {
@@ -426,6 +481,17 @@ export async function getEstadisticasDonaciones() {
   }
 
   return datos
+}
+
+// Nombres de veterinarios (texto) para sugerirlos mientras se escribe en el historial médico
+export async function getVeterinariosHistorial() {
+  const veterinarios = await getJson('/historial/veterinarios')
+
+  if (!Array.isArray(veterinarios)) {
+    throw new Error('La respuesta de la API de veterinarios no es válida.')
+  }
+
+  return veterinarios
 }
 
 // Elimina una foto de un animal. Devuelve el animal con las fotos que le quedan

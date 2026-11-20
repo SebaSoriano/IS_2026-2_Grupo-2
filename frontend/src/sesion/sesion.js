@@ -1,5 +1,12 @@
 import { createContext, useContext } from 'react'
-import { puedeAgregar, puedeAsignarTurnos, puedeEditar, puedeGestionarUsuarios, puedeGestionarAdopciones } from '../data/permisos.js'
+import {
+  puedeAgregar,
+  puedeAsignarTurnos,
+  puedeCorregirAsistencia,
+  puedeEditar,
+  puedeGestionarUsuarios, 
+  puedeGestionarAdopciones,
+} from '../data/permisos.js'
 
 // Un "contexto" de React guarda un valor que cualquier componente de más abajo puede leer,
 // sin tener que pasarlo como prop de padre a hijo a nieto (InternalPage → HistorialSection → ...).
@@ -23,5 +30,6 @@ export function usePermisos() {
     puedeGestionarUsuarios: puedeGestionarUsuarios(usuario),
     puedeAsignarTurnos: puedeAsignarTurnos(usuario),
     puedeGestionarAdopciones: puedeGestionarAdopciones(usuario),
+    puedeCorregirAsistencia: puedeCorregirAsistencia(usuario),
   }
 }

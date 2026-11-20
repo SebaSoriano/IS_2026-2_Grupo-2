@@ -3,7 +3,7 @@ import prisma from '../config/prisma.js';
 import { usuarioPublico } from './usuario.select.js';
 import { obtenerUsuarioPorRut } from './usuario.service.js';
 import { HttpError } from '../middlewares/error.middleware.js';
-import { diaDelHorario, hoy } from '../utils/fechas.js';
+import { ahoraEnChile, diaDelHorario, hoy } from '../utils/fechas.js';
 import { ROLES } from '../config/roles.js';
 
 const incluirTurno = { usuario: usuarioPublico, horario: true };
@@ -109,11 +109,83 @@ export const eliminarTurno = async (id) => {
     return prisma.turno.delete({ where: { id } });
 };
 
-// service para marcar o desmarcar que el usuario llego a la hora a su turno
+// ---------- Asistencia: llegada al turno ----------
+// la persona registra su llegada con el boton "Llegué" y se guarda la hora (hora_llegada)
+// el boton aparece desde ANTICIPACION_MINUTOS antes del inicio del turno hasta que el turno termina
+// cuenta como "a la hora" si llego hasta TOLERANCIA_MINUTOS despues del inicio
+export const ANTICIPACION_MINUTOS = 10;
+export const TOLERANCIA_MINUTOS = 25;
+
+// convierte "08:30" en minutos desde las 00:00 (510) para comparar horas con minutos
+const minutos = (texto) => Number(texto.slice(0, 2)) * 60 + Number(texto.slice(3, 5));
+
+// minuto en que termina el turno; si no hay hora_fin, el turno dura solo su bloque de una hora
+const finDelTurno = (turno) => (turno.hora_fin ? minutos(turno.hora_fin) : minutos(turno.hora_inicio) + 60);
+
+// estado de la asistencia de un turno, se calcula con hora_llegada y la hora actual:
+// - 'a-tiempo': llego hasta TOLERANCIA_MINUTOS despues del inicio
+// - 'tarde': llego despues de la tolerancia
+// - 'ausente': el turno ya termino y no registro llegada
+// - 'pendiente': el turno aun no termina y todavia no registra llegada
+export const estadoAsistencia = (turno, ahora = ahoraEnChile()) => {
+    if (turno.hora_llegada) {
+        return minutos(turno.hora_llegada) <= minutos(turno.hora_inicio) + TOLERANCIA_MINUTOS ? 'a-tiempo' : 'tarde';
+    }
+    const fechaTurno = turno.fecha.getTime();
+    const fechaHoy = ahora.fecha.getTime();
+    const yaTermino = fechaTurno < fechaHoy || (fechaTurno === fechaHoy && minutos(ahora.hora) >= finDelTurno(turno));
+    return yaTermino ? 'ausente' : 'pendiente';
+};
+
+// agrega el estado de la asistencia al turno que se responde
+export const conEstado = (turno, ahora = ahoraEnChile()) => ({ ...turno, estado: estadoAsistencia(turno, ahora) });
+
+// turno de hoy de la persona en que puede registrar su llegada en este momento, o null si no hay
+// los turnos de un usuario no se cruzan, pero la anticipacion del siguiente puede tocar el final del anterior:
+// en ese caso se elige el primero que aun no tiene llegada
+const buscarTurnoParaLlegada = async (rut, ahora) => {
+    const turnosDeHoy = await prisma.turno.findMany({
+        where: { rut_usuario: rut, fecha: ahora.fecha, hora_llegada: null },
+        orderBy: { hora_inicio: 'asc' },
+    });
+    const minutoActual = minutos(ahora.hora);
+    return turnosDeHoy.find((turno) =>
+        minutoActual >= minutos(turno.hora_inicio) - ANTICIPACION_MINUTOS && minutoActual < finDelTurno(turno),
+    ) ?? null;
+};
+
+// service para saber si la persona de la sesion puede apretar "Llegué" ahora (sesion = req.usuario: { rut, rol })
+export const obtenerTurnoParaLlegada = async (sesion) => {
+    const turno = await buscarTurnoParaLlegada(sesion.rut, ahoraEnChile());
+    return turno ? conEstado(turno) : null;
+};
+
+// service para registrar la llegada de la persona de la sesion a su turno actual
+// la hora la pone el servidor, asi nadie puede mandar una hora distinta desde el navegador
+export const registrarLlegada = async (sesion) => {
+    const ahora = ahoraEnChile();
+    const turno = await buscarTurnoParaLlegada(sesion.rut, ahora);
+    if (!turno) throw new HttpError(400, 'No tienes un turno en curso para registrar tu llegada');
+
+    const actualizado = await prisma.turno.update({
+        where: { id: turno.id },
+        data: { hora_llegada: ahora.hora },
+        include: incluirTurno,
+    });
+    return conEstado(actualizado, ahora);
+};
+
+// service para que el Admin corrija la asistencia a mano (ej: alguien olvido apretar "Llegué")
+// llego = true la deja como llegada a la hora (con la hora de inicio del turno), false borra la llegada
 // solo se puede en turnos de hoy o de dias que ya pasaron
-export const marcarAsistenciaTurno = async (id, { llego_a_la_hora }) => {
+export const marcarAsistenciaTurno = async (id, { llego }) => {
     const turno = await obtenerTurnoPorId(id);
     if (turno.fecha > hoy()) throw new HttpError(400, 'No se puede marcar asistencia en un turno que aún no llega');
 
-    return prisma.turno.update({ where: { id }, data: { llego_a_la_hora }, include: incluirTurno });
+    const actualizado = await prisma.turno.update({
+        where: { id },
+        data: { hora_llegada: llego ? turno.hora_inicio : null },
+        include: incluirTurno,
+    });
+    return conEstado(actualizado);
 };
