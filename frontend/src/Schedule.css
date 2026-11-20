@@ -964,6 +964,30 @@
   background: #d9fbe9;
 }
 
+/* llego, pero despues de la tolerancia */
+.attendance-cell.is-tarde {
+  background: #fff3d6;
+}
+
+.attendance-cell.is-tarde button {
+  color: #9a6700;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.attendance-cell.is-tarde button:hover {
+  background: #ffe7ad;
+}
+
+/* el turno termino y no registro llegada */
+.attendance-cell.is-ausente {
+  background: #fde4e2;
+}
+
+.attendance-cell.is-ausente button:hover {
+  background: #f9cbc7;
+}
+
 /* conteo a/b cuando la persona tiene 2 o mas turnos ese dia */
 .attendance-cell__conteo {
   color: #10494b;
@@ -973,6 +997,14 @@
 
 .attendance-cell.is-presente .attendance-cell__conteo {
   color: #0b8a57;
+}
+
+.attendance-cell.is-tarde .attendance-cell__conteo {
+  color: #9a6700;
+}
+
+.attendance-cell.is-ausente .attendance-cell__conteo {
+  color: #a32121;
 }
 
 .attendance-cell.is-turno-futuro .attendance-cell__conteo {
@@ -1022,6 +1054,15 @@
   background: #d9fbe9;
 }
 
+.attendance-legend__muestra.is-tarde {
+  color: #9a6700;
+  background: #fff3d6;
+}
+
+.attendance-legend__muestra.is-ausente {
+  background: #fde4e2;
+}
+
 .attendance-legend__muestra.is-parcial {
   width: auto;
   padding: 0 4px;
@@ -1063,6 +1104,19 @@
   color: #0b8a57;
   background: #d9fbe9;
   font-weight: 700;
+}
+
+.attendance-turnos label.is-tarde {
+  border-color: #f2c14e;
+  color: #9a6700;
+  background: #fff3d6;
+  font-weight: 700;
+}
+
+.attendance-turnos label.is-ausente {
+  border-color: #f0a29b;
+  color: #a32121;
+  background: #fde4e2;
 }
 
 .attendance-turnos input {
@@ -1354,6 +1408,10 @@
 
 .hoja-tabla__marca.is-ausente {
   color: #a32121;
+}
+
+.hoja-tabla__marca.is-tarde {
+  color: #9a6700;
 }
 
 .hoja-tabla__marca.is-futuro {

@@ -1,7 +1,6 @@
 import {
   DIAS_LARGOS,
   describirSemana,
-  diaDeHoy,
   nombreDelMes,
   semanasDelCalendario,
   sumarDias,
@@ -141,20 +140,20 @@ function HorarioMensual({ usuarios, mes }) {
   )
 }
 
-// staff con turnos en la semana; en cada dia sus turnos con ✓ (llego a la hora), ✗ (no marcado) o sin marca si aun no llega
+// staff con turnos en la semana; en cada dia sus turnos con ✓ (llego a la hora), la hora si llego tarde,
+// ✗ (no registro llegada) o sin marca si el turno aun no termina
 function AsistenciaSemanal({ usuarios, semana }) {
-  const hoy = diaDeHoy()
   const fechas = Array.from({ length: 7 }, (_, i) => sumarDias(semana, i))
 
   const filas = usuarios
     .map((usuario) => {
       const turnos = usuario.turnos.filter((turno) => fechas.includes(turno.fecha.slice(0, 10)))
-      const pasados = turnos.filter((turno) => turno.fecha.slice(0, 10) <= hoy)
+      const terminados = turnos.filter((turno) => turno.estado !== 'pendiente')
       return {
         ...usuario,
         turnos,
-        total: pasados.length,
-        presentes: pasados.filter((turno) => turno.llego_a_la_hora).length,
+        total: terminados.length,
+        presentes: terminados.filter((turno) => turno.estado === 'a-tiempo').length,
       }
     })
     .filter((usuario) => usuario.turnos.length > 0)
@@ -190,11 +189,17 @@ function AsistenciaSemanal({ usuarios, semana }) {
                 return (
                   <td key={fecha}>
                     {turnos.map((turno) => {
-                      const estado = fecha > hoy ? 'is-futuro' : turno.llego_a_la_hora ? 'is-presente' : 'is-ausente'
+                      const estado = {
+                        'a-tiempo': 'is-presente',
+                        tarde: 'is-tarde',
+                        ausente: 'is-ausente',
+                        pendiente: 'is-futuro',
+                      }[turno.estado]
                       return (
                         <span className={`hoja-tabla__marca ${estado}`} key={turno.id}>
                           {rangoHoras(turno)}
                           {estado === 'is-presente' && ' ✓'}
+                          {estado === 'is-tarde' && ` (llegó ${turno.hora_llegada})`}
                           {estado === 'is-ausente' && ' ✗'}
                         </span>
                       )
@@ -210,8 +215,9 @@ function AsistenciaSemanal({ usuarios, semana }) {
 
       <ul className="hoja-leyenda">
         <li><span className="hoja-tabla__marca is-presente">✓</span> Llegó a la hora</li>
-        <li><span className="hoja-tabla__marca is-ausente">✗</span> Sin llegada a la hora registrada</li>
-        <li><span className="hoja-tabla__marca is-futuro">08:00</span> Turno que aún no llega</li>
+        <li><span className="hoja-tabla__marca is-tarde">(llegó 09:40)</span> Llegó tarde, a esa hora</li>
+        <li><span className="hoja-tabla__marca is-ausente">✗</span> No registró llegada</li>
+        <li><span className="hoja-tabla__marca is-futuro">08:00</span> Turno que aún no termina</li>
         <li><span className="hoja-leyenda__muestra" /> Sin turno</li>
       </ul>
     </>
