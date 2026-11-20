@@ -314,16 +314,6 @@ export function actualizarUsuario(rut, datos) {
 export function eliminarUsuario(rut) {
   return sendJson('DELETE', `/usuarios/${rut}`)}
 
-// Busca los animales que todavía no han sido adoptados
-export async function getAnimalesDisponibles() {
-  const animales = await getJson('/animales?adoptado=false')
-
-  if (!Array.isArray(animales)) {
-    throw new Error('La respuesta de la API de animales no es válida.')
-  }
-
-  return animales
-}
 
 // Historial de adopciones, de la más reciente a la más antigua
 export async function getAdopciones() {
@@ -336,10 +326,49 @@ export async function getAdopciones() {
   return adopciones
 }
 
-// Registra la adopción de un animal (crea también al adoptante)
-export function registrarAdopcion(idAnimal, datos) {
-  return postJson(`/animales/${idAnimal}/adopcion`, datos)
+// ----- Solicitudes de adopción -----
+
+// Pública: datos de un animal disponible, para mostrarlo en el formulario de la página pública
+export function getAnimalParaAdoptar(idAnimal) {
+  return getJson(`/adopciones/animales/${idAnimal}`)
 }
+
+// Pública: envía los datos del adoptante y el animal que le interesa
+export function enviarSolicitudAdopcion(datos) {
+  return postJson('/adopciones/solicitudes', datos)
+}
+
+// Intranet: solicitudes abiertas (pendientes y en proceso)
+export async function getSolicitudesAdopcion() {
+  const solicitudes = await getJson('/adopciones/solicitudes')
+
+  if (!Array.isArray(solicitudes)) {
+    throw new Error('La respuesta de la API de solicitudes no es válida.')
+  }
+
+  return solicitudes
+}
+
+// Intranet: ingresa a mano un adoptante con el animal asignado (queda "en proceso")
+export function registrarSolicitudManual(datos) {
+  return postJson('/adopciones/solicitudes/manual', datos)
+}
+
+// Intranet: agenda (o cambia) la hora de visita. fecha_visita: "2026-11-20T15:30"
+export function agendarVisita(idSolicitud, fecha_visita) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/visita`, { fecha_visita })
+}
+
+// Intranet: rechaza una solicitud
+export function rechazarSolicitud(idSolicitud) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/rechazar`)
+}
+
+// Intranet: marca la adopción como hecha (crea la adopción con la fecha de hoy)
+export function marcarAdoptado(idSolicitud) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/adoptar`)
+}
+
 // Sube una o varias fotos de un animal. Se envía como formulario (multipart/form-data), no como JSON.
 // archivos: arreglo de File (los que entrega un <input type="file" multiple>)
 export async function subirFotosAnimal(idAnimal, archivos) {

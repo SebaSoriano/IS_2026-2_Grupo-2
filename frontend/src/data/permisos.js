@@ -29,6 +29,12 @@ export function puedeAsignarTurnos(usuario) {
   return usuario?.rol === ROLES.ADMIN
 }
 
+// Gestionar adopciones (ingresar solicitudes a mano, agendar visitas, rechazar
+// y marcar como adoptado) es solo del Admin; los demás roles solo pueden mirar
+export function puedeGestionarAdopciones(usuario) {
+  return usuario?.rol === ROLES.ADMIN
+}
+
 // Crear, modificar y eliminar usuarios (la sección Voluntarios) es solo del Admin
 export function puedeGestionarUsuarios(usuario) {
   return usuario?.rol === ROLES.ADMIN

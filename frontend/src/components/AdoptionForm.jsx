@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getUsuarios, registrarAdopcion } from '../services/api.js'
+import { getAnimales, registrarSolicitudManual } from '../services/api.js'
 import './AdoptionForm.css'
 
 // Fecha de hoy en formato AAAA-MM-DD usando la hora de Chile (no la hora UTC)
@@ -12,8 +12,7 @@ function fechaDeHoy() {
 
 // Campos del formulario (los mismos nombres que pide el backend)
 const formularioVacio = {
-  fecha_adopcion: '',
-  rut_usuario: '',
+  id_animal: '',
   nombre_adoptante: '',
   direccion: '',
   telefono: '',
@@ -22,14 +21,12 @@ const formularioVacio = {
   observaciones_adoptante: '',
 }
 
-export default function AdoptionForm({ animal, onClose, onSaved }) {
-  // La fecha de adopción parte con el día de hoy
-  const [formulario, setFormulario] = useState(() => ({
-    ...formularioVacio,
-    fecha_adopcion: fechaDeHoy(),
-  }))
-  // Lista de voluntarios para elegir quién registra la adopción
-  const [voluntarios, setVoluntarios] = useState([])
+// Popup para ingresar a mano un adoptante (ej: alguien que llegó al refugio)
+// y asignarle uno de los animales disponibles. La solicitud queda "en proceso".
+export default function AdoptionForm({ onClose, onSaved }) {
+  const [formulario, setFormulario] = useState(formularioVacio)
+  // Animales disponibles para el <select>
+  const [animales, setAnimales] = useState([])
   const [errores, setErrores] = useState({})
   const [mensajeError, setMensajeError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -43,11 +40,11 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
     }
   }, [])
 
-  // Cargar los voluntarios para el <select>
+  // Cargar solo los animales disponibles (el mismo filtro que usa la sección Animales)
   useEffect(() => {
-    getUsuarios()
-      .then((lista) => setVoluntarios(lista))
-      .catch(() => setMensajeError('No se pudo cargar la lista de voluntarios'))
+    getAnimales({ estado: 'disponible' })
+      .then((lista) => setAnimales(lista))
+      .catch(() => setMensajeError('No se pudo cargar la lista de animales disponibles'))
   }, [])
 
   function cambiarCampo(event) {
@@ -68,8 +65,8 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
     setEnviando(true)
 
     const datos = {
-      fecha_adopcion: formulario.fecha_adopcion,
-      rut_usuario: formulario.rut_usuario,
+      // el <select> entrega texto ("5"); el backend espera un número
+      id_animal: Number(formulario.id_animal),
       nombre_adoptante: formulario.nombre_adoptante,
       direccion: formulario.direccion,
       telefono: formulario.telefono.trim(),
@@ -82,8 +79,8 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
     }
 
     try {
-      await registrarAdopcion(animal.id_animal, datos)
-      // Avisarle a AdoptionSection que se registró (ella cierra el popup y actualiza las tablas)
+      await registrarSolicitudManual(datos)
+      // Avisarle a AdoptionSection (ella cierra el popup y recarga la tabla)
       onSaved()
     } catch (error) {
       if (error.details && error.details.length > 0) {
@@ -95,7 +92,7 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
         setErrores(erroresPorCampo)
         setMensajeError('Revisa los campos marcados')
       } else if (error.details) {
-        // Otro error del backend, ej: 409 "El animal ya fue adoptado"
+        // Otro error del backend, ej: 409 "El animal no está disponible para adopción"
         setMensajeError(error.message)
       } else {
         setMensajeError('No se pudo conectar con el servidor')
@@ -117,7 +114,7 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
     >
       <form className="adoption-form" onSubmit={enviarFormulario}>
         <div className="adoption-dialog-header">
-          <h2 id="adoption-dialog-title">Registrar adopción</h2>
+          <h2 id="adoption-dialog-title">Ingresar adoptante</h2>
           <button
             className="adoption-dialog-close"
             type="button"
@@ -129,11 +126,6 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
           </button>
         </div>
 
-        <p className="adoption-form__animal">
-          Animal: <strong>{animal.nombre_animal}</strong> ({animal.especie_animal}, id{' '}
-          {animal.id_animal})
-        </p>
-
         {mensajeError && (
           <p className="adoption-form__error" role="alert">
             {mensajeError}
@@ -141,44 +133,27 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
         )}
 
         <fieldset className="adoption-form__group">
-          <legend>Datos de la adopción</legend>
+          <legend>Animal asignado</legend>
 
-          <div className="adoption-form__row">
-            <label className="adoption-form__field">
-              Fecha de adopción
-              <input
-                name="fecha_adopcion"
-                type="date"
-                value={formulario.fecha_adopcion}
-                onChange={cambiarCampo}
-                max={fechaDeHoy()}
-                required
-              />
-              {errores.fecha_adopcion && (
-                <span className="adoption-form__error">{errores.fecha_adopcion}</span>
-              )}
-            </label>
-
-            <label className="adoption-form__field">
-              Voluntario que registra
-              <select
-                name="rut_usuario"
-                value={formulario.rut_usuario}
-                onChange={cambiarCampo}
-                required
-              >
-                <option value="">Selecciona un voluntario</option>
-                {voluntarios.map((voluntario) => (
-                  <option value={voluntario.rut_usuario} key={voluntario.rut_usuario}>
-                    {voluntario.nombre_usuario} ({voluntario.rut_usuario})
-                  </option>
-                ))}
-              </select>
-              {errores.rut_usuario && (
-                <span className="adoption-form__error">{errores.rut_usuario}</span>
-              )}
-            </label>
-          </div>
+          <label className="adoption-form__field">
+            Animal disponible
+            <select
+              name="id_animal"
+              value={formulario.id_animal}
+              onChange={cambiarCampo}
+              required
+            >
+              <option value="">Selecciona un animal</option>
+              {animales.map((animal) => (
+                <option value={animal.id_animal} key={animal.id_animal}>
+                  {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
+                </option>
+              ))}
+            </select>
+            {errores.id_animal && (
+              <span className="adoption-form__error">{errores.id_animal}</span>
+            )}
+          </label>
         </fieldset>
 
         <fieldset className="adoption-form__group">
@@ -285,7 +260,7 @@ export default function AdoptionForm({ animal, onClose, onSaved }) {
             Cancelar
           </button>
           <button className="adoption-form__submit" type="submit" disabled={enviando}>
-            {enviando ? 'Registrando...' : 'Registrar adopción'}
+            {enviando ? 'Guardando...' : 'Ingresar y asignar'}
           </button>
         </div>
       </form>
