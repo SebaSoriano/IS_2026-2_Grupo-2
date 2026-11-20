@@ -22,7 +22,7 @@ const horasDeLlegada = rango(HORA_MIN, HORA_MAX - 1)
 export default function TurnoForm({ dias, turno, personaFija, textoBoton, onSubmit, onCancel }) {
   const [usuario, setUsuario] = useState(personaFija ?? turno?.usuario ?? null)
   const [semana, setSemana] = useState(() => (turno ? lunesDe(turno.fecha.slice(0, 10)) : semanaActual()))
-  const [horarioId, setHorarioId] = useState(turno?.horario_id ?? null)
+  const [diaSemanaId, setDiaSemanaId] = useState(turno?.dia_semana_id ?? null)
   const [inicio, setInicio] = useState(turno ? leerHora(turno.hora_inicio) : HORA_PREDETERMINADA)
   const [fin, setFin] = useState(turno?.hora_fin ? leerHora(turno.hora_fin) : null)
   const [error, setError] = useState('')
@@ -40,7 +40,7 @@ export default function TurnoForm({ dias, turno, personaFija, textoBoton, onSubm
   const cambiarSemana = (nuevaSemana) => {
     setSemana(nuevaSemana)
     // si el dia elegido queda en el pasado al volver a la semana actual, se quita
-    if (horarioId && fechaDelDia(nuevaSemana, horarioId) < hoy) setHorarioId(null)
+    if (diaSemanaId && fechaDelDia(nuevaSemana, diaSemanaId) < hoy) setDiaSemanaId(null)
   }
 
   const finReal = fin ?? inicio + 1
@@ -49,7 +49,7 @@ export default function TurnoForm({ dias, turno, personaFija, textoBoton, onSubm
   const enviar = async (event) => {
     event.preventDefault()
     if (!usuario) return setError('Selecciona una persona de la lista.')
-    if (!horarioId) return setError('Selecciona el día del turno.')
+    if (!diaSemanaId) return setError('Selecciona el día del turno.')
 
     setGuardando(true)
     setError('')
@@ -57,7 +57,7 @@ export default function TurnoForm({ dias, turno, personaFija, textoBoton, onSubm
       await onSubmit({
         rut_usuario: usuario.rut_usuario,
         // el backend calcula el dia de la semana a partir de la fecha
-        fecha: fechaDelDia(semana, horarioId),
+        fecha: fechaDelDia(semana, diaSemanaId),
         hora_inicio: formatearHora(inicio),
         hora_fin: fin == null ? null : formatearHora(fin),
       })
@@ -92,16 +92,16 @@ export default function TurnoForm({ dias, turno, personaFija, textoBoton, onSubm
             const pasado = esDiaPasado(dia.id)
             return (
               <label
-                className={`day-picker__option${horarioId === dia.id ? ' is-selected' : ''}${pasado ? ' is-disabled' : ''}`}
+                className={`day-picker__option${diaSemanaId === dia.id ? ' is-selected' : ''}${pasado ? ' is-disabled' : ''}`}
                 key={dia.id}
                 title={pasado ? 'Este día ya pasó' : undefined}
               >
                 <input
                   type="radio"
-                  name="horario_id"
+                  name="dia_semana_id"
                   value={dia.id}
-                  checked={horarioId === dia.id}
-                  onChange={() => setHorarioId(dia.id)}
+                  checked={diaSemanaId === dia.id}
+                  onChange={() => setDiaSemanaId(dia.id)}
                   disabled={pasado}
                 />
                 {dia.dia} <small>{Number(fechaDelDia(semana, dia.id).slice(8))}</small>

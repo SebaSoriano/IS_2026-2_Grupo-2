@@ -24,7 +24,7 @@ export const fecha = z.string()
 
 const turnoSchema = z.object({
   rut_usuario: rut,
-  // fecha puntual del turno; el dia de la semana (horario_id) lo calcula el backend
+  // fecha puntual del turno; el dia de la semana (dia_semana_id) lo calcula el backend
   fecha,
   // hora de llegada, el turno empieza en ese bloque
   hora_inicio: bloque(8, 19),

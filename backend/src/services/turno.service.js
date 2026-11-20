@@ -6,7 +6,7 @@ import { HttpError } from '../middlewares/error.middleware.js';
 import { ahoraEnChile, diaDelHorario, hoy } from '../utils/fechas.js';
 import { ROLES } from '../config/roles.js';
 
-const incluirTurno = { usuario: usuarioPublico, horario: true };
+const incluirTurno = { usuario: usuarioPublico, dia_semana: true };
 // ordena por fecha y luego por hora de llegada
 const ordenTurnos = [{ fecha: 'asc' }, { hora_inicio: 'asc' }];
 
@@ -43,7 +43,7 @@ const obtenerTurnoPorId = async (id) => {
 };
 
 // service para crear un turno en una fecha de hoy en adelante
-// el dia de la semana (horario_id) sale de la fecha
+// el dia de la semana (dia_semana_id) sale de la fecha
 // si el usuario no existe Prisma lanza P2003 (400) que responde error.middleware.js
 // solo el Admin puede añadir turnos a nombre de otra persona;
 // Veterinaria y Voluntario solo pueden añadirlos a su propio nombre (sesion = req.usuario: { rut, rol })
@@ -54,7 +54,7 @@ export const crearTurno = async (data, sesion) => {
     verificarQueNoEsPasado(data.fecha, 'No se pueden añadir turnos en días que ya pasaron');
     await verificarTraslape(data);
     return prisma.turno.create({
-        data: { ...data, horario_id: diaDelHorario(data.fecha) },
+        data: { ...data, dia_semana_id: diaDelHorario(data.fecha) },
         include: incluirTurno,
     });
 };
@@ -98,7 +98,7 @@ export const actualizarTurno = async (id, data, sesion) => {
     await verificarTraslape(turnoEditado, id);
 
     // si cambia la fecha, tambien cambia el dia de la semana
-    const cambios = data.fecha ? { ...data, horario_id: diaDelHorario(data.fecha) } : data;
+    const cambios = data.fecha ? { ...data, dia_semana_id: diaDelHorario(data.fecha) } : data;
     return prisma.turno.update({ where: { id }, data: cambios, include: incluirTurno });
 };
 
