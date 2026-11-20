@@ -8,6 +8,8 @@ import { marcarAsistenciaTurnoController } from '../controllers/turno.controller
 import { obtenerTurnoParaLlegadaController, registrarLlegadaController } from '../controllers/turno.controller.js';
 
 import { validate } from '../middlewares/validate.middleware.js';
+import { requireRol } from '../middlewares/auth.middleware.js';
+import { ROLES } from '../config/roles.js';
 import { createTurnoSchema, updateTurnoSchema, asistenciaTurnoSchema } from '../schemas/turnos.schema.js';
 import { rutParamSchema } from '../schemas/usuario.schema.js';
 import { idParamSchema } from '../schemas/idParam.schema.js';
@@ -25,7 +27,7 @@ router.get('/:rut', validate(rutParamSchema, 'params'), obtenerTurnosPorRutContr
 //editar y borrar un turno por su id
 router.put('/:id', validate(idParamSchema, 'params'), validate(updateTurnoSchema, 'body'), actualizarTurnoController);
 router.delete('/:id', validate(idParamSchema, 'params'), eliminarTurnoController);
-//Admin o Veterinaria corrigen a mano la asistencia de un turno (PATCH: requireEdicion deja solo a esos roles)
-router.patch('/:id/asistencia', validate(idParamSchema, 'params'), validate(asistenciaTurnoSchema, 'body'), marcarAsistenciaTurnoController);
+//solo el Admin corrige a mano la asistencia de un turno (Veterinaria y Voluntario reciben 403)
+router.patch('/:id/asistencia', requireRol(ROLES.ADMIN), validate(idParamSchema, 'params'), validate(asistenciaTurnoSchema, 'body'), marcarAsistenciaTurnoController);
 
 export default router;
