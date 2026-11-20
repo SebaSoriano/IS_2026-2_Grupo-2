@@ -28,6 +28,13 @@ export const solicitudAdopcionSchema = z.object({
     observaciones_adoptante: z.string().trim().max(500, 'Debe tener como máximo 500 caracteres').optional(),
 });
 
+// POST /api/adopciones/solicitudes/existente
+// Un adoptante que ya está registrado + un animal disponible
+export const solicitudExistenteSchema = z.object({
+    id_adoptante: z.number().int().positive('Debe elegir un adoptante'),
+    id_animal: z.number().int().positive('Debe elegir un animal'),
+});
+
 // PATCH /api/adopciones/solicitudes/:id/visita
 export const visitaSchema = z.object({
     fecha_visita: fechaHoraFutura,

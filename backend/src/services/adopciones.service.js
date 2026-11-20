@@ -84,6 +84,40 @@ export const crearSolicitudPublica = (datos) => crearSolicitud(datos, 'pendiente
 
 export const crearSolicitudManual = (datos) => crearSolicitud(datos, 'en_proceso');
 
+// Adoptantes registrados (desde la página pública o la intranet), ordenados por nombre
+export const getAdoptantes = () =>
+  prisma.adoptante.findMany({
+    orderBy: { nombre_adoptante: 'asc' },
+    select: { id_adoptante: true, nombre_adoptante: true, correo: true },
+  });
+
+// Inicia un proceso de adopción con un adoptante que ya existe y un animal disponible.
+// La solicitud queda "en proceso" y el animal también.
+export const crearSolicitudExistente = ({ id_adoptante, id_animal }) =>
+  prisma.$transaction(async (tx) => {
+    const adoptante = await tx.adoptante.findUnique({ where: { id_adoptante } });
+    if (!adoptante) throw new HttpError(404, 'Adoptante no encontrado');
+
+    const animal = await tx.animales.findUnique({
+      where: { id_animal },
+      select: { estado_animal: true },
+    });
+    if (!animal) throw new HttpError(404, 'Animal no encontrado');
+    if (animal.estado_animal !== 'disponible') {
+      throw new HttpError(409, 'El animal no está disponible para adopción');
+    }
+
+    await tx.animales.update({
+      where: { id_animal },
+      data: { estado_animal: 'en_proceso' },
+    });
+
+    return tx.solicitudes_adopcion.create({
+      data: { estado: 'en_proceso', id_adoptante, id_animal },
+      include: datosSolicitud,
+    });
+  });
+
 // Solicitudes abiertas (pendientes y en proceso), de la más antigua a la más nueva
 export const getSolicitudes = () =>
   prisma.solicitudes_adopcion.findMany({

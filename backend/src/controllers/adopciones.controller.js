@@ -34,6 +34,18 @@ export const createSolicitudManual = async (req, res) => {
   res.status(201).json(solicitud);
 };
 
+// GET /api/adopciones/adoptantes
+export const getAdoptantes = async (req, res) => {
+  const adoptantes = await adopcionesService.getAdoptantes();
+  res.json(adoptantes);
+};
+
+// POST /api/adopciones/solicitudes/existente
+export const createSolicitudExistente = async (req, res) => {
+  const solicitud = await adopcionesService.crearSolicitudExistente(req.body);
+  res.status(201).json(solicitud);
+};
+
 // PATCH /api/adopciones/solicitudes/:id/visita
 export const agendarVisita = async (req, res) => {
   const solicitud = await adopcionesService.agendarVisita(req.params.id, req.body.fecha_visita);
