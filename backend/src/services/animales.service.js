@@ -266,6 +266,7 @@ export async function getAnimalesPublicos() {
       nombre_animal: true,
       especie_animal: true,
       edad: true,
+      peso_animal: true,
       foto_animal: true,
     },
     // Muestra primero las mascotas registradas más recientemente.

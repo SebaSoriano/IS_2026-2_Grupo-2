@@ -3,6 +3,7 @@ import './PublicPage.css';
 import DonationPanels from './components/DonationPanels.jsx';
 import DonationInsumosForm from './components/DonationFormInsumo.jsx';
 import DonationMonetariaForm from './components/DonationFormMonetaria.jsx';
+import Modal from './schedule/Modal.jsx';
 import perroImage from './assets/perro.png';
 import gatoImage from './assets/cat.png';
 import { getAnimalesPublicos } from './services/api.js';
@@ -22,10 +23,14 @@ function textoEdad(edad) {
 
 export default function PublicPage() {
   const [vistaDonar, setVistaDonar] = useState(null);
+  const [animalDetalles, setAnimalDetalles] = useState(null);
   const [animales, setAnimales] = useState([]);
   const [estadoCarga, setEstadoCarga] = useState('cargando');
   const [errorCarga, setErrorCarga] = useState('');
   const cerrarDonar = () => setVistaDonar(null);
+  const fotoAnimalDetalles = animalDetalles
+    ? animalDetalles.foto_animal || fotoDeEjemplo(animalDetalles.especie_animal)
+    : null;
 
   useEffect(() => {
     let cancelado = false;
@@ -107,24 +112,67 @@ export default function PublicPage() {
                   {foto ? (
                     <>
                       <img src={foto} alt={`Foto de ${animal.nombre_animal}`} />
-                      {!animal.foto_animal && (
-                        <span className="pet-card__badge">Imagen referencial</span>
-                      )}
                     </>
                   ) : (
                     <span className="pet-card__photo-placeholder">Foto no disponible</span>
                   )}
                 </div>
                 <div className="pet-card__details">
-                  <p className="pet-card__species">{animal.especie_animal}</p>
                   <h3>{animal.nombre_animal}</h3>
-                  <p>{textoEdad(animal.edad)}</p>
+                  <button
+                    className="pet-card__details-button"
+                    type="button"
+                    aria-haspopup="dialog"
+                    onClick={() => setAnimalDetalles(animal)}
+                  >
+                    Ver detalles
+                  </button>
                 </div>
               </article>
             );
           })}
         </section>
       </main>
+
+      {animalDetalles && (
+        <Modal
+          title={`Conoce a ${animalDetalles.nombre_animal}`}
+          onClose={() => setAnimalDetalles(null)}
+          className="public-pet-modal"
+        >
+          <div className="public-pet-details">
+            {fotoAnimalDetalles ? (
+              <img
+                className="public-pet-details__photo"
+                src={fotoAnimalDetalles}
+                alt={`Foto de ${animalDetalles.nombre_animal}`}
+              />
+            ) : (
+              <div className="public-pet-details__photo-placeholder">
+                Foto no disponible
+              </div>
+            )}
+            <dl className="public-pet-details__facts">
+              <div>
+                <dt>Especie</dt>
+                <dd>{animalDetalles.especie_animal}</dd>
+              </div>
+              <div>
+                <dt>Edad</dt>
+                <dd>{textoEdad(animalDetalles.edad)}</dd>
+              </div>
+              <div>
+                <dt>Peso</dt>
+                <dd>
+                  {animalDetalles.peso_animal.toLocaleString('es-CL', {
+                    maximumFractionDigits: 2,
+                  })} kg
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </Modal>
+      )}
 
       {vistaDonar === 'opciones' && (
         <DonationPanels onContinuar={setVistaDonar} onClose={cerrarDonar} />
