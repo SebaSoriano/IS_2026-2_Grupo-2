@@ -17,7 +17,9 @@
 }
 
 .schedule-table-scroll {
-  overflow-x: auto;
+  /* scroll propio: el encabezado sticky se pega dentro de este div */
+  overflow: auto;
+  max-height: 70vh;
   border: 1px solid #d8eeee;
 }
 
@@ -30,6 +32,10 @@
 }
 
 .schedule-table thead th {
+  /* encabezado fijo arriba al bajar por las horas */
+  position: sticky;
+  top: 0;
+  z-index: 1; /* queda por encima de las celdas al hacer scroll */
   padding: 12px 8px;
   color: #fff;
   background: #17a3b5;
