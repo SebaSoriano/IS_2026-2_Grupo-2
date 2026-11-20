@@ -3,11 +3,29 @@
 // "2026-10-15" -> Date del dia a las 00:00 UTC, igual a como lo guarda Prisma
 export const fechaDesdeTexto = (texto) => new Date(`${texto}T00:00:00.000Z`);
 
-// fecha de hoy sin hora, para comparar si un turno ya paso o aun no llega
-export const hoy = () => {
-    const ahora = new Date();
-    return new Date(Date.UTC(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()));
+// el refugio esta en Chile: la fecha y la hora de "ahora" se calculan siempre en esa zona horaria,
+// sin importar la zona horaria del servidor (ej: un contenedor en UTC)
+const formatoChile = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Santiago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+});
+
+// fecha (Date del dia a las 00:00 UTC, igual que los turnos) y hora ("HH:MM") de este momento en Chile
+export const ahoraEnChile = () => {
+    const partes = Object.fromEntries(formatoChile.formatToParts(new Date()).map(({ type, value }) => [type, value]));
+    return {
+        fecha: fechaDesdeTexto(`${partes.year}-${partes.month}-${partes.day}`),
+        hora: `${partes.hour}:${partes.minute}`,
+    };
 };
+
+// fecha de hoy sin hora, para comparar si un turno ya paso o aun no llega
+export const hoy = () => ahoraEnChile().fecha;
 
 // dia de la semana de una fecha igual que el id del horario (1 = Lunes ... 7 = Domingo)
 // getUTCDay devuelve 0 para el domingo, por eso se cambia a 7
