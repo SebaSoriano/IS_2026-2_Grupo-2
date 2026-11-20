@@ -29,6 +29,12 @@ export function puedeAsignarTurnos(usuario) {
   return usuario?.rol === ROLES.ADMIN
 }
 
+// Corregir la asistencia a mano (en la tabla de Asistencia) es solo del Admin;
+// Veterinaria y Voluntario ven la tabla, pero no pueden corregirla
+export function puedeCorregirAsistencia(usuario) {
+  return usuario?.rol === ROLES.ADMIN
+}
+
 // Crear, modificar y eliminar usuarios (la sección Voluntarios) es solo del Admin
 export function puedeGestionarUsuarios(usuario) {
   return usuario?.rol === ROLES.ADMIN

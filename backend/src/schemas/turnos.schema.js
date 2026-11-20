@@ -45,7 +45,7 @@ export const updateTurnoSchema = turnoSchema
   .refine((datos) => Object.keys(datos).length > 0, 'Debe enviar al menos el usuario a cambiar o el bloque horario a cambiar')
   .refine(finDespuesDeInicio, mensajeFin);
 
-// PATCH /api/turnos/:id/asistencia: Admin o Veterinaria corrigen la asistencia a mano
+// PATCH /api/turnos/:id/asistencia: el Admin corrige la asistencia a mano
 // llego = true deja el turno como llegada a la hora, false borra la llegada
 // tiene que ser un booleano de verdad: el texto "true" se rechaza
 export const asistenciaTurnoSchema = z.object({

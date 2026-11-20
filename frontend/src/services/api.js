@@ -188,7 +188,7 @@ export async function getAsistencias(mes) {
   return usuarios
 }
 
-// Admin o Veterinaria corrigen la asistencia a mano: true la deja como llegada a la hora, false borra la llegada
+// el Admin corrige la asistencia a mano: true la deja como llegada a la hora, false borra la llegada
 export function marcarAsistenciaTurno(id, llego) {
   return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego })
 }

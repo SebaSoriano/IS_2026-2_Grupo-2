@@ -175,7 +175,7 @@ export const registrarLlegada = async (sesion) => {
     return conEstado(actualizado, ahora);
 };
 
-// service para que Admin o Veterinaria corrijan la asistencia a mano (ej: alguien olvido apretar "Llegué")
+// service para que el Admin corrija la asistencia a mano (ej: alguien olvido apretar "Llegué")
 // llego = true la deja como llegada a la hora (con la hora de inicio del turno), false borra la llegada
 // solo se puede en turnos de hoy o de dias que ya pasaron
 export const marcarAsistenciaTurno = async (id, { llego }) => {
