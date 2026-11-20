@@ -246,3 +246,25 @@
   color: #315052;
   font-size: 0.9rem;
 }
+/* tamaños fijos: elegir una opción no cambia el ancho de ningún filtro */
+.donation-filters select {
+  width: 9.5rem;
+}
+
+.donation-filters .donation-filters__categoria select {
+  width: 14rem; /* "Accesorios y juguetes" es la opción más larga */
+}
+
+.donation-filters input[type='date'] {
+  width: 10.5rem;
+}
+
+.donation-filters select:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* sin filtros activos el botón no se ve, pero mantiene su lugar en la fila */
+.donation-filters__limpiar:disabled {
+  visibility: hidden;
+}

@@ -215,7 +215,7 @@ const [detalle, setDetalle] = useState(null)
                 </button>
               ))}
             </div>
-
+            
             {vista !== 'estadisticas' && (
               <div className="donation-filters">
                 {Object.entries(OPCIONES_FILTRO).map(([clave, opciones]) => (
@@ -229,61 +229,50 @@ const [detalle, setDetalle] = useState(null)
                     </select>
                   </label>
                 ))}
-                {vista !== 'estadisticas' && (
-                  <div className="donation-filters">
-                    {Object.entries(OPCIONES_FILTRO).map(([clave, opciones]) => (
-                      <label key={clave}>
-                        <span>{ETIQUETAS_FILTRO[clave]}</span>
-                        <select value={filtros[clave]} onChange={(event) => cambiarFiltro(clave, event.target.value)}>
-                          <option value="">Todos</option>
-                          {opciones.map((opcion) => (
-                            <option key={opcion} value={opcion}>{opcion}</option>
-                          ))}
-                        </select>
-                      </label>
+
+                {/* siempre se dibuja (en Monetarias queda desactivada): así los demás filtros no cambian de lugar */}
+                <label className="donation-filters__categoria">
+                  <span>Categoría</span>
+                  <select
+                    value={vista === 'insumos' ? filtros.categoria_insumo : ''}
+                    disabled={vista !== 'insumos'}
+                    onChange={(event) => cambiarFiltro('categoria_insumo', event.target.value)}
+                  >
+                    <option value="">Todas</option>
+                    {CATEGORIAS_INSUMO.map((categoria) => (
+                      <option key={categoria} value={categoria}>{categoria}</option>
                     ))}
+                  </select>
+                </label>
 
-                    {vista === 'insumos' && (
-                      <label>
-                        <span>Categoría</span>
-                        <select
-                          value={filtros.categoria_insumo}
-                          onChange={(event) => cambiarFiltro('categoria_insumo', event.target.value)}
-                        >
-                          <option value="">Todas</option>
-                          {CATEGORIAS_INSUMO.map((categoria) => (
-                            <option key={categoria} value={categoria}>{categoria}</option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
+                <label>
+                  <span>Desde</span>
+                  <input
+                    type="date"
+                    value={filtros.fecha_desde}
+                    max={filtros.fecha_hasta || undefined}
+                    onChange={(event) => cambiarFiltro('fecha_desde', event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Hasta</span>
+                  <input
+                    type="date"
+                    value={filtros.fecha_hasta}
+                    min={filtros.fecha_desde || undefined}
+                    onChange={(event) => cambiarFiltro('fecha_hasta', event.target.value)}
+                  />
+                </label>
 
-                    <label>
-                      <span>Desde</span>
-                      <input
-                        type="date"
-                        value={filtros.fecha_desde}
-                        max={filtros.fecha_hasta || undefined}
-                        onChange={(event) => cambiarFiltro('fecha_desde', event.target.value)}
-                      />
-                    </label>
-                    <label>
-                      <span>Hasta</span>
-                      <input
-                        type="date"
-                        value={filtros.fecha_hasta}
-                        min={filtros.fecha_desde || undefined}
-                        onChange={(event) => cambiarFiltro('fecha_hasta', event.target.value)}
-                      />
-                    </label>
-
-                    {hayFiltros && (
-                      <button type="button" className="donation-filters__limpiar" onClick={limpiarFiltros}>
-                        Limpiar filtros
-                      </button>
-                    )}
-                  </div>
-                )}
+                {/* también siempre presente: sin filtros queda invisible pero reserva su espacio */}
+                <button
+                  type="button"
+                  className="donation-filters__limpiar"
+                  onClick={limpiarFiltros}
+                  disabled={!hayFiltros}
+                >
+                  Limpiar filtros
+                </button>
               </div>
             )}
           </div>
