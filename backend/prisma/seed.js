@@ -88,6 +88,8 @@ async function main() {
     console.log('-Creando turnos');
     // bloques de una hora entre las 08:00 y las 20:00, ej: 8 -> "08:00"
     const hora = (h) => `${String(h).padStart(2, '0')}:00`;
+    // minutos desde las 00:00 -> "HH:MM", ej: 545 -> "09:05"
+    const horaConMinutos = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
     // los turnos son de una fecha puntual: se crean desde 3 semanas atras hasta 3 semanas adelante
     const hoy = new Date();
     const hoyUTC = Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
@@ -114,8 +116,10 @@ async function main() {
                     hora_inicio: hora(inicio),
                     // a veces se registra solo la llegada (hora_fin null)
                     hora_fin: faker.datatype.boolean() ? hora(inicio + faker.number.int({ min: 1, max: 2 })) : null,
-                    // solo los turnos que ya pasaron pueden tener asistencia
-                    llego_a_la_hora: dia <= 0 && faker.datatype.boolean({ probability: 0.7 }),
+                    // solo los turnos que ya pasaron pueden tener llegada: entre 10 min antes y 40 min despues del inicio
+                    hora_llegada: dia <= 0 && faker.datatype.boolean({ probability: 0.7 })
+                        ? horaConMinutos(inicio * 60 + faker.number.int({ min: -10, max: 40 }))
+                        : null,
                 });
             }
         }
