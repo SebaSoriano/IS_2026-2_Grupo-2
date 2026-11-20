@@ -354,6 +354,22 @@ export function registrarSolicitudManual(datos) {
   return postJson('/adopciones/solicitudes/manual', datos)
 }
 
+// Intranet: adoptantes registrados en la base de datos
+export async function getAdoptantes() {
+  const adoptantes = await getJson('/adopciones/adoptantes')
+
+  if (!Array.isArray(adoptantes)) {
+    throw new Error('La respuesta de la API de adoptantes no es válida.')
+  }
+
+  return adoptantes
+}
+
+// Intranet: inicia una adopción con un adoptante existente. datos: { id_adoptante, id_animal }
+export function registrarSolicitudExistente(datos) {
+  return postJson('/adopciones/solicitudes/existente', datos)
+}
+
 // Intranet: agenda (o cambia) la hora de visita. fecha_visita: "2026-11-20T15:30"
 export function agendarVisita(idSolicitud, fecha_visita) {
   return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/visita`, { fecha_visita })

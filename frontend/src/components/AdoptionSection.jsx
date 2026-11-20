@@ -8,6 +8,7 @@ import {
 import { ESTADOS_SOLICITUD } from '../data/estados.js'
 import AdoptionForm from './AdoptionForm.jsx'
 import VisitaForm from './VisitaForm.jsx'
+import SolicitudExistenteForm from './SolicitudExistenteForm.jsx'
 import './AdoptionSection.css'
 import { usePermisos } from '../sesion/sesion.js'
 
@@ -97,6 +98,11 @@ export default function AdoptionSection() {
     recargar('Adoptante ingresado: el animal quedó en proceso de adopción')
   }
 
+  function solicitudIngresada() {
+    setPopup(null)
+    recargar('Solicitud ingresada: el animal quedó en proceso de adopción')
+  }
+
   function visitaAgendada() {
     setPopup(null)
     recargar('Visita agendada: el animal quedó en proceso de adopción')
@@ -168,6 +174,9 @@ export default function AdoptionSection() {
           <>
             <button className="area-action" type="button" onClick={() => abrirPopup('ingresar')}>
               Ingresar Adoptante
+            </button>
+            <button className="area-action" type="button" onClick={() => abrirPopup('solicitud')}>
+              Ingresar Solicitud
             </button>
             <button
               className="area-action"
@@ -318,6 +327,9 @@ export default function AdoptionSection() {
 
       {popup === 'ingresar' && (
         <AdoptionForm onClose={() => setPopup(null)} onSaved={adoptanteIngresado} />
+      )}
+      {popup === 'solicitud' && (
+        <SolicitudExistenteForm onClose={() => setPopup(null)} onSaved={solicitudIngresada} />
       )}
       {popup === 'visita' && solicitudSeleccionada && (
         <VisitaForm
