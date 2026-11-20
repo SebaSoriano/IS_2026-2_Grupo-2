@@ -16,14 +16,42 @@ import {
 const describirHoras = (turno) =>
   turno.hora_fin ? `${turno.hora_inicio} a ${turno.hora_fin}` : `${turno.hora_inicio} (sin hora de ida)`
 
+// el estado de cada turno lo calcula el backend con hora_llegada:
+// 'a-tiempo' (hasta 25 min despues del inicio), 'tarde', 'ausente' (termino sin llegada) o 'pendiente' (aun no termina)
+const CLASE_POR_ESTADO = {
+  'a-tiempo': 'is-presente',
+  tarde: 'is-tarde',
+  ausente: 'is-ausente',
+  pendiente: 'is-turno',
+}
+
+const describirEstado = (turno) =>
+  ({
+    'a-tiempo': `Llegó a la hora (${turno.hora_llegada})`,
+    tarde: `Llegó tarde (${turno.hora_llegada})`,
+    ausente: 'No registró llegada',
+    pendiente: 'Aún sin llegada',
+  })[turno.estado]
+
+// clase de la celda cuando la persona tiene 2 o mas turnos ese dia
+const claseDelDia = (turnos) => {
+  const llegadas = turnos.filter((turno) => turno.hora_llegada)
+  if (llegadas.length === turnos.length) {
+    return llegadas.every((turno) => turno.estado === 'a-tiempo') ? 'is-presente' : 'is-tarde'
+  }
+  if (llegadas.length > 0) return 'is-parcial'
+  return turnos.some((turno) => turno.estado === 'ausente') ? 'is-ausente' : 'is-turno'
+}
+
 // tabla de asistencia del mes elegido: mes, luego semanas y debajo los dias
 // a la izquierda el staff; en cada dia se ven sus turnos de esa fecha:
-//  - con 1 turno: un click marca que llego a la hora (verde con tick)
-//  - con 2 o mas: muestra a/b (turnos con llegada a la hora / turnos del dia) y el click abre un pop-up para marcar cada uno
+//  - con 1 turno: el color dice si llego a la hora, tarde o no vino; solo el Admin puede corregirlo con un click
+//  - con 2 o mas: muestra a/b (turnos con llegada / turnos del dia) y el click abre un pop-up para corregir cada uno
+// la llegada la registra cada persona con el boton "Llegué" del horario
 // cambiosTurnos cambia cuando se añade, edita o borra un turno, para recargar la tabla
 export default function AttendanceSection({ cambiosTurnos }) {
-  // el Voluntario ve la asistencia, pero no puede marcarla: las celdas se muestran sin botón
-  const { puedeEditar } = usePermisos()
+  // solo el Admin corrige la asistencia; Veterinaria y Voluntario la ven sin botón en las celdas
+  const { puedeCorregirAsistencia } = usePermisos()
   const [mes, setMes] = useState(mesActual)
   const [usuarios, setUsuarios] = useState([])
   const [estado, setEstado] = useState('loading')
@@ -59,17 +87,18 @@ export default function AttendanceSection({ cambiosTurnos }) {
   const semanas = semanasDelMes(dias)
   const hoy = diaDeHoy()
 
-  // marca o desmarca un turno y actualiza solo ese turno en la tabla
+  // correccion manual: si el turno tiene llegada la borra, si no la deja como llegada a la hora
+  // actualiza solo ese turno en la tabla
   const alternarTurno = async (turno) => {
     setGuardando((ids) => [...ids, turno.id])
     setError('')
     try {
-      const actualizado = await marcarAsistenciaTurno(turno.id, !turno.llego_a_la_hora)
+      const actualizado = await marcarAsistenciaTurno(turno.id, !turno.hora_llegada)
       setUsuarios((actuales) =>
         actuales.map((usuario) => ({
           ...usuario,
           turnos: usuario.turnos.map((t) =>
-            t.id === turno.id ? { ...t, llego_a_la_hora: actualizado.llego_a_la_hora } : t,
+            t.id === turno.id ? { ...t, hora_llegada: actualizado.hora_llegada, estado: actualizado.estado } : t,
           ),
         })),
       )
@@ -96,90 +125,109 @@ export default function AttendanceSection({ cambiosTurnos }) {
       {/* error al marcar o desmarcar un turno */}
       {estado === 'success' && error && <p className="inventory-error" role="alert">{error}</p>}
 
-      <div className="attendance-table-scroll">
-        <table className="attendance-table">
-          <caption className="visually-hidden">Asistencia de {nombreDelMes(mes)}</caption>
+      {/* bloque 1: RUT y Nombre, fijo a la izquierda y fuera del scroll */}
+      {/* bloque 2: mes fijo y centrado; debajo, lo único con scroll horizontal son las semanas y días */}
+      {/* son dos tablas separadas: las filas se alinean con alturas fijas (variables --asistencia-* en el CSS) */}
+      <div className="attendance-grid">
+        <table className="attendance-table attendance-staff">
+          <caption className="visually-hidden">Staff de la asistencia</caption>
           <thead>
             <tr>
-              <th scope="col" rowSpan="3" className="attendance-table__rut">RUT</th>
-              <th scope="col" rowSpan="3" className="attendance-table__nombre">Nombre</th>
-              <th scope="colgroup" colSpan={dias.length} className="attendance-table__mes">
-                <div className="month-picker">
-                  <button type="button" onClick={() => cambiarMes(-1)} aria-label="Mes anterior">‹</button>
-                  <span aria-live="polite">{nombreDelMes(mes)}</span>
-                  <button type="button" onClick={() => cambiarMes(1)} aria-label="Mes siguiente">›</button>
-                </div>
-              </th>
-            </tr>
-            <tr>
-              {semanas.map((semana, i) => (
-                <th scope="colgroup" colSpan={semana.length} className="attendance-table__semana" key={semana[0].fecha}>
-                  Semana {i + 1}
-                </th>
-              ))}
-            </tr>
-            <tr>
-              {dias.map((dia) => (
-                <th
-                  scope="col"
-                  key={dia.fecha}
-                  className={`attendance-table__dia${dia.diaSemana === 1 ? ' inicio-semana' : ''}${dia.fecha === hoy ? ' is-hoy' : ''}`}
-                >
-                  <span>{DIAS_CORTOS[dia.diaSemana - 1]}</span>
-                  <span>{dia.numero}</span>
-                </th>
-              ))}
+              <th scope="col" className="attendance-table__rut">RUT</th>
+              <th scope="col" className="attendance-table__nombre">Nombre</th>
             </tr>
           </thead>
           <tbody>
-            {estado === 'loading' && (
-              <tr>
-                <td colSpan={dias.length + 2} className="attendance-table__mensaje" role="status">
-                  Cargando asistencia...
-                </td>
-              </tr>
-            )}
-            {estado === 'success' && usuarios.length === 0 && (
-              <tr>
-                <td colSpan={dias.length + 2} className="attendance-table__mensaje">No hay staff registrado.</td>
-              </tr>
-            )}
             {estado === 'success' &&
-              usuarios.map((usuario) => {
-                // fecha ("AAAA-MM-DD") -> turnos de ese dia
-                const turnosPorDia = new Map()
-                for (const turno of usuario.turnos) {
-                  const fecha = turno.fecha.slice(0, 10)
-                  turnosPorDia.set(fecha, [...(turnosPorDia.get(fecha) ?? []), turno])
-                }
-                return (
-                  <tr key={usuario.rut_usuario}>
-                    <td className="attendance-table__rut">{usuario.rut_usuario}</td>
-                    <th scope="row" className="attendance-table__nombre">{usuario.nombre_usuario}</th>
-                    {dias.map((dia) => (
-                      <CeldaAsistencia
-                        key={dia.fecha}
-                        dia={dia}
-                        turnos={turnosPorDia.get(dia.fecha) ?? []}
-                        esFuturo={dia.fecha > hoy}
-                        guardando={guardando}
-                        nombre={usuario.nombre_usuario}
-                        soloLectura={!puedeEditar}
-                        onAlternar={alternarTurno}
-                        onAbrir={() => setDiaAbierto({ rut: usuario.rut_usuario, nombre: usuario.nombre_usuario, dia })}
-                      />
-                    ))}
-                  </tr>
-                )
-              })}
+              usuarios.map((usuario) => (
+                <tr key={usuario.rut_usuario}>
+                  <td className="attendance-table__rut">{usuario.rut_usuario}</td>
+                  <th scope="row" className="attendance-table__nombre">{usuario.nombre_usuario}</th>
+                </tr>
+              ))}
           </tbody>
         </table>
+
+        <div className="attendance-dias">
+          <div className="attendance-mes">
+            <div className="month-picker">
+              <button type="button" onClick={() => cambiarMes(-1)} aria-label="Mes anterior">‹</button>
+              <span aria-live="polite">{nombreDelMes(mes)}</span>
+              <button type="button" onClick={() => cambiarMes(1)} aria-label="Mes siguiente">›</button>
+            </div>
+          </div>
+
+          <div className="attendance-table-scroll">
+            <table className="attendance-table">
+              <caption className="visually-hidden">Asistencia de {nombreDelMes(mes)}</caption>
+              <thead>
+                <tr className="attendance-table__fila-semana">
+                  {semanas.map((semana, i) => (
+                    <th scope="colgroup" colSpan={semana.length} className="attendance-table__semana" key={semana[0].fecha}>
+                      Semana {i + 1}
+                    </th>
+                  ))}
+                </tr>
+                <tr className="attendance-table__fila-dia">
+                  {dias.map((dia) => (
+                    <th
+                      scope="col"
+                      key={dia.fecha}
+                      className={`attendance-table__dia${dia.diaSemana === 1 ? ' inicio-semana' : ''}${dia.fecha === hoy ? ' is-hoy' : ''}`}
+                    >
+                      <span>{DIAS_CORTOS[dia.diaSemana - 1]}</span>
+                      <span>{dia.numero}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {estado === 'success' &&
+                  usuarios.map((usuario) => {
+                    // fecha ("AAAA-MM-DD") -> turnos de ese dia
+                    const turnosPorDia = new Map()
+                    for (const turno of usuario.turnos) {
+                      const fecha = turno.fecha.slice(0, 10)
+                      turnosPorDia.set(fecha, [...(turnosPorDia.get(fecha) ?? []), turno])
+                    }
+                    return (
+                      <tr key={usuario.rut_usuario}>
+                        {dias.map((dia) => (
+                          <CeldaAsistencia
+                            key={dia.fecha}
+                            dia={dia}
+                            turnos={turnosPorDia.get(dia.fecha) ?? []}
+                            esFuturo={dia.fecha > hoy}
+                            guardando={guardando}
+                            nombre={usuario.nombre_usuario}
+                            soloLectura={!puedeCorregirAsistencia}
+                            onAlternar={alternarTurno}
+                            onAbrir={() => setDiaAbierto({ rut: usuario.rut_usuario, nombre: usuario.nombre_usuario, dia })}
+                          />
+                        ))}
+                      </tr>
+                    )
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
+      {/* fuera de las tablas para no descuadrar las filas de ambos bloques */}
+      {estado === 'loading' && (
+        <p className="attendance-table__mensaje" role="status">Cargando asistencia...</p>
+      )}
+      {estado === 'success' && usuarios.length === 0 && (
+        <p className="attendance-table__mensaje">No hay staff registrado.</p>
+      )}
 
       <ul className="attendance-legend" aria-label="Simbología">
         <li><span className="attendance-legend__muestra is-presente">✓</span> Llegó a la hora</li>
-        <li><span className="attendance-legend__muestra is-parcial">a/b</span> Llegó a la hora, <em>a</em> de sus <em>b</em> turnos del día (cuando tiene 2 o más)</li>
-        <li><span className="attendance-legend__muestra is-turno" /> {puedeEditar ? 'Tiene turno (click para marcar)' : 'Tiene turno'}</li>
+        <li><span className="attendance-legend__muestra is-tarde">✓</span> Llegó tarde (más de 25 min)</li>
+        <li><span className="attendance-legend__muestra is-ausente" /> No registró llegada</li>
+        <li><span className="attendance-legend__muestra is-parcial">a/b</span> Registró llegada en <em>a</em> de sus <em>b</em> turnos del día (cuando tiene 2 o más)</li>
+        <li><span className="attendance-legend__muestra is-turno" /> {puedeCorregirAsistencia ? 'Turno aún sin llegada (click para corregir)' : 'Turno aún sin llegada'}</li>
         <li><span className="attendance-legend__muestra is-sin-turno" /> Sin turno</li>
       </ul>
 
@@ -189,19 +237,19 @@ export default function AttendanceSection({ cambiosTurnos }) {
           onClose={() => setDiaAbierto(null)}
         >
           <div className="turno-form">
-            <p>Marca los turnos a los que llegó a la hora:</p>
+            <p>Marca los turnos a los que llegó. Desmarcar borra la llegada registrada:</p>
             <ul className="attendance-turnos">
               {turnosDelDiaAbierto.map((turno) => (
                 <li key={turno.id}>
-                  <label className={turno.llego_a_la_hora ? 'is-presente' : undefined}>
+                  <label className={CLASE_POR_ESTADO[turno.estado]}>
                     {/* no se deshabilita mientras guarda para no perder el foco; el click repetido se ignora */}
                     <input
                       type="checkbox"
-                      checked={turno.llego_a_la_hora}
+                      checked={Boolean(turno.hora_llegada)}
                       onChange={() => !guardando.includes(turno.id) && alternarTurno(turno)}
                       aria-busy={guardando.includes(turno.id)}
                     />
-                    {describirHoras(turno)}
+                    {describirHoras(turno)} · {describirEstado(turno)}
                   </label>
                 </li>
               ))}
@@ -219,8 +267,8 @@ export default function AttendanceSection({ cambiosTurnos }) {
   )
 }
 
-// una celda por usuario y dia: solo se puede marcar en dias con turno de hoy o anteriores
-// con soloLectura (Voluntario) se muestra el mismo color y contenido, pero sin botón para hacer click
+// una celda por usuario y dia: solo se puede corregir en dias con turno de hoy o anteriores
+// con soloLectura (Veterinaria y Voluntario) se muestra el mismo color y contenido, pero sin botón para hacer click
 function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, soloLectura, onAlternar, onAbrir }) {
   const inicioSemana = dia.diaSemana === 1 ? ' inicio-semana' : ''
   const descripcion = `${nombre}, ${DIAS_CORTOS[dia.diaSemana - 1]} ${dia.numero}`
@@ -237,56 +285,50 @@ function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, soloLectura
     )
   }
 
-  // con un solo turno el click marca o desmarca directo
+  // con un solo turno el click corrige directo: borra la llegada o la deja como llegada a la hora
   if (turnos.length === 1) {
     const [turno] = turnos
+    const clase = `attendance-cell ${CLASE_POR_ESTADO[turno.estado]}${inicioSemana}`
+    const estado = `Turno ${describirHoras(turno)}: ${describirEstado(turno)}`
+    const marca = turno.hora_llegada ? '✓' : ''
     if (soloLectura) {
-      return (
-        <td
-          className={`attendance-cell ${turno.llego_a_la_hora ? 'is-presente' : 'is-turno'}${inicioSemana}`}
-          title={turno.llego_a_la_hora ? 'Llegó a la hora' : `Turno ${describirHoras(turno)}`}
-        >
-          {turno.llego_a_la_hora ? '✓' : ''}
-        </td>
-      )
+      return <td className={clase} title={estado}>{marca}</td>
     }
     return (
-      <td className={`attendance-cell ${turno.llego_a_la_hora ? 'is-presente' : 'is-turno'}${inicioSemana}`}>
+      <td className={clase}>
         <button
           type="button"
           onClick={() => onAlternar(turno)}
           disabled={guardando.includes(turno.id)}
-          aria-label={`${descripcion}, ${describirHoras(turno)}: ${turno.llego_a_la_hora ? 'llegó a la hora. Click para desmarcar' : 'marcar que llegó a la hora'}`}
-          title={turno.llego_a_la_hora ? 'Llegó a la hora (click para desmarcar)' : `Turno ${describirHoras(turno)}: click para marcar`}
+          aria-label={`${descripcion}, ${estado}. ${turno.hora_llegada ? 'Click para borrar la llegada' : 'Click para marcar que llegó a la hora'}`}
+          title={`${estado} (${turno.hora_llegada ? 'click para borrar la llegada' : 'click para marcar que llegó a la hora'})`}
         >
-          {turno.llego_a_la_hora ? '✓' : ''}
+          {marca}
         </button>
       </td>
     )
   }
 
   // con 2 o mas turnos se muestra a/b y el click abre el pop-up del dia
-  const presentes = turnos.filter((turno) => turno.llego_a_la_hora).length
-  const clase = presentes === turnos.length ? 'is-presente' : presentes > 0 ? 'is-parcial' : 'is-turno'
+  const llegadas = turnos.filter((turno) => turno.hora_llegada).length
+  const clase = `attendance-cell ${claseDelDia(turnos)}${inicioSemana}`
+  const resumen = `Registró llegada en ${llegadas} de ${turnos.length} turnos`
   if (soloLectura) {
     return (
-      <td
-        className={`attendance-cell ${clase}${inicioSemana}`}
-        title={`Llegó a la hora a ${presentes} de ${turnos.length} turnos`}
-      >
-        <span className="attendance-cell__conteo">{presentes}/{turnos.length}</span>
+      <td className={clase} title={resumen}>
+        <span className="attendance-cell__conteo">{llegadas}/{turnos.length}</span>
       </td>
     )
   }
   return (
-    <td className={`attendance-cell ${clase}${inicioSemana}`}>
+    <td className={clase}>
       <button
         type="button"
         onClick={onAbrir}
-        aria-label={`${descripcion}: llegó a la hora a ${presentes} de ${turnos.length} turnos. Click para marcar`}
-        title={`Llegó a la hora a ${presentes} de ${turnos.length} turnos (click para marcar)`}
+        aria-label={`${descripcion}: ${resumen.toLowerCase()}. Click para corregir`}
+        title={`${resumen} (click para corregir)`}
       >
-        <span className="attendance-cell__conteo">{presentes}/{turnos.length}</span>
+        <span className="attendance-cell__conteo">{llegadas}/{turnos.length}</span>
       </button>
     </td>
   )

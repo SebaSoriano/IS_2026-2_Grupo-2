@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
-import { getAdopciones, getAnimalesDisponibles } from '../services/api.js'
+import {
+  getAdopciones,
+  getSolicitudesAdopcion,
+  marcarAdoptado,
+  rechazarSolicitud,
+} from '../services/api.js'
+import { ESTADOS_SOLICITUD } from '../data/estados.js'
 import AdoptionForm from './AdoptionForm.jsx'
+import VisitaForm from './VisitaForm.jsx'
+import SolicitudExistenteForm from './SolicitudExistenteForm.jsx'
 import './AdoptionSection.css'
 import { usePermisos } from '../sesion/sesion.js'
 
@@ -10,33 +18,38 @@ function formatearFecha(valor) {
   return new Date(valor).toLocaleDateString('es-CL', { timeZone: 'UTC' })
 }
 
-// Por ahora el nombre del adoptante se guarda al inicio de observaciones_adoptante,
-// con el formato "Nombre: Carla Pérez | otras observaciones". Esta función lo extrae.
-function nombreAdoptante(adoptante) {
-  const texto = adoptante?.observaciones_adoptante ?? ''
-  if (!texto.startsWith('Nombre: ')) return '—'
-  return texto.slice('Nombre: '.length).split(' | ')[0]
+// Muestra fecha y hora (para la visita), ej: 20-11-2026, 15:30
+function formatearFechaHora(valor) {
+  if (!valor) return '—'
+  return new Date(valor).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' })
+}
+
+// Pide las dos listas al mismo tiempo. Está fuera del componente porque no usa su estado
+function pedirDatos() {
+  return Promise.all([getSolicitudesAdopcion(), getAdopciones()])
 }
 
 export default function AdoptionSection() {
-  // registrar una adopción es agregar un registro nuevo, así que lo pueden hacer todos los roles,
-  // también el Voluntario (en esta sección no hay botones de modificar ni eliminar)
-  const { puedeAgregar } = usePermisos()
-  // Qué tabla se ve: 'disponibles' o 'historial'
-  const [vista, setVista] = useState('disponibles')
-  const [animales, setAnimales] = useState([])
+  // Mirar lo pueden todos; ingresar, agendar, rechazar y marcar como adoptado solo el Admin
+  const { puedeGestionarAdopciones } = usePermisos()
+  // Qué tabla se ve: 'solicitudes' o 'historial'
+  const [vista, setVista] = useState('solicitudes')
+  const [solicitudes, setSolicitudes] = useState([])
   const [adopciones, setAdopciones] = useState([])
   const [estado, setEstado] = useState('cargando')
   const [errorCarga, setErrorCarga] = useState('')
+  // id_solicitud seleccionada (null = ninguna)
   const [seleccionadoId, setSeleccionadoId] = useState(null)
-  const [formularioAbierto, setFormularioAbierto] = useState(false)
+  // Qué popup está abierto: null, 'ingresar' o 'visita'
+  const [popup, setPopup] = useState(null)
+  const [trabajando, setTrabajando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
 
-  // Cargar las dos listas al mismo tiempo al entrar a la pestaña
+  // Cargar las dos listas al entrar a la pestaña
   useEffect(() => {
-    Promise.all([getAnimalesDisponibles(), getAdopciones()])
-      .then(([listaAnimales, listaAdopciones]) => {
-        setAnimales(listaAnimales)
+    pedirDatos()
+      .then(([listaSolicitudes, listaAdopciones]) => {
+        setSolicitudes(listaSolicitudes)
         setAdopciones(listaAdopciones)
         setEstado('listo')
       })
@@ -46,44 +59,92 @@ export default function AdoptionSection() {
       })
   }, [])
 
-  const animalSeleccionado =
-    animales.find((animal) => animal.id_animal === seleccionadoId) ?? null
+  const solicitudSeleccionada =
+    solicitudes.find((solicitud) => solicitud.id_solicitud === seleccionadoId) ?? null
+
+  // Vuelve a pedir las listas después de cualquier cambio
+  // (el backend cambia varias cosas a la vez: la solicitud, el animal y otras solicitudes)
+  async function recargar(textoExito) {
+    try {
+      const [listaSolicitudes, listaAdopciones] = await pedirDatos()
+      setSolicitudes(listaSolicitudes)
+      setAdopciones(listaAdopciones)
+      setSeleccionadoId(null)
+      setMensaje({ tipo: 'exito', texto: textoExito })
+    } catch {
+      setMensaje({ tipo: 'error', texto: 'El cambio se guardó, pero no se pudo actualizar la tabla. Recarga la página.' })
+    }
+  }
 
   function cambiarVista(nuevaVista) {
     setVista(nuevaVista)
     setMensaje(null)
-  }
-
-  function abrirFormulario() {
-    setMensaje(null)
-    setFormularioAbierto(true)
-  }
-
-  function cerrarFormulario() {
-    setFormularioAbierto(false)
-  }
-
-  // AdoptionForm llama a esta función cuando el backend registró la adopción
-  async function adopcionRegistrada() {
-    const animal = animalSeleccionado
-    setFormularioAbierto(false)
-
-    // El animal deja de estar disponible: se quita de la tabla
-    setAnimales(animales.filter((actual) => actual.id_animal !== animal.id_animal))
     setSeleccionadoId(null)
-    setMensaje({ tipo: 'exito', texto: `Adopción de ${animal.nombre_animal} registrada` })
+  }
 
-    // Se vuelve a pedir el historial para que aparezca la nueva adopción con todos sus datos
+  // Si se aprieta la misma solicitud, se deselecciona; si es otra, se selecciona esa
+  function alternarSeleccion(id) {
+    setSeleccionadoId(seleccionadoId === id ? null : id)
+  }
+
+  function abrirPopup(nombre) {
+    setMensaje(null)
+    setPopup(nombre)
+  }
+
+  // Los popups llaman a estas funciones cuando el backend guardó
+  function adoptanteIngresado() {
+    setPopup(null)
+    recargar('Adoptante ingresado: el animal quedó en proceso de adopción')
+  }
+
+  function solicitudIngresada() {
+    setPopup(null)
+    recargar('Solicitud ingresada: el animal quedó en proceso de adopción')
+  }
+
+  function visitaAgendada() {
+    setPopup(null)
+    recargar('Visita agendada: el animal quedó en proceso de adopción')
+  }
+
+  // Para "Rechazar" y "Marcar como adoptado": confirma, llama al backend y recarga
+  async function ejecutar(accion, pregunta, textoExito) {
+    if (!window.confirm(pregunta)) return
+    setMensaje(null)
+    setTrabajando(true)
     try {
-      const listaAdopciones = await getAdopciones()
-      setAdopciones(listaAdopciones)
-    } catch {
-      setMensaje({
-        tipo: 'error',
-        texto: 'La adopción se registró, pero no se pudo actualizar el historial. Recarga la página.',
-      })
+      await accion(solicitudSeleccionada.id_solicitud)
+      await recargar(textoExito)
+    } catch (error) {
+      setMensaje({ tipo: 'error', texto: error.message })
+    } finally {
+      setTrabajando(false)
     }
   }
+
+  function rechazar() {
+    const solicitud = solicitudSeleccionada
+    ejecutar(
+      rechazarSolicitud,
+      `¿Rechazar la solicitud de ${solicitud.adoptante.nombre_adoptante} por ${solicitud.animal.nombre_animal}?`,
+      'Solicitud rechazada',
+    )
+  }
+
+  function adoptar() {
+    const solicitud = solicitudSeleccionada
+    ejecutar(
+      marcarAdoptado,
+      `¿Confirmar que ${solicitud.adoptante.nombre_adoptante} adoptó a ${solicitud.animal.nombre_animal}?`,
+      `${solicitud.animal.nombre_animal} quedó registrado como adoptado`,
+    )
+  }
+
+  // Qué botones se pueden usar según el estado de la solicitud seleccionada
+  const estadoSeleccionada = solicitudSeleccionada?.estado
+  const sePuedeAgendar = estadoSeleccionada === 'pendiente' || estadoSeleccionada === 'en_proceso'
+  const sePuedeAdoptar = estadoSeleccionada === 'en_proceso'
 
   return (
     <>
@@ -93,12 +154,12 @@ export default function AdoptionSection() {
         aria-label="Acciones de adopción"
       >
         <button
-          className={`area-action${vista === 'disponibles' ? ' is-active' : ''}`}
+          className={`area-action${vista === 'solicitudes' ? ' is-active' : ''}`}
           type="button"
-          aria-pressed={vista === 'disponibles'}
-          onClick={() => cambiarVista('disponibles')}
+          aria-pressed={vista === 'solicitudes'}
+          onClick={() => cambiarVista('solicitudes')}
         >
-          Animales Disponibles
+          Solicitudes
         </button>
         <button
           className={`area-action${vista === 'historial' ? ' is-active' : ''}`}
@@ -108,21 +169,44 @@ export default function AdoptionSection() {
         >
           Adopciones Registradas
         </button>
-        {puedeAgregar && (
+
+        {puedeGestionarAdopciones && vista === 'solicitudes' && (
           <>
-          <button
-            className="area-action"
-            type="button"
-            onClick={abrirFormulario}
-            disabled={vista !== 'disponibles' || !animalSeleccionado}
-          >
-            Registrar Adopción
-          </button>
-          {vista === 'disponibles' && !animalSeleccionado && (
-            <p className="adoption-actions-help">
-              Selecciona un animal para registrar su adopción.
-            </p>
-          )}
+            <button className="area-action" type="button" onClick={() => abrirPopup('ingresar')}>
+              Ingresar Adoptante
+            </button>
+            <button className="area-action" type="button" onClick={() => abrirPopup('solicitud')}>
+              Ingresar Solicitud
+            </button>
+            <button
+              className="area-action"
+              type="button"
+              onClick={() => abrirPopup('visita')}
+              disabled={!sePuedeAgendar || trabajando}
+            >
+              {estadoSeleccionada === 'en_proceso' ? 'Cambiar Visita' : 'Agendar Visita'}
+            </button>
+            <button
+              className="area-action"
+              type="button"
+              onClick={rechazar}
+              disabled={!solicitudSeleccionada || trabajando}
+            >
+              Rechazar
+            </button>
+            <button
+              className="area-action"
+              type="button"
+              onClick={adoptar}
+              disabled={!sePuedeAdoptar || trabajando}
+            >
+              Marcar como Adoptado
+            </button>
+            {!solicitudSeleccionada && (
+              <p className="adoption-actions-help">
+                Selecciona una solicitud para agendar la visita, rechazarla o marcar la adopción.
+              </p>
+            )}
           </>
         )}
       </div>
@@ -140,52 +224,56 @@ export default function AdoptionSection() {
           </p>
         )}
 
-        {estado === 'listo' && vista === 'disponibles' && (
+        {estado === 'listo' && vista === 'solicitudes' && (
           <div className="adoption-table-scroll">
             <table className="adoption-table">
-              <caption>Animales disponibles para adopción</caption>
+              <caption>Solicitudes de adopción abiertas</caption>
               <thead>
                 <tr>
                   <th scope="col">Seleccionar</th>
-                  <th scope="col">ID</th>
-                  <th scope="col">Nombre</th>
+                  <th scope="col">Fecha</th>
+                  <th scope="col">Animal</th>
                   <th scope="col">Especie</th>
-                  <th scope="col">Edad</th>
-                  <th scope="col">Peso (kg)</th>
-                  <th scope="col">Vía de ingreso</th>
+                  <th scope="col">Adoptante</th>
+                  <th scope="col">Teléfono</th>
+                  <th scope="col">Correo</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col">Visita</th>
                   <th scope="col">Observaciones</th>
                 </tr>
               </thead>
               <tbody>
-                {animales.length === 0 ? (
+                {solicitudes.length === 0 ? (
                   <tr>
-                    <td className="adoption-table-empty" colSpan="8">
-                      No hay animales disponibles.
+                    <td className="adoption-table-empty" colSpan="10">
+                      No hay solicitudes abiertas.
                     </td>
                   </tr>
                 ) : (
-                  animales.map((animal) => (
+                  solicitudes.map((solicitud) => (
                     <tr
-                      key={animal.id_animal}
-                      className={animal.id_animal === seleccionadoId ? 'is-selected' : ''}
-                      onClick={() => setSeleccionadoId(animal.id_animal)}
+                      key={solicitud.id_solicitud}
+                      className={solicitud.id_solicitud === seleccionadoId ? 'is-selected' : ''}
+                      onClick={() => alternarSeleccion(solicitud.id_solicitud)}
                     >
                       <td>
                         <input
-                          type="radio"
-                          name="adopcion-animal-seleccionado"
-                          aria-label={`Seleccionar a ${animal.nombre_animal}`}
-                          checked={animal.id_animal === seleccionadoId}
-                          onChange={() => setSeleccionadoId(animal.id_animal)}
+                          type="checkbox"
+                          aria-label={`Seleccionar solicitud ${solicitud.id_solicitud}`}
+                          checked={solicitud.id_solicitud === seleccionadoId}
+                          onChange={() => alternarSeleccion(solicitud.id_solicitud)}
+                          onClick={(event) => event.stopPropagation()}
                         />
                       </td>
-                      <td>{animal.id_animal}</td>
-                      <td>{animal.nombre_animal}</td>
-                      <td>{animal.especie_animal}</td>
-                      <td>{animal.edad}</td>
-                      <td>{animal.peso_animal}</td>
-                      <td>{animal.via_ingreso}</td>
-                      <td>{animal.observaciones_animal || '—'}</td>
+                      <td>{formatearFecha(solicitud.fecha_solicitud)}</td>
+                      <td>{solicitud.animal.nombre_animal}</td>
+                      <td>{solicitud.animal.especie_animal}</td>
+                      <td>{solicitud.adoptante.nombre_adoptante ?? '—'}</td>
+                      <td>{solicitud.adoptante.telefono}</td>
+                      <td>{solicitud.adoptante.correo}</td>
+                      <td>{ESTADOS_SOLICITUD[solicitud.estado] ?? solicitud.estado}</td>
+                      <td>{formatearFechaHora(solicitud.fecha_visita)}</td>
+                      <td>{solicitud.adoptante.observaciones_adoptante || '—'}</td>
                     </tr>
                   ))
                 )}
@@ -223,7 +311,7 @@ export default function AdoptionSection() {
                       <td>{formatearFecha(adopcion.fecha_adopcion)}</td>
                       <td>{adopcion.animal?.nombre_animal ?? '—'}</td>
                       <td>{adopcion.animal?.especie_animal ?? '—'}</td>
-                      <td>{nombreAdoptante(adopcion.adoptante)}</td>
+                      <td>{adopcion.adoptante?.nombre_adoptante ?? '—'}</td>
                       <td>{adopcion.adoptante?.direccion ?? '—'}</td>
                       <td>{adopcion.adoptante?.telefono ?? '—'}</td>
                       <td>{adopcion.adoptante?.correo ?? '—'}</td>
@@ -237,11 +325,17 @@ export default function AdoptionSection() {
         )}
       </div>
 
-      {formularioAbierto && animalSeleccionado && (
-        <AdoptionForm
-          animal={animalSeleccionado}
-          onClose={cerrarFormulario}
-          onSaved={adopcionRegistrada}
+      {popup === 'ingresar' && (
+        <AdoptionForm onClose={() => setPopup(null)} onSaved={adoptanteIngresado} />
+      )}
+      {popup === 'solicitud' && (
+        <SolicitudExistenteForm onClose={() => setPopup(null)} onSaved={solicitudIngresada} />
+      )}
+      {popup === 'visita' && solicitudSeleccionada && (
+        <VisitaForm
+          solicitud={solicitudSeleccionada}
+          onClose={() => setPopup(null)}
+          onSaved={visitaAgendada}
         />
       )}
     </>

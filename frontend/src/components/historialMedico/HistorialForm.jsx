@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarHistorial, crearHistorial, getAnimales } from '../services/api.js'
+import { actualizarHistorial, crearHistorial } from '../../services/api.js'
+import { hoyIso } from '../../utils/fechas.js'
+import Autocompletar from '../Autocompletar.jsx'
+import CampoFecha from '../fecha/CampoFecha.jsx'
+import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
-import './AnimalForm.css'
+import '../AnimalForm.css'
+// tamaño y orden de los campos propios de esta ventana (más ancha que la de animales)
+import './HistorialForm.css'
 
 // valores iniciales del formulario
 const formularioVacio = {
   id_animal: '',
+  // texto escrito en el campo Animal; id_animal se llena recién al elegir un animal de la lista
+  nombre_animal: '',
   tratamiento: '',
   fecha_tratamiento: '',
   veterinario: '',
@@ -17,16 +25,13 @@ const formularioVacio = {
 function formularioDesdeRegistro(registro) {
   return {
     id_animal: String(registro.id_animal),
+    nombre_animal: registro.animal.nombre_animal,
     tratamiento: registro.tratamiento,
     fecha_tratamiento: registro.fecha_tratamiento.slice(0, 10),
     veterinario: registro.veterinario,
     observaciones: registro.observaciones ?? '',
   }
 }
-
-// fecha de hoy en formato AAAA-MM-DD, para que el calendario no deje elegir días futuros.
-// el formato 'en-CA' (Canadá) escribe las fechas justo como AAAA-MM-DD.
-const hoy = () => new Date().toLocaleDateString('en-CA')
 
 // popup para registrar o modificar un registro médico.
 // Si recibe un registro, se está modificando; si recibe null, se está creando uno nuevo.
@@ -36,8 +41,8 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
   const [formulario, setFormulario] = useState(
     esEdicion ? formularioDesdeRegistro(registro) : formularioVacio,
   )
-  // Animales para la lista desplegable (el registro se asocia a un animal por su id)
-  const [animales, setAnimales] = useState([])
+  // Listas para la búsqueda con predicción de los campos Animal y Veterinario
+  const { opcionesAnimales, opcionesVeterinarios } = useSugerenciasHistorial()
   const [errores, setErrores] = useState({})
   const [mensajeError, setMensajeError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -53,16 +58,22 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
     }
   }, [])
 
-  // Se cargan los animales una vez, para llenar la lista desplegable
-  useEffect(() => {
-    getAnimales()
-      .then(setAnimales)
-      .catch(() => setMensajeError('No se pudieron cargar los animales'))
-  }, [])
-
   function cambiarCampo(event) {
     setFormulario({ ...formulario, [event.target.name]: event.target.value })
   }
+
+  // Cambia varios campos a la vez sin tocar los demás (lo usan los Autocompletar)
+  function cambiarValores(cambios) {
+    setFormulario({ ...formulario, ...cambios })
+  }
+
+  // El registro se asocia a un animal por su id, no por su nombre (puede haber dos "Toby").
+  // Por eso, si se escribió algo pero no se eligió un animal de la lista, se muestra un error
+  // y el formulario no se puede enviar.
+  const errorAnimal =
+    formulario.nombre_animal.trim() !== '' && formulario.id_animal === ''
+      ? 'Elige un animal de la lista'
+      : ''
 
   function cerrar() {
     if (enviando) return
@@ -115,7 +126,7 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
 
   return (
     <dialog
-      className="animal-dialog"
+      className="animal-dialog historial-dialog"
       ref={dialogRef}
       aria-labelledby="historial-dialog-title"
       onCancel={(event) => {
@@ -146,18 +157,61 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
           </p>
         )}
 
-        <label className="animal-form__field">
-          Animal
-          <select name="id_animal" value={formulario.id_animal} onChange={cambiarCampo} required>
-            <option value="">Selecciona un animal</option>
-            {animales.map((animal) => (
-              <option value={animal.id_animal} key={animal.id_animal}>
-                {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
-              </option>
-            ))}
-          </select>
-          {errores.id_animal && <span className="animal-form__error">{errores.id_animal}</span>}
-        </label>
+        {/* Animal, fecha y veterinario en una misma fila (ver HistorialForm.css) */}
+        <div className="historial-form__fila-datos">
+          <label className="animal-form__field">
+            Animal
+            {/* Al escribir se borra el id elegido antes; al elegir de la lista se guardan
+                el id (lo que se manda al backend) y el nombre (lo que se ve en el campo) */}
+            <Autocompletar
+              name="nombre_animal"
+              opciones={opcionesAnimales}
+              texto={formulario.nombre_animal}
+              onCambiarTexto={(texto) => cambiarValores({ nombre_animal: texto, id_animal: '' })}
+              onElegir={(opcion) =>
+                cambiarValores({ nombre_animal: opcion.texto, id_animal: String(opcion.valor) })
+              }
+              placeholder="Escribe el nombre del animal"
+              error={errorAnimal}
+              required
+            />
+            {errores.id_animal && <span className="animal-form__error">{errores.id_animal}</span>}
+          </label>
+
+          <label className="animal-form__field">
+            Fecha
+            {/* Se escribe como DD-MM-AAAA, pero se guarda en formulario como AAAA-MM-DD.
+                max={hoyIso()} no deja elegir días futuros */}
+            <CampoFecha
+              name="fecha_tratamiento"
+              value={formulario.fecha_tratamiento}
+              onChange={cambiarCampo}
+              max={hoyIso()}
+              required
+            />
+            {errores.fecha_tratamiento && (
+              <span className="animal-form__error">{errores.fecha_tratamiento}</span>
+            )}
+          </label>
+
+          <label className="animal-form__field">
+            Veterinario
+            {/* Sugiere los veterinarios ya registrados, pero se puede escribir uno nuevo */}
+            <Autocompletar
+              name="veterinario"
+              opciones={opcionesVeterinarios}
+              texto={formulario.veterinario}
+              onCambiarTexto={(texto) => cambiarValores({ veterinario: texto })}
+              onElegir={(opcion) => cambiarValores({ veterinario: opcion.texto })}
+              placeholder="Ej: Dra. Sofía González"
+              maxLength={100}
+              required
+            />
+            {errores.veterinario && (
+              <span className="animal-form__error">{errores.veterinario}</span>
+            )}
+          </label>
+        </div>
 
         <label className="animal-form__field">
           Tipo de tratamiento
@@ -175,40 +229,6 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
             <span className="animal-form__error">{errores.tratamiento}</span>
           )}
         </label>
-
-        <div className="animal-form__row">
-          <label className="animal-form__field">
-            Fecha
-            <input
-              name="fecha_tratamiento"
-              type="date"
-              value={formulario.fecha_tratamiento}
-              onChange={cambiarCampo}
-              max={hoy()}
-              required
-            />
-            {errores.fecha_tratamiento && (
-              <span className="animal-form__error">{errores.fecha_tratamiento}</span>
-            )}
-          </label>
-
-          <label className="animal-form__field">
-            Veterinario
-            <input
-              name="veterinario"
-              type="text"
-              value={formulario.veterinario}
-              onChange={cambiarCampo}
-              placeholder="Ej: Dra. Sofía González"
-              minLength={2}
-              maxLength={100}
-              required
-            />
-            {errores.veterinario && (
-              <span className="animal-form__error">{errores.veterinario}</span>
-            )}
-          </label>
-        </div>
 
         {/* Espacio reservado para los insumos: se habilita cuando la base de datos
             registre qué insumos se usaron en cada tratamiento */}

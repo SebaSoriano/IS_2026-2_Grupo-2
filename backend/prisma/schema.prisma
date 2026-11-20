@@ -65,7 +65,8 @@ model Horario{
 // horario_id es el dia de la semana de la fecha (lo calcula el backend), sirve para agrupar en el horario semanal
 // hora_inicio es el bloque de una hora en que llega (ej: "08:00")
 // hora_fin es la hora en que se va, es opcional (si no viene, el turno dura solo ese bloque)
-// llego_a_la_hora es la asistencia del turno (por ahora no se guarda tarde ni ausente)
+// hora_llegada es la hora ("HH:MM") en que la persona apreto "Llegué"; null si aun no registra su llegada
+// si llego a la hora, tarde o no vino se calcula con hora_llegada (ver estadoAsistencia en turno.service.js)
 model Turno {
   id Int @id @default(autoincrement())
   rut_usuario String
@@ -73,7 +74,7 @@ model Turno {
   horario_id Int
   hora_inicio String @db.VarChar(5)
   hora_fin String? @db.VarChar(5)
-  llego_a_la_hora Boolean @default(false)
+  hora_llegada String? @db.VarChar(5)
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
   horario Horario @relation(fields: [horario_id], references: [id])
 
@@ -101,9 +102,25 @@ model animales {
   especie_animal        String            @db.VarChar(100)
   observaciones_animal  String?
   foto_animal           String?           @db.VarChar(255)
+  // disponible, en_proceso (de adopción), adoptado o fallecido
+  estado_animal         EstadoAnimal      @default(disponible)
 
   historial historial_medico[]
   adopciones adopciones[]
+  // galería de fotos del animal (foto_animal sigue siendo la portada)
+  fotos fotos_animal[]
+  // solicitudes de adopción que se hicieron por este animal
+  solicitudes solicitudes_adopcion[]
+}
+
+// Fotos de cada animal. Un animal puede tener varias (carrusel).
+model fotos_animal {
+  id_foto       Int       @id @default(autoincrement())
+  ruta          String    @db.VarChar(255)
+  fecha_subida  DateTime  @default(now())
+  id_animal     Int
+  // onDelete: Cascade → si se elimina el animal, se eliminan también sus filas de fotos
+  animal        animales  @relation(fields: [id_animal], references: [id_animal], onDelete: Cascade)
 }
 
 enum TipoDonacion {
@@ -156,12 +173,48 @@ model donaciones {
 
 model adoptante {
   id_adoptante              Int         @id @default(autoincrement())
+  // opcional en la base de datos porque los adoptantes antiguos no lo tenían; la API lo exige
+  nombre_adoptante          String?     @db.VarChar(100)
   direccion                 String
   telefono                  String
   correo                    String
   fecha_nacimiento          DateTime
   observaciones_adoptante   String?
   adopciones adopciones[]
+  solicitudes solicitudes_adopcion[]
+}
+
+// Solicitud de adopción: une a un adoptante con el animal que le interesa
+// y guarda en qué parte del proceso va.
+model solicitudes_adopcion {
+  id_solicitud     Int              @id @default(autoincrement())
+  fecha_solicitud  DateTime         @default(now())
+  estado           EstadoSolicitud  @default(pendiente)
+  // hora de la visita al refugio (se completa al agendarla)
+  fecha_visita     DateTime?
+
+  id_animal        Int
+  animal           animales         @relation(fields: [id_animal], references: [id_animal])
+
+  id_adoptante     Int
+  adoptante        adoptante        @relation(fields: [id_adoptante], references: [id_adoptante])
+}
+
+// Estados de un animal
+enum EstadoAnimal {
+  disponible
+  en_proceso
+  adoptado
+  fallecido
+}
+
+// Estados de una solicitud de adopción:
+// pendiente (recién llegó), en_proceso (visita agendada o ingresada a mano), rechazada, adoptada
+enum EstadoSolicitud {
+  pendiente
+  en_proceso
+  rechazada
+  adoptada
 }
 
 model adopciones {
