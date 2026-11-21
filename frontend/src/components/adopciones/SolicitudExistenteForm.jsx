@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { getAdoptantes, getAnimales, registrarSolicitudExistente } from '../services/api.js'
+import Modal from '../../schedule/Modal.jsx'
+import { getAdoptantes, getAnimales, registrarSolicitudExistente } from '../../services/api.js'
 // usa los estilos del formulario de donaciones (donation-form, donation-field)
-import './DonationForm.css'
+import '../DonationForm.css'
 
 // Popup "Ingresar solicitud": elige un adoptante que ya está en la base de datos
 // y un animal disponible, e inicia el proceso de adopción (queda "en proceso").

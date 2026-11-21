@@ -4,13 +4,13 @@ import {
   getSolicitudesAdopcion,
   marcarAdoptado,
   rechazarSolicitud,
-} from '../services/api.js'
-import { ESTADOS_SOLICITUD } from '../data/estados.js'
+} from '../../services/api.js'
+import { ESTADOS_SOLICITUD } from '../../data/estados.js'
 import AdoptionForm from './AdoptionForm.jsx'
 import VisitaForm from './VisitaForm.jsx'
 import SolicitudExistenteForm from './SolicitudExistenteForm.jsx'
 import './AdoptionSection.css'
-import { usePermisos } from '../sesion/sesion.js'
+import { usePermisos } from '../../sesion/sesion.js'
 
 // Muestra una fecha de la base de datos como dd-mm-aaaa
 function formatearFecha(valor) {

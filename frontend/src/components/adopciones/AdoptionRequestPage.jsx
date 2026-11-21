@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { enviarSolicitudAdopcion, getAnimalParaAdoptar } from '../services/api.js'
+import { enviarSolicitudAdopcion, getAnimalParaAdoptar } from '../../services/api.js'
 import './AdoptionRequestPage.css'
 
 // Campos del formulario: los datos de la tabla "adoptante"

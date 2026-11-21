@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { VIAS_DE_INGRESO } from '../data/viasIngreso.js'
-import { ESTADOS_ANIMAL } from '../data/estados.js'
+import { VIAS_DE_INGRESO } from '../../data/viasIngreso.js'
+import { ESTADOS_ANIMAL } from '../../data/estados.js'
 
 // Valores iniciales: todos vacíos significa "sin filtros"
 const filtrosVacios = {

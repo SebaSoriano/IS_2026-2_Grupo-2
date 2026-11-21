@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { eliminarFotoAnimal } from '../services/api.js'
+import Modal from '../../schedule/Modal.jsx'
+import { eliminarFotoAnimal } from '../../services/api.js'
 import './AnimalCarrusel.css'
 
 // Popup con las fotos de un animal: una foto grande, flechas para avanzar/retroceder,
