@@ -118,15 +118,21 @@ export default function PublicPage() {
                   )}
                 </div>
                 <div className="pet-card__details">
-                  <h3>{animal.nombre_animal}</h3>
-                  <button
-                    className="pet-card__details-button"
-                    type="button"
-                    aria-haspopup="dialog"
-                    onClick={() => setAnimalDetalles(animal)}
-                  >
-                    Ver detalles
-                  </button>
+                                    <h3>{animal.nombre_animal}</h3>
+                  <div className="pet-card__actions">
+                    <button
+                      className="pet-card__details-button"
+                      type="button"
+                      aria-haspopup="dialog"
+                      onClick={() => setAnimalDetalles(animal)}
+                    >
+                      Ver detalles
+                    </button>
+                    {/* Lleva al formulario de adopción con este animal ya elegido */}
+                    <a className="pet-card__adopt-button" href={`/adoptar?animal=${animal.id_animal}`}>
+                      Quiero adoptar
+                    </a>
+                  </div>
                 </div>
               </article>
             );
@@ -170,6 +176,11 @@ export default function PublicPage() {
                 </dd>
               </div>
             </dl>
+          </div>
+          <div className="modal__actions">
+            <a className="pet-card__adopt-button" href={`/adoptar?animal=${animalDetalles.id_animal}`}>
+              Quiero adoptar a {animalDetalles.nombre_animal}
+            </a>
           </div>
         </Modal>
       )}
