@@ -31,7 +31,7 @@ function pedirDatos() {
 
 export default function AdoptionSection() {
   // Mirar lo pueden todos; ingresar, agendar, rechazar y marcar como adoptado solo el Admin
-  const { puedeGestionarAdopciones } = usePermisos()
+  const { puedeAgregar, puedeGestionarAdopciones } = usePermisos()
   // Qué tabla se ve: 'solicitudes' o 'historial'
   const [vista, setVista] = useState('solicitudes')
   const [solicitudes, setSolicitudes] = useState([])
@@ -170,7 +170,8 @@ export default function AdoptionSection() {
           Adopciones Registradas
         </button>
 
-        {puedeGestionarAdopciones && vista === 'solicitudes' && (
+        {/* Ingresar adoptantes y solicitudes lo pueden hacer todos los roles */}
+        {puedeAgregar && vista === 'solicitudes' && (
           <>
             <button className="area-action" type="button" onClick={() => abrirPopup('ingresar')}>
               Ingresar Adoptante
@@ -178,6 +179,12 @@ export default function AdoptionSection() {
             <button className="area-action" type="button" onClick={() => abrirPopup('solicitud')}>
               Ingresar Solicitud
             </button>
+          </>
+        )}
+
+        {/* Agendar, rechazar y marcar como adoptado es solo del Admin */}
+        {puedeGestionarAdopciones && vista === 'solicitudes' && (
+          <>
             <button
               className="area-action"
               type="button"
