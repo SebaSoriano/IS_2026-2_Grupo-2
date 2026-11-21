@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import multer from 'multer';
 
 export class HttpError extends Error {
@@ -9,8 +8,7 @@ export class HttpError extends Error {
 }
 
 export const errorHandler = (err, req, res, next) => {
-    console.error(err);
-
+    //JSON mal formado en el body (lo lanza express.json())
     if (err.type === 'entity.parse.failed') {
         return res.status(400).json({ error: 'El JSON enviado está mal formado.' });
     }
@@ -28,11 +26,6 @@ export const errorHandler = (err, req, res, next) => {
             return res.status(400).json({ error: 'Debe enviar una sola foto en el campo "foto"' });
         }
         return res.status(400).json({ error: `Error al subir el archivo: ${err.message}` });
-    }
-
-    //JSON mal formado en el body (lo lanza express.json())
-    if (err.type === 'entity.parse.failed') {
-        return res.status(400).json({ error: 'El cuerpo de la peticion no es un JSON valido' });
     }
 
     //Errores de Prisma (base de datos)

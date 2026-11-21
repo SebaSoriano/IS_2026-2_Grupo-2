@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { getUsuarios } from '../services/api.js'
+import { getUsuariosHorario } from '../services/api.js'
 
 // pasa el texto a minusculas y sin tildes para comparar ("jose" encuentra a "José" y "JOSÉ")
 const normalizar = (texto) =>
@@ -28,7 +28,7 @@ export default function UserSearch({ usuario, onSelect }) {
 
   useEffect(() => {
     let vigente = true
-    getUsuarios()
+    getUsuariosHorario()
       .then((data) => vigente && setUsuarios(data))
       .catch((err) => vigente && setError(err.message))
       .finally(() => vigente && setCargando(false))

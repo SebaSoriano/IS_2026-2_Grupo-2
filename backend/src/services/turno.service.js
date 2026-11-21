@@ -1,14 +1,11 @@
 //este import hace que se ocupe una sola instancia
 import prisma from '../config/prisma.js';
 import { usuarioPublico } from './usuario.select.js';
-import { obtenerUsuarioPorRut } from './usuario.service.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 import { ahoraEnChile, diaDelHorario, hoy } from '../utils/fechas.js';
 import { ROLES } from '../config/roles.js';
 
 const incluirTurno = { usuario: usuarioPublico, dia_semana: true };
-// ordena por fecha y luego por hora de llegada
-const ordenTurnos = [{ fecha: 'asc' }, { hora_inicio: 'asc' }];
 
 // convierte "08:00" en 8 para poder comparar las horas
 const hora = (texto) => Number(texto.slice(0, 2));
@@ -56,27 +53,6 @@ export const crearTurno = async (data, sesion) => {
     return prisma.turno.create({
         data: { ...data, dia_semana_id: diaDelHorario(data.fecha) },
         include: incluirTurno,
-    });
-};
-
-// service para obtener todos los turnos
-export const obtenerTurnos = ( ) => {
-    return prisma.turno.findMany({
-        include: incluirTurno,
-        orderBy: ordenTurnos,
-    });
-}
-
-// service para obtener los turnos de un usuario por rut
-// si el usuario no existe se lanza un 404 que responde error.middleware.js
-export const obtenerTurnosPorRut = async (rut) => {
-    const usuario = await obtenerUsuarioPorRut(rut);
-    if (!usuario) throw new HttpError(404, 'Usuario no encontrado');
-
-    return prisma.turno.findMany({
-        where: { rut_usuario: rut },
-        include: incluirTurno,
-        orderBy: ordenTurnos,
     });
 };
 
@@ -177,15 +153,20 @@ export const registrarLlegada = async (sesion) => {
 
 // service para que el Admin corrija la asistencia a mano (ej: alguien olvido apretar "Llegué")
 // llego = true la deja como llegada a la hora (con la hora de inicio del turno), false borra la llegada
-// solo se puede en turnos de hoy o de dias que ya pasaron
+// solo se puede en turnos que ya pasaron, o de hoy desde que se abre la ventana de "Llegué"
 export const marcarAsistenciaTurno = async (id, { llego }) => {
     const turno = await obtenerTurnoPorId(id);
-    if (turno.fecha > hoy()) throw new HttpError(400, 'No se puede marcar asistencia en un turno que aún no llega');
+    const ahora = ahoraEnChile();
+    if (turno.fecha > ahora.fecha) throw new HttpError(400, 'No se puede marcar asistencia en un turno que aún no llega');
+    const esDeHoy = turno.fecha.getTime() === ahora.fecha.getTime();
+    if (esDeHoy && minutos(ahora.hora) < minutos(turno.hora_inicio) - ANTICIPACION_MINUTOS) {
+        throw new HttpError(400, 'No se puede marcar asistencia en un turno que aún no empieza');
+    }
 
     const actualizado = await prisma.turno.update({
         where: { id },
         data: { hora_llegada: llego ? turno.hora_inicio : null },
         include: incluirTurno,
     });
-    return conEstado(actualizado);
+    return conEstado(actualizado, ahora);
 };

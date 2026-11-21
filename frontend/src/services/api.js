@@ -149,9 +149,16 @@ export async function getHorarios(semana) {
 }
 
 // todos los usuarios ordenados por nombre, para elegir a quien se le asigna un turno
-//export function getUsuarios() {
-//  return getJson('/horarios/usuarios')
-//}
+// solo trae rut, nombre y correo (no los datos personales de /usuarios)
+export async function getUsuariosHorario() {
+  const usuarios = await getJson('/horarios/usuarios')
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de usuarios no es válida.')
+  }
+
+  return usuarios
+}
 
 export function crearTurno(turno) {
   return postJson('/turnos', turno)
