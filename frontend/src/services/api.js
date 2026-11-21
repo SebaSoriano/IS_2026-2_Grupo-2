@@ -124,6 +124,29 @@ export async function getAnimales(filtros = {}) {
   return animales
 }
 
+export async function getAnimalesPublicos() {
+  const response = await fetch(`${API_BASE_URL}/animalesPublicos/animales`, {
+    credentials: 'omit',
+  })
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('application/json')) {
+    throw new Error('La API devolvió una respuesta que no es JSON.')
+  }
+
+  const animales = await response.json()
+
+  if (!response.ok) {
+    throw new Error(animales.error ?? `Error HTTP ${response.status}`)
+  }
+
+  if (!Array.isArray(animales)) {
+    throw new Error('La respuesta de la API pública de animales no es válida.')
+  }
+
+  return animales
+}
+
 export function actualizarAnimal(id, animal) {
   return sendJson('PUT', `/animales/${id}`, animal)
 }
@@ -156,9 +179,16 @@ export async function getHorarios(semana) {
 }
 
 // todos los usuarios ordenados por nombre, para elegir a quien se le asigna un turno
-//export function getUsuarios() {
-//  return getJson('/horarios/usuarios')
-//}
+// solo trae rut, nombre y correo (no los datos personales de /usuarios)
+export async function getUsuariosHorario() {
+  const usuarios = await getJson('/horarios/usuarios')
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de usuarios no es válida.')
+  }
+
+  return usuarios
+}
 
 export function crearTurno(turno) {
   return postJson('/turnos', turno)

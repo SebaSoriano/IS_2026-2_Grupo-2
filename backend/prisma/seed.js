@@ -23,7 +23,7 @@ async function main() {
     await prisma.cuenta_transferencia.deleteMany();
     await prisma.historial_medico.deleteMany();
     await prisma.agendamiento.deleteMany();
-    await prisma.horario.deleteMany();
+    await prisma.diaSemana.deleteMany();
     await prisma.insumo.deleteMany();
     await prisma.animales.deleteMany();
     await prisma.adoptante.deleteMany();
@@ -52,7 +52,7 @@ async function main() {
     // horario estatico: el id identifica el dia de la semana (1 = Lunes ... 7 = Domingo)
     const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
     for (const [i, dia] of dias.entries()) {
-        await prisma.horario.upsert({
+        await prisma.diaSemana.upsert({
             where: { id: i + 1 },
             update: { dia },
             create: { id: i + 1, dia },
@@ -98,8 +98,8 @@ async function main() {
     const turnos = [];
     for (let dia = -21; dia <= 21; dia++) {
         const fecha = new Date(hoyUTC + dia * UN_DIA);
-        // horario_id es el dia de la semana de la fecha (1 = Lunes ... 7 = Domingo)
-        const horario_id = fecha.getUTCDay() || 7;
+        // dia_semana_id es el dia de la semana de la fecha (1 = Lunes ... 7 = Domingo)
+        const dia_semana_id = fecha.getUTCDay() || 7;
         for (const rut_usuario of rutUsuarios) {
             // cada usuario se anota mas o menos un tercio de los dias
             if (faker.number.int({ min: 1, max: 3 }) !== 1) continue;
@@ -113,7 +113,7 @@ async function main() {
                 turnos.push({
                     rut_usuario,
                     fecha,
-                    horario_id,
+                    dia_semana_id,
                     hora_inicio: hora(inicio),
                     // a veces se registra solo la llegada (hora_fin null)
                     hora_fin: faker.datatype.boolean() ? hora(inicio + faker.number.int({ min: 1, max: 2 })) : null,

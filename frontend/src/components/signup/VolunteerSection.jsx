@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { eliminarUsuario, getUsuarios } from '../services/api.js'
-import { nombreDelRol } from '../data/roles.js'
+import { eliminarUsuario, getUsuarios } from '../../services/api.js'
+import { nombreDelRol } from '../../data/roles.js'
 import VolunteerForm from './VolunteerForm.jsx'
 import './VolunteerSection.css'
-import { usePermisos } from '../sesion/sesion.js'
+import { usePermisos } from '../../sesion/sesion.js'
 
 // Muestra una fecha de la base de datos como dd-mm-aaaa
 function formatearFecha(valor) {

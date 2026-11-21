@@ -4,14 +4,6 @@ import { usuarioPublico } from './usuario.select.js';
 import bcrypt from 'bcryptjs';
 import { HttpError } from '../middlewares/error.middleware.js';
 
-// service para obtener un usuario por rut, sin la contrasena
-export const obtenerUsuarioPorRut = (rut) => {
-    return prisma.usuario.findUnique({
-        where: { rut_usuario: rut },
-        select: usuarioPublico.select,
-    });
-};
-
 // service para listar todos los usuarios, ordenados por nombre para mostrarlos en el selector de turnos
 export const listarUsuarios = () => {
     return prisma.usuario.findMany({
@@ -41,6 +33,26 @@ export async function obtenerUsuarios() {
 
 // Modificar un usuario
 export async function actualizarUsuario(rut, datos) {
+  // Si viene un rol, no se puede convertir a nadie en Admin.
+  // (Si el usuario YA era Admin y se deja igual, sí se permite: el formulario siempre envía el rol)
+  if (datos.rol_id !== undefined) {
+    const rol = await prisma.rol.findUnique({ where: { id: datos.rol_id } });
+    if (!rol) {
+      throw new HttpError(400, 'El rol indicado no existe');
+    }
+    if (rol.nombre === ROLES.ADMIN) {
+      const usuario = await prisma.usuario.findUnique({
+        where: { rut_usuario: rut },
+        select: { rol_id: true },
+      });
+      if (usuario === null) {
+        throw new HttpError(404, 'Voluntario no encontrado');
+      }
+      if (usuario.rol_id !== datos.rol_id) {
+        throw new HttpError(403, 'No se puede asignar el rol Admin a otro usuario');
+      }
+    }
+  }
   // Si viene una contraseña nueva, se encripta antes de guardarla
   if (datos.contrasena !== undefined) {
     datos.contrasena = await bcrypt.hash(datos.contrasena, 10);

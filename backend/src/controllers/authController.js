@@ -4,6 +4,7 @@ import prisma from '../config/prisma.js';
 import bcrypt from "bcryptjs"; // npm install bcrypt
 import { firmarToken } from '../utils/jwt.js';
 import { HttpError } from '../middlewares/error.middleware.js';
+import { ROLES } from '../config/roles.js';
 import {
     COOKIE_NAME,
     DURACION_SESION,
@@ -21,7 +22,15 @@ const register = async (req, res) => {
         fecha_nacimiento,
         contrasena,
         rol_id }  = req.body;
-    
+
+    // El rol debe existir, y no se pueden crear cuentas de Admin desde la página
+    const rol = await prisma.rol.findUnique({ where: { id: rol_id } });
+    if (!rol) {
+        throw new HttpError(400, 'El rol indicado no existe');
+    }
+    if (rol.nombre === ROLES.ADMIN) {
+        throw new HttpError(403, 'No se pueden crear usuarios con rol Admin');
+    }
     // Se encripta la contraseña con hashing
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(contrasena, salt);

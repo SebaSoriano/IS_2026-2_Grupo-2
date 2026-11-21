@@ -249,8 +249,27 @@ export async function eliminarFotoAnimal(id, idFoto) {
     }
   });
 
-  // El archivo se borra del disco después de que la base de datos quedó bien
-  await borrarArchivoFoto(foto.ruta);
-
+  // Borrar del disco la foto anterior si tenía alguna
+  await borrarArchivoFoto(animal.foto_animal);
   return buscarAnimalConFotos(id);
+}
+
+export async function getAnimalesPublicos() {
+  return prisma.animales.findMany({
+    // Una mascota está disponible si no tiene registros relacionados en "adopciones".
+    where: {
+      estado_animal: 'disponible',
+    },
+    // Devolvemos solo la información necesaria para las tarjetas públicas.
+    select: {
+      id_animal: true,
+      nombre_animal: true,
+      especie_animal: true,
+      edad: true,
+      peso_animal: true,
+      foto_animal: true,
+    },
+    // Muestra primero las mascotas registradas más recientemente.
+    orderBy: { id_animal: 'desc' },
+  });
 }
