@@ -5,11 +5,6 @@
   align-items: flex-start;
 }
 
-.area-action:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 .schedule-table-container {
   flex: 1;
   min-width: 0;
@@ -726,19 +721,16 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.attendance p {
-  margin: 0;
-}
-
-/* alturas compartidas: las filas de las dos tablas (staff y días) deben medir lo mismo para quedar alineadas */
-.attendance {
+  /* alturas compartidas: las filas de las dos tablas (staff y días) deben medir lo mismo para quedar alineadas */
   --asistencia-mes: 52px;
   --asistencia-semana: 34px;
   --asistencia-dia: 48px;
   --asistencia-fila: 44px;
   --asistencia-borde: #b3d4d4;
+}
+
+.attendance p {
+  margin: 0;
 }
 
 /* bloque 1 (staff) a la izquierda y bloque 2 (mes + días) a la derecha */

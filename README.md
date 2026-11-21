@@ -216,8 +216,6 @@ Los errores responden JSON con la forma `{ "error": "mensaje" }`. Cuando falla l
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/turnos` | Lista todos los turnos, ordenados por día y hora |
-| GET | `/api/turnos/:rut` | Turnos de un usuario (`404` si el usuario no existe) |
 | POST | `/api/turnos` | Asigna un usuario a un bloque horario de un día |
 | PUT | `/api/turnos/:id` | Modifica un turno: usuario, día u horas (basta con enviar los campos que cambian) |
 | DELETE | `/api/turnos/:id` | Elimina un turno |

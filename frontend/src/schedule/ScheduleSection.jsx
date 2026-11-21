@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { scheduleActions } from '../data/scheduleActions.js'
 import {
   actualizarTurno,
@@ -118,13 +118,19 @@ export default function ScheduleSection() {
     setVista(vistaDesdeRuta())
   }
 
+  // numero de la ultima carga pedida: si llega la respuesta de una carga anterior, se descarta
+  const ultimaCarga = useRef(0)
+
   const cargarHorarios = useCallback(() => {
+    const carga = ++ultimaCarga.current
     return getHorarios(semana)
       .then((data) => {
+        if (carga !== ultimaCarga.current) return
         setHorarios(data)
         setEstado('success')
       })
       .catch((error) => {
+        if (carga !== ultimaCarga.current) return
         setErrorCarga(error.message)
         setEstado('error')
       })

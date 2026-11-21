@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getAsistencias, marcarAsistenciaTurno } from '../services/api.js'
 import Modal from './Modal.jsx'
 import { usePermisos } from '../sesion/sesion.js'
@@ -15,6 +15,12 @@ import {
 // "08:00" a "10:00", o solo la llegada si no tiene hora de ida
 const describirHoras = (turno) =>
   turno.hora_fin ? `${turno.hora_inicio} a ${turno.hora_fin}` : `${turno.hora_inicio} (sin hora de ida)`
+
+// igual que ANTICIPACION_MINUTOS del backend: un turno de hoy se puede corregir desde 10 min antes de su inicio
+const ANTICIPACION_MINUTOS = 10
+const minutos = (texto) => Number(texto.slice(0, 2)) * 60 + Number(texto.slice(3, 5))
+const aunNoEmpieza = (turno, hoy, minutoActual) =>
+  turno.fecha.slice(0, 10) === hoy && minutoActual < minutos(turno.hora_inicio) - ANTICIPACION_MINUTOS
 
 // el estado de cada turno lo calcula el backend con hora_llegada:
 // 'a-tiempo' (hasta 25 min despues del inicio), 'tarde', 'ausente' (termino sin llegada) o 'pendiente' (aun no termina)
@@ -61,13 +67,19 @@ export default function AttendanceSection({ cambiosTurnos }) {
   // dia abierto en el pop-up: { rut, nombre, dia }
   const [diaAbierto, setDiaAbierto] = useState(null)
 
+  // numero de la ultima carga pedida: si llega la respuesta de una carga anterior, se descarta
+  const ultimaCarga = useRef(0)
+
   const cargarAsistencia = useCallback(() => {
+    const carga = ++ultimaCarga.current
     return getAsistencias(mes)
       .then((data) => {
+        if (carga !== ultimaCarga.current) return
         setUsuarios(data)
         setEstado('success')
       })
       .catch((err) => {
+        if (carga !== ultimaCarga.current) return
         setError(err.message)
         setEstado('error')
       })
@@ -86,6 +98,8 @@ export default function AttendanceSection({ cambiosTurnos }) {
   const dias = diasDelMes(mes)
   const semanas = semanasDelMes(dias)
   const hoy = diaDeHoy()
+  const ahora = new Date()
+  const minutoActual = ahora.getHours() * 60 + ahora.getMinutes()
 
   // correccion manual: si el turno tiene llegada la borra, si no la deja como llegada a la hora
   // actualiza solo ese turno en la tabla
@@ -197,7 +211,10 @@ export default function AttendanceSection({ cambiosTurnos }) {
                             key={dia.fecha}
                             dia={dia}
                             turnos={turnosPorDia.get(dia.fecha) ?? []}
-                            esFuturo={dia.fecha > hoy}
+                            esFuturo={
+                              dia.fecha > hoy ||
+                              (turnosPorDia.get(dia.fecha) ?? []).every((turno) => aunNoEmpieza(turno, hoy, minutoActual))
+                            }
                             guardando={guardando}
                             nombre={usuario.nombre_usuario}
                             soloLectura={!puedeCorregirAsistencia}
@@ -248,6 +265,7 @@ export default function AttendanceSection({ cambiosTurnos }) {
                       checked={Boolean(turno.hora_llegada)}
                       onChange={() => !guardando.includes(turno.id) && alternarTurno(turno)}
                       aria-busy={guardando.includes(turno.id)}
+                      disabled={aunNoEmpieza(turno, hoy, minutoActual)}
                     />
                     {describirHoras(turno)} · {describirEstado(turno)}
                   </label>
@@ -279,7 +297,7 @@ function CeldaAsistencia({ dia, turnos, esFuturo, guardando, nombre, soloLectura
 
   if (esFuturo) {
     return (
-      <td className={`attendance-cell is-turno-futuro${inicioSemana}`} title="Día que aún no llega">
+      <td className={`attendance-cell is-turno-futuro${inicioSemana}`} title="Turno que aún no empieza">
         {turnos.length > 1 && <span className="attendance-cell__conteo">0/{turnos.length}</span>}
       </td>
     )
