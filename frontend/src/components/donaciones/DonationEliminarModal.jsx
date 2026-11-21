@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Modal from '../../schedule/Modal.jsx'
 import { eliminarDonacion } from '../../services/api.js'
 import './DonationForm.css'
-import { formatoFechaHora } from './DonationFormato.js'
+import { formatoFechaHora, nombreDonante } from './DonationFormato.js'
 // Pide confirmación antes de borrar una o varias donaciones (solo el Admin)
 export default function DonationEliminarModal({ donaciones, onClose, onListo }) {
   const [error, setError] = useState('')
