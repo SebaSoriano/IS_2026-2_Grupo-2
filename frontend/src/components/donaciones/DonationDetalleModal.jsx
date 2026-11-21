@@ -26,6 +26,7 @@ export default function DonationDetalleModal({ donacion, usuario, onClose, onAcc
   const esInsumos = donacion.tipo_donacion === 'insumos'
   const agendar = puedeAgendar(donacion)
   const confirmar = puedeConfirmar(donacion, usuario)
+  const rechazar = puedeRechazar(donacion, usuario)
   // el navegador manda la cookie de sesión solo, por eso la imagen y el enlace funcionan
   const urlComprobante = `${API_BASE_URL}/donaciones/${donacion.id_donacion}/comprobante`
 
@@ -88,6 +89,11 @@ export default function DonationDetalleModal({ donacion, usuario, onClose, onAcc
         <button type="button" className="modal__button" onClick={onClose}>
           Cerrar
         </button>
+        {rechazar && (
+          <button type="button" className="modal__button modal__button--danger" onClick={() => onAccion('rechazar')}>
+            Rechazar
+          </button>
+        )}
         {agendar && (
           <button type="button" className="modal__button" onClick={() => onAccion('agendar')}>
             Agendar
@@ -98,26 +104,6 @@ export default function DonationDetalleModal({ donacion, usuario, onClose, onAcc
             {esInsumos ? 'Confirmar recepción' : 'Confirmar'}
           </button>
         )}
-        <div className="modal__actions">
-          <button type="button" className="modal__button" onClick={onClose}>
-            Cerrar
-          </button>
-          {rechazar && (
-            <button type="button" className="modal__button modal__button--danger" onClick={() => onAccion('rechazar')}>
-              Rechazar
-            </button>
-          )}
-          {agendar && (
-            <button type="button" className="modal__button" onClick={() => onAccion('agendar')}>
-              Agendar
-            </button>
-          )}
-          {confirmar && (
-            <button type="button" className="modal__button modal__button--primary" onClick={() => onAccion('confirmar')}>
-              {esInsumos ? 'Confirmar recepción' : 'Confirmar'}
-            </button>
-          )}
-        </div>
       </div>
     </Modal>
   )
