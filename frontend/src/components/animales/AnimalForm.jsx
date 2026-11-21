@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarAnimal, crearAnimal, subirFotosAnimal } from '../services/api.js'
-import { VIAS_DE_INGRESO } from '../data/viasIngreso.js'
-import { ESTADOS_ANIMAL } from '../data/estados.js'
+import { actualizarAnimal, crearAnimal, subirFotosAnimal } from '../../services/api.js'
+import { VIAS_DE_INGRESO } from '../../data/viasIngreso.js'
+import { ESTADOS_ANIMAL } from '../../data/estados.js'
 import './AnimalForm.css'
 
 // Valores iniciales del formulario

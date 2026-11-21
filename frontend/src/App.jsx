@@ -3,7 +3,7 @@ import InternalPage from './InternalPage.jsx'
 import PublicPage from './PublicPage.jsx';
 import Auth from './Auth.jsx';
 import RutaProtegida from './components/RutaProtegida.jsx';
-import AdoptionRequestPage from './components/AdoptionRequestPage.jsx';
+import AdoptionRequestPage from './components/adopciones/AdoptionRequestPage.jsx';
 
 export default function App() {
   const [pathname, setPathname] = useState(window.location.pathname)

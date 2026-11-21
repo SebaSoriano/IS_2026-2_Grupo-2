@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { getAnimales, registrarSolicitudManual } from '../services/api.js'
+import { getAnimales, registrarSolicitudManual } from '../../services/api.js'
 import './AdoptionForm.css'
 
 // Fecha de hoy en formato AAAA-MM-DD usando la hora de Chile (no la hora UTC)

@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react'
-import { getAnimales } from '../services/api.js'
-import { ESTADOS_ANIMAL } from '../data/estados.js'
+import { getAnimales } from '../../services/api.js'
+import { ESTADOS_ANIMAL } from '../../data/estados.js'
 import AnimalForm from './AnimalForm.jsx'
 import AnimalFiltros from './AnimalFiltros.jsx'
 import AnimalCarrusel from './AnimalCarrusel.jsx'
-import HistorialTarjetas from './historialMedico/HistorialTarjetas.jsx'
+import HistorialTarjetas from '../historialMedico/HistorialTarjetas.jsx'
 import './AnimalSection.css'
 // Se importa para usar los estilos de las tarjetas y de los botones Tabla/Tarjetas
-import './historialMedico/HistorialSection.css'
-import { usePermisos } from '../sesion/sesion.js'
+import '../historialMedico/HistorialSection.css'
+import { usePermisos } from '../../sesion/sesion.js'
 
 export default function AnimalSection() {
   // todos los roles ven "Añadir Animal" (puedeAgregar);
