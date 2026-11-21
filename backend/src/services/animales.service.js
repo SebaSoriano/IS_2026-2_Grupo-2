@@ -258,7 +258,7 @@ export async function getAnimalesPublicos() {
   return prisma.animales.findMany({
     // Una mascota está disponible si no tiene registros relacionados en "adopciones".
     where: {
-      adopciones: { none: {} },
+      estado_animal: 'disponible',
     },
     // Devolvemos solo la información necesaria para las tarjetas públicas.
     select: {
