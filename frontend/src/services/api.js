@@ -267,6 +267,9 @@ export function agendarDonacion(id, fecha_agendada) {
 export function confirmarDonacion(id, datos) {
   return sendJson('PATCH', `/donaciones/${id}/confirmar`, datos)
 }
+export function rechazarDonacion(id) {
+  return sendJson('PATCH', `/donaciones/${id}/rechazar`)
+}
 
 export function eliminarDonacion(id) {
   return sendJson('DELETE', `/donaciones/${id}`)

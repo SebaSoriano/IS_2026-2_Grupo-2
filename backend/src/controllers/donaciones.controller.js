@@ -43,3 +43,7 @@ export const deleteDonacion = async (req, res) => {
 export const getEstadisticas = async (req, res) => {
   res.json(await donacionesService.getEstadisticas());
 };
+
+export const rechazarDonacion = async (req, res) => {
+  res.json(await donacionesService.rechazarDonacion(req.params.id, req.usuario));
+};

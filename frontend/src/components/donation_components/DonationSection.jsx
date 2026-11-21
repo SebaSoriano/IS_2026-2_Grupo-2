@@ -12,8 +12,10 @@ import { getDonaciones } from '../../services/api.js'
 import DonationDetalleModal from './DonationDetalleModal.jsx'
 import { detalleDonacion, formatoDia, formatoFechaHora, nombreDonante } from './DonationFormato.js'
 import { CATEGORIAS_INSUMO } from '../../data/categoriasInsumo.js'
+import DonationRechazarModal from './DonationRechazarModal.jsx'
+
 const OPCIONES_FILTRO = {
-  estado: ['pendiente', 'agendada', 'confirmada'],
+  estado: ['pendiente', 'agendada', 'confirmada', 'rechazada'],
   origen: ['presencial', 'web'],
 }
 
@@ -349,6 +351,9 @@ const [detalle, setDetalle] = useState(null)
           )}
           {accion?.tipo === 'eliminar' && (
             <DonationEliminarModal donaciones={accion.donaciones} onClose={cerrarAccion} onListo={accionTerminada} />
+          )}
+          {accion?.tipo === 'rechazar' && (
+            <DonationRechazarModal donacion={accion.donacion} onClose={cerrarAccion} onListo={accionTerminada} />
           )}
           {registrando && (
             <DonationPresencialForm onClose={() => setRegistrando(false)} onListo={accionTerminada} />

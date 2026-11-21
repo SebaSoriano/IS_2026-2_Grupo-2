@@ -29,9 +29,12 @@ export function nombreDonante(donacion) {
 // Solo se agendan las de insumos que todavía están pendientes
 export const puedeAgendar = (donacion) => donacion.tipo_donacion === 'insumos' && donacion.estado === 'pendiente'
 
-// Mismas reglas que el servidor (esto solo esconde el botón; el servidor responde 403 igual)
 export const puedeConfirmar = (donacion, usuario) => {
-  if (donacion.estado === 'confirmada') return false
+  if (donacion.estado === 'confirmada' || donacion.estado === 'rechazada') return false
   if (donacion.tipo_donacion === 'insumos') return true
   return usuario.rol === ROLES.ADMIN || donacion.cuenta?.rut_usuario === usuario.rut
 }
+
+// Solo se rechazan las monetarias pendientes, puede rechazar admin y propetario de cuenta
+export const puedeRechazar = (donacion, usuario) =>
+  donacion.tipo_donacion === 'monetaria' && donacion.estado === 'pendiente' && puedeConfirmar(donacion, usuario)

@@ -7,6 +7,7 @@ import {
   nombreDonante,
   puedeAgendar,
   puedeConfirmar,
+  puedeRechazar
 } from './DonationFormato.js'
 
 // una fila "etiqueta: valor" de la lista de datos
@@ -97,7 +98,26 @@ export default function DonationDetalleModal({ donacion, usuario, onClose, onAcc
             {esInsumos ? 'Confirmar recepción' : 'Confirmar'}
           </button>
         )}
-        {/* "Rechazar" se agrega en el paso 5, junto con el estado nuevo */}
+        <div className="modal__actions">
+          <button type="button" className="modal__button" onClick={onClose}>
+            Cerrar
+          </button>
+          {rechazar && (
+            <button type="button" className="modal__button modal__button--danger" onClick={() => onAccion('rechazar')}>
+              Rechazar
+            </button>
+          )}
+          {agendar && (
+            <button type="button" className="modal__button" onClick={() => onAccion('agendar')}>
+              Agendar
+            </button>
+          )}
+          {confirmar && (
+            <button type="button" className="modal__button modal__button--primary" onClick={() => onAccion('confirmar')}>
+              {esInsumos ? 'Confirmar recepción' : 'Confirmar'}
+            </button>
+          )}
+        </div>
       </div>
     </Modal>
   )

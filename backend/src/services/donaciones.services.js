@@ -9,9 +9,10 @@ const incluir = { usuario: usuarioPublico, insumos: true, cuenta: cuentaPublica 
 
 // Desde qué estado se puede pasar a cuáles
 const TRANSICIONES = {
-  pendiente: ['agendada', 'confirmada'],
+  pendiente: ['agendada', 'confirmada', 'rechazada'],
   agendada: ['confirmada'],
   confirmada: [],
+  rechazada: [],
 };
 
 const verificarTransicion = (actual, nuevo) => {
@@ -210,6 +211,25 @@ export const confirmarDonacion = async (id, { insumos }, usuario) => {
         if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id, usuario.rut) });
     return tx.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });
   });
+};
+
+// Solo las donaciones monetarias pendientes se pueden rechazar.
+export const rechazarDonacion = async (id, usuario) => {
+  const donacion = await obtenerDonacion(id);
+  if (donacion.tipo_donacion !== 'monetaria') {
+    throw new HttpError(409, 'Solo las donaciones monetarias se pueden rechazar');
+  }
+  verificarTransicion(donacion.estado, 'rechazada');
+  await verificarPermiso(donacion, usuario);
+
+  // El "where estado" evita que dos voluntarios actúen a la vez (uno confirma y el otro rechaza)
+  const { count } = await prisma.donaciones.updateMany({
+    where: { id_donacion: id, estado: donacion.estado },
+    data: { estado: 'rechazada' },
+  });
+  if (count === 0) throw new HttpError(409, 'La donación cambió de estado, actualiza e inténtalo de nuevo');
+
+  return prisma.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });
 };
 
 // ---------- Estadísticas ----------

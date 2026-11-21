@@ -3,7 +3,7 @@ import { tipoInsumo } from './insumos.schema.js';
 
 export const TIPOS_DONACION = ['monetaria', 'insumos'];
 export const METODOS_PAGO = ['efectivo', 'transferencia'];
-export const ESTADOS_DONACION = ['pendiente', 'agendada', 'confirmada'];
+export const ESTADOS_DONACION = ['pendiente', 'agendada', 'confirmada', 'rechazada'];
 export const ORIGENES_DONACION = ['presencial', 'web'];
 
 export const rut = z.string().trim().regex(/^\d{7,8}-[\dkK]$/, 'Debe ser un RUT con formato 12345678-9');

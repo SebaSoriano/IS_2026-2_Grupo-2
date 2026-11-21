@@ -273,3 +273,5 @@
 .donation-filters--oculto {
   visibility: hidden;
 }
+
+.donation-badge--rechazada { background: #fbd9d5; color: #8a1f14; }
