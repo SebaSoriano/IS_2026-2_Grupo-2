@@ -33,11 +33,14 @@ router.use(requireAuth);
 router.get('/', getAdopciones);
 router.get('/solicitudes', getSolicitudes);
 
-// Decidir (ingresar a mano, agendar visita, rechazar y marcar como adoptado) es solo del Admin
+// Iniciar un proceso de adopción (adoptante nuevo o ya registrado) lo pueden hacer todos los roles
+router.post('/solicitudes/manual', validate(solicitudAdopcionSchema, 'body'), createSolicitudManual);
+router.get('/adoptantes', getAdoptantes);
+router.post('/solicitudes/existente', validate(solicitudExistenteSchema, 'body'), createSolicitudExistente);
+
+// Decidir (agendar visita, rechazar y marcar como adoptado) es solo del Admin
 const soloAdmin = requireRol(ROLES.ADMIN);
-router.post('/solicitudes/manual', soloAdmin, validate(solicitudAdopcionSchema, 'body'), createSolicitudManual);
-router.get('/adoptantes', soloAdmin, getAdoptantes);
-router.post('/solicitudes/existente', soloAdmin, validate(solicitudExistenteSchema, 'body'), createSolicitudExistente);
+
 router.patch('/solicitudes/:id/visita', soloAdmin, id, validate(visitaSchema, 'body'), agendarVisita);
 router.patch('/solicitudes/:id/rechazar', soloAdmin, id, rechazarSolicitud);
 router.patch('/solicitudes/:id/adoptar', soloAdmin, id, marcarAdoptado);
