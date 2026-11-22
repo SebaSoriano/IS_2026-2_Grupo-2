@@ -10,7 +10,7 @@ import DonationStats from './DonationStats.jsx'
 import './DonationSection.css'
 import { getDonaciones } from '../../services/api.js'
 import DonationDetalleModal from './DonationDetalleModal.jsx'
-import { detalleDonacion, formatoDia, formatoFechaHora, nombreDonante } from './DonationFormato.js'
+import { detalleDonacion, formatoFechaHora, nombreDonante } from './DonationFormato.js'
 import { CATEGORIAS_INSUMO } from '../../data/categoriasInsumo.js'
 import DonationRechazarModal from './DonationRechazarModal.jsx'
 
