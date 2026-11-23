@@ -21,10 +21,7 @@
   font-weight: 400;
 }
 
-/* Los dos botones usan la misma letra. Un <button> no hereda la fuente de la página
-   (el navegador le pone una propia, más chica), en cambio un <a> sí la hereda.
-   Con font: inherit y un tamaño fijo, "Volver al inicio" y "Cerrar sesión" quedan iguales.
-   white-space: nowrap evita que el texto se parta en dos líneas. */
+
 .sesion-usuario__inicio,
 .sesion-usuario__salir {
   font: inherit;
