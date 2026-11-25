@@ -59,7 +59,7 @@ export const registrarLlegadaController = async (req, res, next) => {
 export const eliminarTurnoController = async (req, res, next) => {
   try {
     const { id } = req.params;
-    await eliminarTurno(id);
+    await eliminarTurno(id, req.usuario);
     res.status(204).send();
   } catch (error) {
     next(error);
