@@ -10,6 +10,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  /* separa el nombre de los botones, para que se lea como un bloque aparte a la izquierda */
+  margin-right: 10px;
   color: #071b1c;
   font-weight: 600;
 }
@@ -19,14 +21,36 @@
   font-weight: 400;
 }
 
+
+.sesion-usuario__inicio,
+.sesion-usuario__salir {
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .sesion-usuario__salir {
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
   background: #3ba5a3;
   color: #ffffff;
-  font-weight: 600;
   cursor: pointer;
+}
+
+.sesion-usuario__inicio {
+  padding: 6px 14px;
+  border: 2px solid #3ba5a3;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #2e8583;
+  /* es un <a>: se le quita el subrayado de los enlaces */
+  text-decoration: none;
+}
+
+.sesion-usuario__inicio:hover {
+  background: #e6f6f5;
 }
 
 .sesion-usuario__salir:hover:not(:disabled) {
@@ -38,9 +62,22 @@
   cursor: default;
 }
 
-/* en pantallas chicas se esconde el nombre y queda solo el botón */
+/* en pantallas chicas se esconde el nombre y quedan solo los botones */
 @media (max-width: 640px) {
   .sesion-usuario__nombre {
     display: none;
+  }
+
+  .sesion-usuario__inicio,
+  .sesion-usuario__salir {
+    font-size: 12px;
+  }
+
+  .sesion-usuario__inicio {
+    padding: 5px 8px;
+  }
+
+  .sesion-usuario__salir {
+    padding: 7px 10px;
   }
 }
