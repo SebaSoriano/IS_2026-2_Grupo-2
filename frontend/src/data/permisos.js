@@ -29,6 +29,13 @@ export function puedeAsignarTurnos(usuario) {
   return usuario?.rol === ROLES.ADMIN
 }
 
+// Editar y borrar turnos: el Admin puede con cualquier turno;
+// Veterinaria y Voluntario solo con sus propios turnos (los que tienen su rut), no los de otras personas
+export function puedeModificarTurno(usuario, turno) {
+  if (usuario?.rol === ROLES.ADMIN) return true
+  return puedeAgregar(usuario) && turno?.rut_usuario === usuario.rut
+}
+
 // Corregir la asistencia a mano (en la tabla de Asistencia) es solo del Admin;
 // Veterinaria y Voluntario ven la tabla, pero no pueden corregirla
 export function puedeCorregirAsistencia(usuario) {
