@@ -38,8 +38,45 @@ export const tipoInsumo = z.string()
     'Otros',
   ], 'tipo_insumo debe ser uno de los tipos permitidos'));
 
+export const unidadMedida = z.enum(['kg', 'g', 'unidad']);
+
+function validarUnidadYCantidad(datos, ctx, esCreacion = false) {
+  const error = (campo, mensaje) => ctx.addIssue({
+    code: 'custom',
+    path: [campo],
+    message: mensaje,
+  });
+
+  const esAlimentacion = datos.tipo_insumo === 'Alimentación';
+  if (datos.tipo_insumo && datos.unidad_medida) {
+    if (!esAlimentacion && datos.unidad_medida !== 'unidad') {
+      error('unidad_medida', 'Este tipo de insumo se registra en unidades');
+    }
+  }
+
+  if (datos.cantidad !== undefined) {
+    const esGramoDeAlimentacion =
+      datos.tipo_insumo === 'Alimentación' && datos.unidad_medida === 'g';
+    const maximo = esGramoDeAlimentacion ? 99_999 : 99;
+
+    if (datos.cantidad > maximo) {
+      error(
+        'cantidad',
+        esGramoDeAlimentacion
+          ? 'La cantidad máxima es 99999 g'
+          : 'Para cantidades mayores a 99, selecciona gramos en insumos de alimentación',
+      );
+    }
+  }
+
+  if (esCreacion && !esAlimentacion && datos.unidad_medida !== 'unidad') {
+    error('unidad_medida', 'Este tipo de insumo se registra en unidades');
+  }
+}
+
 const insumoSchema = z.object({
   tipo_insumo: tipoInsumo,
+  unidad_medida: unidadMedida,
   fecha_ingreso: fecha,
   fecha_vencimiento: fechaVencimiento.nullable().optional(),
   descripcion: z.string()
@@ -47,16 +84,18 @@ const insumoSchema = z.object({
     .nullable()
     .optional(),
   cantidad: z.number()
-    .int('cantidad debe ser un entero entre 0 y 99')
-    .min(0, 'cantidad debe ser un entero entre 0 y 99')
-    .max(99, 'cantidad debe ser un entero entre 0 y 99'),
+    .int('cantidad debe ser un entero')
+    .min(0, 'cantidad debe ser mayor o igual a 0')
+    .max(99_999, 'cantidad no puede superar 99999'),
   rut_usuario: z.string()
     .trim()
     .min(1, 'rut_usuario debe ser un texto no vacío'),
 }).strict();
 
-export const createInsumoSchema = insumoSchema;
+export const createInsumoSchema = insumoSchema.superRefine((datos, ctx) =>
+  validarUnidadYCantidad(datos, ctx, true));
 export const updateInsumoSchema = insumoSchema
   .partial()
   .strict()
+  .superRefine((datos, ctx) => validarUnidadYCantidad(datos, ctx))
   .refine((data) => Object.keys(data).length > 0, 'Debe enviar al menos un campo para modificar');
