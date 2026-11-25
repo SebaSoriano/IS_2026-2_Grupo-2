@@ -383,7 +383,13 @@ export default function InventorySection({
                       </td>
                       <td>{insumo.tipo_insumo}</td>
                       <td>{insumo.descripcion || '—'}</td>
-                      <td>{insumo.cantidad}</td>
+                      <td>
+                        {insumo.cantidad} {insumo.unidad_medida === 'kg'
+                          ? 'kg'
+                          : insumo.unidad_medida === 'g'
+                            ? 'g'
+                            : 'unidades'}
+                      </td>
                       <td>{formatDate(insumo.fecha_ingreso)}</td>
                       <td>{formatDate(insumo.fecha_vencimiento)}</td>
                       <td>{insumo.usuario?.nombre_usuario || '—'}</td>

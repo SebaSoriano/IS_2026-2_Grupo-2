@@ -44,6 +44,7 @@ model Insumo{
   fecha_vencimiento DateTime?
   descripcion String? @db.VarChar(255)
   cantidad Int
+  unidad_medida String @default("unidad") @db.VarChar(10)
   rut_usuario String
   usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
   id_donacion Int?

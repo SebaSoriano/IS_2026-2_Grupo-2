@@ -13,6 +13,7 @@ const TIPOS_INSUMO = [
 
 const EMPTY_FORM = {
   tipo_insumo: '',
+  unidad_medida: '',
   fecha_ingreso: '',
   fecha_vencimiento: '',
   descripcion: '',
@@ -33,6 +34,7 @@ function formFromInsumo(insumo) {
 
   return {
     tipo_insumo: insumo.tipo_insumo ?? '',
+    unidad_medida: insumo.unidad_medida ?? 'unidad',
     fecha_ingreso: dateForInput(insumo.fecha_ingreso),
     fecha_vencimiento: dateForInput(insumo.fecha_vencimiento),
     descripcion: insumo.descripcion ?? '',
@@ -78,8 +80,18 @@ export default function InventoryForm({
 
   const updateFormField = (event) => {
     const { name, value } = event.target
-    setForm((currentForm) => ({ ...currentForm, [name]: value }))
-    setFormErrors((currentErrors) => ({ ...currentErrors, [name]: '' }))
+    setForm((currentForm) => ({
+      ...currentForm,
+      [name]: value,
+      ...(name === 'tipo_insumo'
+        ? { unidad_medida: value === 'Alimentación' ? '' : 'unidad' }
+        : {}),
+    }))
+    setFormErrors((currentErrors) => ({
+      ...currentErrors,
+      [name]: '',
+      ...(name === 'tipo_insumo' ? { unidad_medida: '' } : {}),
+    }))
   }
 
   const closeForm = () => {
@@ -95,6 +107,7 @@ export default function InventoryForm({
 
     const payload = {
       tipo_insumo: form.tipo_insumo.trim(),
+      unidad_medida: form.unidad_medida,
       fecha_ingreso: form.fecha_ingreso,
       fecha_vencimiento: form.fecha_vencimiento || null,
       descripcion: form.descripcion.trim() || null,
@@ -188,13 +201,38 @@ export default function InventoryForm({
           )}
         </label>
 
+        {form.tipo_insumo === 'Alimentación' ? (
+          <label className="inventory-form-field">
+            Unidad de medida
+            <select
+              name="unidad_medida"
+              value={form.unidad_medida}
+              onChange={updateFormField}
+              required
+              aria-invalid={Boolean(formErrors.unidad_medida)}
+            >
+              <option value="" disabled>Selecciona una unidad</option>
+              <option value="kg">Kilogramos (kg)</option>
+              <option value="g">Gramos (g)</option>
+              <option value="unidad">Unidades (sacos, latas, etc.)</option>
+            </select>
+            {formErrors.unidad_medida && (
+              <span className="inventory-form-error">{formErrors.unidad_medida}</span>
+            )}
+          </label>
+        ) : (
+          <span className="inventory-form-field">Unidad: Unidades</span>
+        )}
+
         <label className="inventory-form-field">
-          Cantidad
+          {form.tipo_insumo === 'Alimentación'
+            ? `Cantidad (${form.unidad_medida === 'unidad' ? 'unidades' : form.unidad_medida || 'kg, g o unidades'})`
+            : 'Cantidad'}
           <input
             name="cantidad"
             type="number"
             min="0"
-            max="99"
+            max={form.unidad_medida === 'g' ? '99999' : '99'}
             step="1"
             value={form.cantidad}
             onChange={updateFormField}
