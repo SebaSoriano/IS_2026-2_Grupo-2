@@ -48,7 +48,9 @@ const conSesion = [requireAuth, requireEdicion];
 
 router.use('/insumos', conSesion, insumosRouter);
 router.use('/animales', conSesion, animalesRoutes);
-router.use('/turnos', conSesion, turnosRoutes);
+// en turnos el Voluntario también puede editar y borrar, pero solo sus propios turnos,
+// por eso aquí va solo requireAuth y los permisos se revisan en turnos.routes.js y en turno.service.js
+router.use('/turnos', requireAuth, turnosRoutes);
 router.use('/horarios', conSesion, horariosRoutes);
 router.use('/asistencias', conSesion, asistenciasRoutes);
 router.use('/historial', conSesion, historialRoutes);

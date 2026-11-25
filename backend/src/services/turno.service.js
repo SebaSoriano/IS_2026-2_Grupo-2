@@ -39,6 +39,14 @@ const obtenerTurnoPorId = async (id) => {
     return turno;
 };
 
+// el Admin puede editar y borrar cualquier turno;
+// Veterinaria y Voluntario solo los turnos que son suyos (los que tienen su rut), no los de otras personas
+const verificarQueEsSuyo = (turno, sesion, mensaje) => {
+    if (sesion?.rol !== ROLES.ADMIN && turno.rut_usuario !== sesion?.rut) {
+        throw new HttpError(403, mensaje);
+    }
+};
+
 // service para crear un turno en una fecha de hoy en adelante
 // el dia de la semana (dia_semana_id) sale de la fecha
 // si el usuario no existe Prisma lanza P2003 (400) que responde error.middleware.js
@@ -58,9 +66,10 @@ export const crearTurno = async (data, sesion) => {
 
 // service para editar un turno que aun no pasa, y sin moverlo a una fecha que ya paso
 // se junta lo que llega con lo que ya tenia el turno para revisar las horas completas
-// solo el Admin puede cambiar la persona del turno; la Veterinaria edita el resto de los datos
+// Veterinaria y Voluntario solo editan sus propios turnos, y no pueden cambiar la persona del turno
 export const actualizarTurno = async (id, data, sesion) => {
     const turno = await obtenerTurnoPorId(id);
+    verificarQueEsSuyo(turno, sesion, 'Solo puedes editar tus propios turnos');
     if (sesion?.rol !== ROLES.ADMIN && data.rut_usuario && data.rut_usuario !== turno.rut_usuario) {
         throw new HttpError(403, 'Solo el administrador puede cambiar la persona del turno');
     }
@@ -79,8 +88,10 @@ export const actualizarTurno = async (id, data, sesion) => {
 };
 
 // service para borrar un turno que aun no pasa
-export const eliminarTurno = async (id) => {
+// Veterinaria y Voluntario solo borran sus propios turnos
+export const eliminarTurno = async (id, sesion) => {
     const turno = await obtenerTurnoPorId(id);
+    verificarQueEsSuyo(turno, sesion, 'Solo puedes borrar tus propios turnos');
     verificarQueNoEsPasado(turno.fecha, 'No se puede borrar un turno de un día que ya pasó');
     return prisma.turno.delete({ where: { id } });
 };

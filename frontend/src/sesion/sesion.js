@@ -4,8 +4,9 @@ import {
   puedeAsignarTurnos,
   puedeCorregirAsistencia,
   puedeEditar,
-  puedeGestionarUsuarios, 
+  puedeGestionarUsuarios,
   puedeGestionarAdopciones,
+  puedeModificarTurno,
 } from '../data/permisos.js'
 
 // Un "contexto" de React guarda un valor que cualquier componente de más abajo puede leer,
@@ -31,5 +32,7 @@ export function usePermisos() {
     puedeAsignarTurnos: puedeAsignarTurnos(usuario),
     puedeGestionarAdopciones: puedeGestionarAdopciones(usuario),
     puedeCorregirAsistencia: puedeCorregirAsistencia(usuario),
+    // depende del turno, por eso es una función: puedeModificarTurno(turno)
+    puedeModificarTurno: (turno) => puedeModificarTurno(usuario, turno),
   }
 }
