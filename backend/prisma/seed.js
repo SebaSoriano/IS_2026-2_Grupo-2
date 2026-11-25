@@ -148,23 +148,32 @@ async function main() {
         return fecha;
     };
     const insumos = [
-        { tipo_insumo: 'Alimentación', dias_ingreso: -6, dias_vencimiento: 266, descripcion: 'Alimento seco para perros adultos en sacos de 15 kg', cantidad: 8, rut_usuario: '11111111-1' },
-        { tipo_insumo: 'Alimentación', dias_ingreso: -5, dias_vencimiento: 236, descripcion: 'Alimento seco para gatos adultos en sacos de 10 kg', cantidad: 5, rut_usuario: '11111111-1' },
-        { tipo_insumo: 'Alimentación', dias_ingreso: -4, dias_vencimiento: 175, descripcion: 'Alimento húmedo para perros en latas de 400 g, para recuperación o dietas especiales', cantidad: 36, rut_usuario: '22222222-2' },
-        { tipo_insumo: 'Higiene y aseo', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Arena sanitaria para gatos en bolsas de 10 kg', cantidad: 12, rut_usuario: '22222222-2' },
-        { tipo_insumo: 'Salud', dias_ingreso: -7, dias_vencimiento: 1090, descripcion: 'Gasas estériles para curaciones bajo supervisión veterinaria', cantidad: 10, rut_usuario: '44444444-4' },
-        { tipo_insumo: 'Higiene y aseo', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Guantes de nitrilo para manejo e higiene', cantidad: 14, rut_usuario: '44444444-4' },
-        { tipo_insumo: 'Salud', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '11111111-1' },
-        { tipo_insumo: 'Limpieza', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Desinfectante de superficies en bidones de 5 litros para caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
-        { tipo_insumo: 'Limpieza', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Limpiador enzimático en botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
-        { tipo_insumo: 'Limpieza', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Bolsas resistentes para residuos', cantidad: 25, rut_usuario: '11111111-1' },
-        { tipo_insumo: 'Accesorios y juguetes', dias_ingreso: -5, dias_vencimiento: null, descripcion: 'Correas de 1.5 m para paseos supervisados', cantidad: 10, rut_usuario: '22222222-2' },
-        { tipo_insumo: 'Limpieza', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Toallas absorbentes para limpieza y cuidado de animales', cantidad: 7, rut_usuario: '44444444-4' },
-    ].map(({ dias_ingreso, dias_vencimiento, ...insumo }) => ({
-        ...insumo,
-        fecha_ingreso: fechaRelativa(dias_ingreso),
-        fecha_vencimiento: dias_vencimiento === null ? null : fechaRelativa(dias_vencimiento),
-    }));
+        { tipo_insumo: 'Alimentación', unidad_medida: 'kg', dias_ingreso: -6, dias_vencimiento: 266, descripcion: 'Saco de alimento seco para perros adultos de 15 kg', cantidad: 15, registros: 3, rut_usuario: '11111111-1' },
+        { tipo_insumo: 'Alimentación', unidad_medida: 'kg', dias_ingreso: -5, dias_vencimiento: 236, descripcion: 'Saco de alimento seco para gatos adultos de 10 kg', cantidad: 10, registros: 3, rut_usuario: '11111111-1' },
+        { tipo_insumo: 'Alimentación', unidad_medida: 'unidad', dias_ingreso: -4, dias_vencimiento: 175, descripcion: 'Alimento húmedo para perros en latas de 400 g, para recuperación o dietas especiales', cantidad: 36, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Higiene y aseo', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Arena sanitaria para gatos en bolsas de 10 kg', cantidad: 12, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Salud', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: 1090, descripcion: 'Gasas estériles para curaciones bajo supervisión veterinaria', cantidad: 10, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Higiene y aseo', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Guantes de nitrilo para manejo e higiene', cantidad: 14, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Salud', unidad_medida: 'unidad', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '11111111-1' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Desinfectante de superficies en bidones de 5 litros para caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Limpiador enzimático en botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Bolsas resistentes para residuos', cantidad: 25, rut_usuario: '11111111-1' },
+        { tipo_insumo: 'Accesorios y juguetes', unidad_medida: 'unidad', dias_ingreso: -5, dias_vencimiento: null, descripcion: 'Correas de 1.5 m para paseos supervisados', cantidad: 10, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Toallas absorbentes para limpieza y cuidado de animales', cantidad: 7, rut_usuario: '44444444-4' },
+    ].flatMap(({ dias_ingreso, dias_vencimiento, registros = 1, ...insumo }) => {
+        const datosInsumo = {
+            ...insumo,
+            fecha_ingreso: fechaRelativa(dias_ingreso),
+            fecha_vencimiento: dias_vencimiento === null ? null : fechaRelativa(dias_vencimiento),
+        };
+
+        return Array.from({ length: registros }, (_, indice) => ({
+            ...datosInsumo,
+            descripcion: registros === 1
+                ? datosInsumo.descripcion
+                : `${datosInsumo.descripcion} (${indice + 1} de ${registros})`,
+        }));
+    });
     const resultadoInsumos = await prisma.insumo.createMany({ data: insumos });
     console.log(`Insumos creados: ${resultadoInsumos.count}`);
 
