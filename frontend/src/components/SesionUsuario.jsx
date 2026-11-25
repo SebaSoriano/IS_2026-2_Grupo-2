@@ -20,10 +20,19 @@ export default function SesionUsuario({ usuario }) {
 
   return (
     <div className="sesion-usuario">
+      
+      {/* nombre */}
       <span className="sesion-usuario__nombre">
         {usuario.nombre}
         <span className="sesion-usuario__rol">{usuario.rol}</span>
       </span>
+
+      {/* inicio */}
+      <a className="sesion-usuario__inicio" href="/">
+        Volver al inicio
+      </a>
+
+      {/* cerrar sesion */}
       <button
         className="sesion-usuario__salir"
         type="button"
