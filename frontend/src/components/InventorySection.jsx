@@ -139,6 +139,8 @@ export default function InventorySection({
 
     const searchableValues = [
       insumo.tipo_insumo,
+      insumo.marca,
+      insumo.estado,
       insumo.descripcion,
       insumo.cantidad,
       insumo.fecha_ingreso,
@@ -324,6 +326,18 @@ export default function InventorySection({
                   />
                   <SortableHeader
                     activeSort={sort}
+                    label="Marca"
+                    onSort={sortBy}
+                    sortKey="marca"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Estado"
+                    onSort={sortBy}
+                    sortKey="estado"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
                     label="Descripción"
                     onSort={sortBy}
                     sortKey="descripcion"
@@ -357,13 +371,13 @@ export default function InventorySection({
               <tbody>
                 {insumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="7">
+                    <td className="inventory-empty" colSpan="9">
                       No hay insumos registrados.
                     </td>
                   </tr>
                 ) : sortedInsumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="7">
+                    <td className="inventory-empty" colSpan="9">
                       No se encontraron insumos para “{search}”.
                     </td>
                   </tr>
@@ -382,6 +396,8 @@ export default function InventorySection({
                         />
                       </td>
                       <td>{insumo.tipo_insumo}</td>
+                      <td>{insumo.marca || '—'}</td>
+                      <td>{insumo.estado || 'Nuevo'}</td>
                       <td>{insumo.descripcion || '—'}</td>
                       <td>
                         {insumo.cantidad} {insumo.unidad_medida === 'kg'

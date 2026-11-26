@@ -40,6 +40,8 @@ model Agendamiento {
 model Insumo{
   id Int @id @default(autoincrement())
   tipo_insumo String @db.VarChar(100)
+  marca String? @db.VarChar(100)
+  estado String @default("Nuevo") @db.VarChar(20)
   fecha_ingreso DateTime
   fecha_vencimiento DateTime?
   descripcion String? @db.VarChar(255)
