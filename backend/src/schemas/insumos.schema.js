@@ -39,6 +39,13 @@ export const tipoInsumo = z.string()
   ], 'tipo_insumo debe ser uno de los tipos permitidos'));
 
 export const unidadMedida = z.enum(['kg', 'g', 'unidad']);
+export const estadosInsumo = [
+  'Nuevo',
+  'Recien usado',
+  'A medio usar',
+  'Usado',
+  'Vencido',
+];
 
 function validarUnidadYCantidad(datos, ctx, esCreacion = false) {
   const error = (campo, mensaje) => ctx.addIssue({
@@ -77,6 +84,12 @@ function validarUnidadYCantidad(datos, ctx, esCreacion = false) {
 const insumoSchema = z.object({
   tipo_insumo: tipoInsumo,
   unidad_medida: unidadMedida,
+  marca: z.string()
+    .trim()
+    .max(100, 'marca no puede superar 100 caracteres')
+    .nullable()
+    .optional(),
+  estado: z.enum(estadosInsumo).optional(),
   fecha_ingreso: fecha,
   fecha_vencimiento: fechaVencimiento.nullable().optional(),
   descripcion: z.string()

@@ -11,9 +11,19 @@ const TIPOS_INSUMO = [
   'Otros',
 ]
 
+const ESTADOS_INSUMO = [
+  'Nuevo',
+  'Recién usado',
+  'A medio usar',
+  'Usado',
+  'Vencido',
+]
+
 const EMPTY_FORM = {
   tipo_insumo: '',
   unidad_medida: '',
+  marca: '',
+  estado: 'Nuevo',
   fecha_ingreso: '',
   fecha_vencimiento: '',
   descripcion: '',
@@ -35,6 +45,8 @@ function formFromInsumo(insumo) {
   return {
     tipo_insumo: insumo.tipo_insumo ?? '',
     unidad_medida: insumo.unidad_medida ?? 'unidad',
+    marca: insumo.marca ?? '',
+    estado: insumo.estado ?? 'Nuevo',
     fecha_ingreso: dateForInput(insumo.fecha_ingreso),
     fecha_vencimiento: dateForInput(insumo.fecha_vencimiento),
     descripcion: insumo.descripcion ?? '',
@@ -108,6 +120,8 @@ export default function InventoryForm({
     const payload = {
       tipo_insumo: form.tipo_insumo.trim(),
       unidad_medida: form.unidad_medida,
+      marca: form.marca.trim() || null,
+      estado: form.estado,
       fecha_ingreso: form.fecha_ingreso,
       fecha_vencimiento: form.fecha_vencimiento || null,
       descripcion: form.descripcion.trim() || null,
@@ -223,6 +237,38 @@ export default function InventoryForm({
         ) : (
           <span className="inventory-form-field">Unidad: Unidades</span>
         )}
+
+        <label className="inventory-form-field">
+          Marca (opcional)
+          <input
+            name="marca"
+            value={form.marca}
+            onChange={updateFormField}
+            maxLength={100}
+            aria-invalid={Boolean(formErrors.marca)}
+          />
+          {formErrors.marca && (
+            <span className="inventory-form-error">{formErrors.marca}</span>
+          )}
+        </label>
+
+        <label className="inventory-form-field">
+          Estado
+          <select
+            name="estado"
+            value={form.estado}
+            onChange={updateFormField}
+            required
+            aria-invalid={Boolean(formErrors.estado)}
+          >
+            {ESTADOS_INSUMO.map((estado) => (
+              <option key={estado} value={estado}>{estado}</option>
+            ))}
+          </select>
+          {formErrors.estado && (
+            <span className="inventory-form-error">{formErrors.estado}</span>
+          )}
+        </label>
 
         <label className="inventory-form-field">
           {form.tipo_insumo === 'Alimentación'

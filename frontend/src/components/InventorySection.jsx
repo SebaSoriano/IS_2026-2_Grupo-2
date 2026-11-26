@@ -90,7 +90,7 @@ export default function InventorySection({
   const [insumos, setInsumos] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
-  const [sort, setSort] = useState({ key: 'id', direction: 'ascending' })
+  const [sort, setSort] = useState({ key: 'tipo_insumo', direction: 'ascending' })
   const [search, setSearch] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [actionError, setActionError] = useState('')
@@ -138,8 +138,9 @@ export default function InventorySection({
     if (!normalizedQuery) return true
 
     const searchableValues = [
-      insumo.id,
       insumo.tipo_insumo,
+      insumo.marca,
+      insumo.estado,
       insumo.descripcion,
       insumo.cantidad,
       insumo.fecha_ingreso,
@@ -319,15 +320,21 @@ export default function InventorySection({
                   </th>
                   <SortableHeader
                     activeSort={sort}
-                    label="ID"
-                    onSort={sortBy}
-                    sortKey="id"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
                     label="Tipo de insumo"
                     onSort={sortBy}
                     sortKey="tipo_insumo"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Marca"
+                    onSort={sortBy}
+                    sortKey="marca"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
+                    label="Estado"
+                    onSort={sortBy}
+                    sortKey="estado"
                   />
                   <SortableHeader
                     activeSort={sort}
@@ -364,13 +371,13 @@ export default function InventorySection({
               <tbody>
                 {insumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="8">
+                    <td className="inventory-empty" colSpan="9">
                       No hay insumos registrados.
                     </td>
                   </tr>
                 ) : sortedInsumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="8">
+                    <td className="inventory-empty" colSpan="9">
                       No se encontraron insumos para “{search}”.
                     </td>
                   </tr>
@@ -388,8 +395,9 @@ export default function InventorySection({
                           aria-label={`Seleccionar insumo ${insumo.id}`}
                         />
                       </td>
-                      <td>{insumo.id}</td>
                       <td>{insumo.tipo_insumo}</td>
+                      <td>{insumo.marca || '—'}</td>
+                      <td>{insumo.estado || 'Nuevo'}</td>
                       <td>{insumo.descripcion || '—'}</td>
                       <td>
                         {insumo.cantidad} {insumo.unidad_medida === 'kg'
