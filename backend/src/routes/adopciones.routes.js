@@ -5,7 +5,7 @@ import {
   getAdopciones,
   getSolicitudes,
   createSolicitudManual,
-getAdoptantes,
+  getAdoptantes,
   createSolicitudExistente,
   agendarVisita,
   rechazarSolicitud,
@@ -13,7 +13,7 @@ getAdoptantes,
 } from '../controllers/adopciones.controller.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { idParamSchema } from '../schemas/idParam.schema.js';
-import { solicitudAdopcionSchema, solicitudExistenteSchema, visitaSchema } from '../schemas/adopciones.schema.js';
+import { solicitudAdopcionSchema, ingresoManualSchema, solicitudExistenteSchema, visitaSchema } from '../schemas/adopciones.schema.js';
 import { requireAuth, requireRol } from '../middlewares/auth.middleware.js';
 import { ROLES } from '../config/roles.js';
 
@@ -34,7 +34,7 @@ router.get('/', getAdopciones);
 router.get('/solicitudes', getSolicitudes);
 
 // Iniciar un proceso de adopción (adoptante nuevo o ya registrado) lo pueden hacer todos los roles
-router.post('/solicitudes/manual', validate(solicitudAdopcionSchema, 'body'), createSolicitudManual);
+router.post('/solicitudes/manual', validate(ingresoManualSchema, 'body'), createSolicitudManual);
 router.get('/adoptantes', getAdoptantes);
 router.post('/solicitudes/existente', validate(solicitudExistenteSchema, 'body'), createSolicitudExistente);
 

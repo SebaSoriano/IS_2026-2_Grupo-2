@@ -93,9 +93,15 @@ export default function AdoptionSection() {
   }
 
   // Los popups llaman a estas funciones cuando el backend guardó
-  function adoptanteIngresado() {
+  
+  // AdoptionForm avisa si se eligió un animal (true) o solo se registró la persona (false)
+  function adoptanteIngresado(conAnimal) {
     setPopup(null)
-    recargar('Adoptante ingresado: el animal quedó en proceso de adopción')
+    if (conAnimal) {
+      recargar('Adoptante ingresado: el animal quedó en proceso de adopción')
+    } else {
+      recargar('Adoptante registrado: puedes asignarle un animal con "Ingresar Solicitud"')
+    }
   }
 
   function solicitudIngresada() {

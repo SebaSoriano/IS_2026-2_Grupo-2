@@ -65,13 +65,17 @@ export default function AdoptionForm({ onClose, onSaved }) {
     setEnviando(true)
 
     const datos = {
-      // el <select> entrega texto ("5"); el backend espera un número
-      id_animal: Number(formulario.id_animal),
       nombre_adoptante: formulario.nombre_adoptante,
       direccion: formulario.direccion,
       telefono: formulario.telefono.trim(),
       correo: formulario.correo.trim(),
       fecha_nacimiento: formulario.fecha_nacimiento,
+    }
+    // El animal es opcional: solo se envía si se eligió uno
+    const conAnimal = formulario.id_animal !== ''
+    if (conAnimal) {
+      // el <select> entrega texto ("5"); el backend espera un número
+      datos.id_animal = Number(formulario.id_animal)
     }
     // Las observaciones son opcionales: solo se envían si se escribió algo
     if (formulario.observaciones_adoptante.trim() !== '') {
@@ -133,7 +137,7 @@ export default function AdoptionForm({ onClose, onSaved }) {
         )}
 
         <fieldset className="adoption-form__group">
-          <legend>Animal asignado</legend>
+          <legend>Animal asignado (opcional)</legend>
 
           <label className="adoption-form__field">
             Animal disponible
@@ -141,12 +145,11 @@ export default function AdoptionForm({ onClose, onSaved }) {
               name="id_animal"
               value={formulario.id_animal}
               onChange={cambiarCampo}
-              required
             >
               <option value="">Selecciona un animal</option>
               {animales.map((animal) => (
                 <option value={animal.id_animal} key={animal.id_animal}>
-                  {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
+                  {animal.nombre_animal} ({animal.especie_animal}, {animal.edad} años)
                 </option>
               ))}
             </select>

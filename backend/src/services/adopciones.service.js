@@ -82,7 +82,15 @@ export const crearSolicitudPublica = (datos) => crearSolicitud(datos, 'pendiente
 
 // ---------- Intranet (piden sesión) ----------
 
-export const crearSolicitudManual = (datos) => crearSolicitud(datos, 'en_proceso');
+// Ingreso manual: el animal es opcional
+export async function crearSolicitudManual(datos) {
+  // Sin animal: solo se guarda el adoptante (la solicitud se crea después con "Ingresar Solicitud")
+  if (datos.id_animal === undefined) {
+    return prisma.adoptante.create({ data: datos });
+  }
+  // Con animal: adoptante + solicitud "en proceso" + animal "en proceso" (como antes)
+  return crearSolicitud(datos, 'en_proceso');
+}
 
 // Adoptantes registrados (desde la página pública o la intranet), ordenados por nombre
 export const getAdoptantes = () =>
