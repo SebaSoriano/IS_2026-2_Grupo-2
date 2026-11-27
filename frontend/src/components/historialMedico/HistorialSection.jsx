@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { descargarHistorialPdf, eliminarHistorial, getAnimales, getHistoriales } from '../../services/api.js'
 import HistorialFiltros from './HistorialFiltros.jsx'
 import HistorialForm from './HistorialForm.jsx'
+import HistorialProcedimientos from './HistorialProcedimientos.jsx'
 import HistorialTabla from './HistorialTabla.jsx'
 import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './HistorialSection.css'
@@ -42,6 +43,8 @@ export default function HistorialSection() {
   const [versionBuscador, setVersionBuscador] = useState(0)
   // true mientras se genera y descarga el PDF (el botón dice "Exportando...")
   const [exportando, setExportando] = useState(false)
+  // true mientras está abierta la ventana "Ver tratamientos"
+  const [verTratamientos, setVerTratamientos] = useState(false)
 
   // Se pide la lista al backend cada vez que cambian los filtros, la página o "recarga".
   // "cancelado" evita un problema clásico: si el usuario busca dos veces seguidas,
@@ -231,6 +234,11 @@ export default function HistorialSection() {
         >
           {exportando ? 'Exportando...' : 'Exportar PDF'}
         </button>
+        {/* "Ver tratamientos" lo ven los tres roles: abre la lista de procedimientos.
+            Dentro de la ventana, el botón Borrar solo aparece para Admin y Veterinaria */}
+        <button className="area-action" type="button" onClick={() => setVerTratamientos(true)}>
+          Ver tratamientos
+        </button>
         {vista !== 'tabla' && (
           <p className="historial-ayuda">Las tarjetas no se exportan: cambia a la vista Tabla para exportar.</p>
         )}
@@ -296,6 +304,8 @@ export default function HistorialSection() {
           onSaved={registroGuardado}
         />
       )}
+
+      {verTratamientos && <HistorialProcedimientos onClose={() => setVerTratamientos(false)} />}
     </>
   )
 }
