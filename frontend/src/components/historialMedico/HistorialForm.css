@@ -30,3 +30,19 @@
   left: 0;
   white-space: nowrap;
 }
+/* recuadro de "Insumos utilizados": se le quita el borde y el espacio que el navegador
+   le pone por defecto a un fieldset, para que se vea igual que los demás campos */
+.historial-form__insumos {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.historial-form__insumos legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 700;
+}

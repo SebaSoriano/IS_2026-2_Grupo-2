@@ -3,9 +3,10 @@ import { actualizarHistorial, crearHistorial } from '../../services/api.js'
 import { hoyIso } from '../../utils/fechas.js'
 import Autocompletar from '../Autocompletar.jsx'
 import CampoFecha from '../fecha/CampoFecha.jsx'
+import HistorialInsumos from './HistorialInsumos.jsx'
 import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
-import '../animales/AnimalForm.css'
+import '../AnimalForm.css'
 // tamaño y orden de los campos propios de esta ventana (más ancha que la de animales)
 import './HistorialForm.css'
 
@@ -18,6 +19,8 @@ const formularioVacio = {
   fecha_tratamiento: '',
   veterinario: '',
   observaciones: '',
+  // insumos usados: lista de { id_insumo, cantidad } que arma HistorialInsumos
+  insumos: [],
 }
 
 // los inputs trabajan con texto: el id se pasa a String y de la fecha
@@ -30,6 +33,12 @@ function formularioDesdeRegistro(registro) {
     fecha_tratamiento: registro.fecha_tratamiento.slice(0, 10),
     veterinario: registro.veterinario,
     observaciones: registro.observaciones ?? '',
+    // los insumos que el registro ya tenía, con la cantidad como texto (como en los inputs).
+    // Los de tipo "estado" no tienen cantidad: se dejan en null (String(null) daría el texto "null")
+    insumos: registro.insumos.map((insumo) => ({
+      id_insumo: insumo.id_insumo,
+      cantidad: insumo.cantidad == null ? null : String(insumo.cantidad),
+    })),
   }
 }
 
@@ -86,14 +95,22 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
     setMensajeError('')
     setEnviando(true)
 
-    // Se arma lo que espera el backend: id_animal como número (no como texto)
-    // y observaciones vacías como null, para que se guarden como "sin observaciones"
+    // Se arma lo que espera el backend: id_animal y las cantidades como número (no como texto)
+    // y observaciones vacías como null, para que se guarden como "sin observaciones".
+    // Los insumos se mandan siempre como la lista COMPLETA: al crear se descuentan todos,
+    // y al modificar el backend compara con la lista anterior y solo ajusta la diferencia
+    // (si no se tocaron, todas las diferencias dan 0 y el inventario no cambia).
     const datos = {
       id_animal: Number(formulario.id_animal),
       tratamiento: formulario.tratamiento,
       fecha_tratamiento: formulario.fecha_tratamiento,
       veterinario: formulario.veterinario,
       observaciones: formulario.observaciones.trim() || null,
+      // los insumos de estado van con cantidad null (Number(null) daría 0, que el backend rechaza)
+      insumos: formulario.insumos.map((insumo) => ({
+        id_insumo: insumo.id_insumo,
+        cantidad: insumo.cantidad == null ? null : Number(insumo.cantidad),
+      })),
     }
 
     try {
@@ -113,7 +130,8 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
         setErrores(erroresPorCampo)
         setMensajeError('Revisa los campos marcados')
       } else if (error.details) {
-        // El backend respondió con otro error (por ejemplo 400 "El animal indicado no existe" o 404)
+        // El backend respondió con otro error, por ejemplo 400 "El animal indicado no existe",
+        // 404, o 409 "No hay stock suficiente de ..." si otra persona usó el insumo mientras tanto
         setMensajeError(error.message)
       } else {
         // No hubo respuesta del backend
@@ -230,12 +248,23 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
           )}
         </label>
 
-        {/* Espacio reservado para los insumos: se habilita cuando la base de datos
-            registre qué insumos se usaron en cada tratamiento */}
-        <label className="animal-form__field">
-          Insumos utilizados
-          <input type="text" placeholder="Pendiente: aún no se registran en la base de datos" disabled />
-        </label>
+        {/* fieldset agrupa los campos del selector de insumos bajo un mismo título (legend).
+            Se usa en vez de label porque adentro hay varios campos, no uno solo */}
+        <fieldset className="historial-form__insumos">
+          <legend>Insumos utilizados</legend>
+          <HistorialInsumos
+            elegidos={formulario.insumos}
+            onChange={(insumos) => cambiarValores({ insumos })}
+            usadosAntes={esEdicion ? registro.insumos : []}
+          />
+          {esEdicion && (
+            <p className="historial-insumos__ayuda">
+              Al guardar, el inventario se ajusta: si usas más se descuenta la diferencia y si usas menos
+              o quitas un insumo, se devuelve.
+            </p>
+          )}
+          {errores.insumos && <span className="animal-form__error">{errores.insumos}</span>}
+        </fieldset>
 
         <label className="animal-form__field">
           Observaciones
