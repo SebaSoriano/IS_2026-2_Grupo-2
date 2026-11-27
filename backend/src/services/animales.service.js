@@ -249,8 +249,8 @@ export async function eliminarFotoAnimal(id, idFoto) {
     }
   });
 
-  // Borrar del disco la foto anterior si tenía alguna
-  await borrarArchivoFoto(animal.foto_animal);
+  // Se borra del disco el archivo de la foto eliminada
+  await borrarArchivoFoto(foto.ruta);
   return buscarAnimalConFotos(id);
 }
 
