@@ -47,6 +47,20 @@ const construirFiltros = (filtros) => {
     where.veterinario = { contains: filtros.veterinario, mode: 'insensitive' };
   }
 
+  // insumo: registros que usaron AL MENOS UN insumo cuyo nombre contenga el texto.
+  if (filtros.insumo) {
+    where.insumos = {
+      some: {
+        insumo: {
+          OR: [
+            { descripcion: { contains: filtros.insumo, mode: 'insensitive' } },
+            { tipo_insumo: { contains: filtros.insumo, mode: 'insensitive' } },
+          ],
+        },
+      },
+    };
+  }
+
   // rango de fechas: gte significa "mayor o igual que" y lt "menor que".
   // Las fechas ya vienen convertidas desde historial.schema.js
   if (filtros.desde || filtros.hasta) {

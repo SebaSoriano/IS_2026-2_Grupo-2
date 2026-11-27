@@ -62,6 +62,9 @@ const periodo = z.string()
 export const filterHistorialSchema = z.object({
   animal:      z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').optional(),
   veterinario: z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').optional(),
+  // texto del insumo que se busca (por ejemplo "gasas"). Se compara con la descripción
+  // y con el tipo del insumo; 255 es el largo máximo de la descripción en el inventario
+  insumo:      z.string().trim().max(255, 'Debe tener como máximo 255 caracteres').optional(),
   desde:       periodo.transform(inicioPeriodo).optional(),
   hasta:       periodo.transform(finPeriodo).optional(),
   limite:      z.coerce.number().int('Debe ser un número entero').min(1).max(100).default(15),
