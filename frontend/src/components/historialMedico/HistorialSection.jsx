@@ -159,9 +159,14 @@ export default function HistorialSection() {
   async function eliminarSeleccionado() {
     if (!registroSeleccionado) return
 
-    // window.confirm muestra un aviso del navegador con "Aceptar" y "Cancelar"
+    // window.confirm muestra un aviso del navegador con "Aceptar" y "Cancelar".
+    // Si el registro usó insumos, se avisa que vuelven al inventario (el backend los devuelve).
+    const avisoInsumos =
+      registroSeleccionado.insumos.length > 0
+        ? '\n\nLos insumos que usó este registro se devolverán al inventario.'
+        : ''
     const confirmado = window.confirm(
-      `¿Eliminar el registro "${registroSeleccionado.tratamiento}" de ${registroSeleccionado.animal.nombre_animal}?`,
+      `¿Eliminar el registro "${registroSeleccionado.tratamiento}" de ${registroSeleccionado.animal.nombre_animal}?${avisoInsumos}`,
     )
     if (!confirmado) return
 
