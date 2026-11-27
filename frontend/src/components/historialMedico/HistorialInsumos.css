@@ -1,0 +1,111 @@
+/* Selector de insumos del formulario del historial médico.
+   Usa los mismos colores que AnimalForm.css para que se vea parte del mismo formulario. */
+
+.historial-insumos {
+  display: grid;
+  gap: 10px;
+}
+
+/* fila para agregar: lista desplegable ancha, cantidad angosta y el botón */
+.historial-insumos__nuevo {
+  display: grid;
+  grid-template-columns: 1fr 90px auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.historial-insumos__agregar {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 5px;
+  color: #064c3e;
+  background: #c3eeee;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.historial-insumos__agregar:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.historial-insumos__ayuda {
+  margin: 0;
+  color: #536d6e;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.historial-insumos__lista {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* cada insumo agregado: nombre, cantidad, stock y botón para quitar */
+.historial-insumos__item {
+  display: grid;
+  grid-template-columns: 1fr 80px auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid #9bd6d3;
+  border-radius: 5px;
+  background: #f3fbfb;
+}
+
+.historial-insumos__nombre {
+  display: grid;
+  color: #173d3e;
+  font-weight: 400;
+}
+
+.historial-insumos__nombre small {
+  color: #536d6e;
+}
+
+.historial-insumos__item input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #9bd6d3;
+  border-radius: 5px;
+  font: inherit;
+}
+
+.historial-insumos__stock {
+  color: #536d6e;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+/* "Se registra el uso (...)" de los insumos de estado: ocupa las columnas de la cantidad y del stock */
+.historial-insumos__estado {
+  grid-column: span 2;
+  color: #536d6e;
+  font-size: 0.875rem;
+  text-align: right;
+}
+
+.historial-insumos__quitar {
+  border: 0;
+  color: #a32121;
+  background: transparent;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .historial-insumos__nuevo {
+    grid-template-columns: 1fr 90px;
+  }
+
+  .historial-insumos__agregar {
+    grid-column: 1 / -1;
+  }
+}
