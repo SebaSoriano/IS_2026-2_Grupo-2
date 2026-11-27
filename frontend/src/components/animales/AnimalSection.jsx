@@ -282,7 +282,7 @@ export default function AnimalSection() {
             {carruselAbierto && animalSeleccionado && (
         <AnimalCarrusel
           animal={animalSeleccionado}
-          puedeEliminar={puedeEditar}
+          puedeEliminar={puedeEditar && animalSeleccionado.estado_animal !== 'adoptado'}
           onClose={() => setCarruselAbierto(false)}
           onFotoEliminada={fotoEliminada}
         />

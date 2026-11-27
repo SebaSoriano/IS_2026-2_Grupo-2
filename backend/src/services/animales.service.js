@@ -113,42 +113,37 @@ export async function createAnimal(datos) {
 // 4. Modificar un animal
 
 export async function updateAnimal(id, datos) {
-  // Si viene un estado nuevo, se revisa el estado actual del animal
-  if (datos.estado_animal !== undefined) {
-    const animal = await prisma.animales.findUnique({
-      where: { id_animal: id },
-      select: { estado_animal: true },
-    });
+  // 1) Se busca el estado ACTUAL del animal en la base de datos
+  const animal = await prisma.animales.findUnique({
+    where: { id_animal: id },
+    select: { estado_animal: true },
+  });
+  if (animal === null) throw new HttpError(404, 'Animal no encontrado');
 
-    if (animal === null) {
-      throw new HttpError(404, 'Animal no encontrado');
+  // 2) Reglas según el estado actual
+  if (animal.estado_animal === 'adoptado') {
+    // Un animal adoptado solo acepta UN cambio: volver a "disponible" (lo devolvieron al hogar)
+    const campos = Object.keys(datos);
+    const esDevolucion = campos.length === 1 && datos.estado_animal === 'disponible';
+    if (!esDevolucion) {
+      throw new HttpError(409, 'Un animal adoptado no se puede modificar; solo se puede marcar como disponible si fue devuelto');
     }
-
-    // Un animal en proceso de adopción o adoptado no se cambia desde aquí
-    if (animal.estado_animal === 'en_proceso' || animal.estado_animal === 'adoptado') {
-      throw new HttpError(409, 'El estado de un animal en proceso de adopción o adoptado se cambia desde la sección Adopción');
-    }
+  } else if (animal.estado_animal === 'en_proceso' && datos.estado_animal !== undefined) {
+    throw new HttpError(409, 'El estado de un animal en proceso de adopción se cambia desde la sección Adopción');
   }
 
-  // Transacción: se modifica el animal y, si falleció, se rechazan sus solicitudes pendientes
+  // 3) Se guarda el cambio
   return prisma.$transaction(async (tx) => {
-    // Si el id no existe, Prisma lanza un error (P2025) y error.middleware.js responde 404
-    const animalModificado = await tx.animales.update({
-      where: { id_animal: id },
-      data: datos,
-    });
-
+    const animalModificado = await tx.animales.update({ where: { id_animal: id }, data: datos });
     if (datos.estado_animal === 'fallecido') {
       await tx.solicitudes_adopcion.updateMany({
         where: { id_animal: id, estado: 'pendiente' },
         data: { estado: 'rechazada' },
       });
     }
-
     return animalModificado;
   });
 }
-
 //------------------------------------------------------------
 
 // Borra del disco el archivo de una foto (si existe)
@@ -188,6 +183,7 @@ export async function agregarFotosAnimal(id, archivos) {
     where: { id_animal: id },
     select: {
       foto_animal: true,
+      estado_animal: true,
       _count: { select: { fotos: true } },
     },
   });
@@ -196,6 +192,10 @@ export async function agregarFotosAnimal(id, archivos) {
   if (animal === null) {
     for (const archivo of archivos) await borrarArchivoFoto(archivo.filename);
     throw new HttpError(404, 'Animal no encontrado');
+  }
+  if (animal.estado_animal === 'adoptado') {
+    for (const archivo of archivos) await borrarArchivoFoto(archivo.filename);
+    throw new HttpError(409, 'No se pueden agregar fotos a un animal adoptado');
   }
   if (animal._count.fotos + archivos.length > MAXIMO_FOTOS) {
     for (const archivo of archivos) await borrarArchivoFoto(archivo.filename);
@@ -226,14 +226,16 @@ export async function agregarFotosAnimal(id, archivos) {
 export async function eliminarFotoAnimal(id, idFoto) {
   const foto = await prisma.fotos_animal.findUnique({
     where: { id_foto: idFoto },
-    include: { animal: { select: { foto_animal: true } } },
+    include: { animal: { select: { foto_animal: true, estado_animal: true } } },
   });
 
   // La foto debe existir y pertenecer a ese animal
   if (foto === null || foto.id_animal !== id) {
     throw new HttpError(404, 'Foto no encontrada');
   }
-
+  if (foto.animal.estado_animal === 'adoptado') {
+    throw new HttpError(409, 'No se pueden eliminar fotos de un animal adoptado');
+  }
   await prisma.$transaction(async (tx) => {
     await tx.fotos_animal.delete({ where: { id_foto: idFoto } });
 
