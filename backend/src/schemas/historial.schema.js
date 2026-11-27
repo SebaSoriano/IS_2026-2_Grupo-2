@@ -15,10 +15,41 @@ const historialSchema = z.object({
   observaciones:     z.string().trim().max(500, 'Debe tener como máximo 500 caracteres').nullable().optional(),
 });
 
-export const createHistorialSchema = historialSchema;
+// un insumo usado en el tratamiento: cuál es (su id en la tabla Insumo) y cuánto se usó.
+// La cantidad va en la unidad de medida del insumo (unidades, kg o g).
+// El mínimo es 1 y el máximo es el mismo que acepta el inventario (99999, ver insumos.schema.js).
+// La cantidad es opcional (o null) porque los insumos de tipo "estado" (un frasco, un bidón)
+// no miden cuánto se usó: solo se registra que se usaron. Qué insumo necesita cantidad
+// no se puede saber aquí sin consultar la base de datos, así que lo revisa historial.service.js,
+// igual que si alcanza el stock (eso depende de cuánto haya justo en el momento de guardar).
+const insumoUsadoSchema = z.object({
+  id_insumo: z.number().int('Debe ser un número entero').positive('Debe ser un número entero positivo'),
+  cantidad:  z.number().int('Debe ser un número entero').positive('Debe usar al menos 1').max(99_999, 'No puede superar 99999')
+    .nullable()
+    .optional(),
+});
 
-// PUT /api/historial/:id: todos los campos pasan a ser opcionales (partial)
+// lista de insumos usados
+const insumosUsadosSchema = z
+  .array(insumoUsadoSchema)
+  .max(50, 'No se pueden registrar más de 50 insumos en un registro')
+  .refine(
+    (insumos) => new Set(insumos.map((insumo) => insumo.id_insumo)).size === insumos.length,
+    'No se puede repetir un insumo: suma las cantidades en una sola fila',
+  );
+
+// POST /api/historial: las columnas del registro más la lista de insumos usados.
+export const createHistorialSchema = historialSchema.extend({
+  insumos: insumosUsadosSchema.default([]),
+});
+
+// PUT /api/historial/:id: todos los campos pasan a ser opcionales (partial).
+// Si viene "insumos", es la lista COMPLETA de insumos que debe quedar en el registro:
+// historial.service.js la compara con la lista anterior y ajusta el inventario por la diferencia.
+// Si no viene, los insumos del registro no se tocan. Por eso aquí no lleva .default([]):
+// un default haría que un PUT que solo corrige la fecha le borrara al registro sus insumos.
 export const updateHistorialSchema = historialSchema
+  .extend({ insumos: insumosUsadosSchema })
   .partial()
   .refine((datos) => Object.keys(datos).length > 0, 'Debe enviar al menos un campo para modificar');
 
