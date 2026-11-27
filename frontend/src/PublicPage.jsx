@@ -21,6 +21,38 @@ function textoEdad(edad) {
   return `${edad} años`;
 }
 
+function TarjetaAnimal({ animal, onVerDetalles }) {
+  const foto = animal.foto_animal || fotoDeEjemplo(animal.especie_animal);
+
+  return (
+    <article className="pet-card" key={animal.id_animal}>
+      <div className="pet-card__photo">
+        {foto ? (
+          <img src={foto} alt={`Foto de ${animal.nombre_animal}`} />
+        ) : (
+          <span className="pet-card__photo-placeholder">Foto no disponible</span>
+        )}
+      </div>
+      <div className="pet-card__details">
+        <h3>{animal.nombre_animal}</h3>
+        <div className="pet-card__actions">
+          <button
+            className="pet-card__details-button"
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => onVerDetalles(animal)}
+          >
+            Ver detalles
+          </button>
+          <a className="pet-card__adopt-button" href={`/adoptar?animal=${animal.id_animal}`}>
+            Quiero adoptar
+          </a>
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function PublicPage() {
   const [vistaDonar, setVistaDonar] = useState(null);
   const [animalDetalles, setAnimalDetalles] = useState(null);
@@ -31,6 +63,21 @@ export default function PublicPage() {
   const fotoAnimalDetalles = animalDetalles
     ? animalDetalles.foto_animal || fotoDeEjemplo(animalDetalles.especie_animal)
     : null;
+  const esGato = (animal) => animal.especie_animal.trim().toLowerCase().includes('gato');
+  const esPerro = (animal) => animal.especie_animal.trim().toLowerCase().includes('perro');
+  const gruposAnimales = [
+    {
+      key: 'gatos',
+      titulo: 'Gatos',
+      animales: animales.filter(esGato),
+    },
+    {
+      key: 'perros',
+      titulo: 'Perros',
+      animales: animales.filter(esPerro),
+    },
+  ];
+  const otrosAnimales = animales.filter((animal) => !esGato(animal) && !esPerro(animal));
 
   useEffect(() => {
     let cancelado = false;
@@ -82,7 +129,7 @@ export default function PublicPage() {
 
       <main className="public-pets">
         <section className="public-pets__intro" aria-labelledby="public-pets-title">
-          <h2 id="public-pets-title">Descubre a tu posible nuevo compañero.</h2>
+          <h2 id="public-pets-title">Descubre a tu nuevo compañero.</h2>
           <p>
             Ellos buscan una familia que los cuide y les brinde un hogar lleno de amor.
           </p>
@@ -103,40 +150,42 @@ export default function PublicPage() {
               Por el momento no hay mascotas disponibles para adopción.
             </p>
           )}
-          {estadoCarga === 'listo' && animales.map((animal) => {
-            const foto = animal.foto_animal || fotoDeEjemplo(animal.especie_animal);
-
-            return (
-              <article className="pet-card" key={animal.id_animal}>
-                <div className="pet-card__photo">
-                  {foto ? (
-                    <>
-                      <img src={foto} alt={`Foto de ${animal.nombre_animal}`} />
-                    </>
-                  ) : (
-                    <span className="pet-card__photo-placeholder">Foto no disponible</span>
-                  )}
-                </div>
-                <div className="pet-card__details">
-                                    <h3>{animal.nombre_animal}</h3>
-                  <div className="pet-card__actions">
-                    <button
-                      className="pet-card__details-button"
-                      type="button"
-                      aria-haspopup="dialog"
-                      onClick={() => setAnimalDetalles(animal)}
-                    >
-                      Ver detalles
-                    </button>
-                    {/* Lleva al formulario de adopción con este animal ya elegido */}
-                    <a className="pet-card__adopt-button" href={`/adoptar?animal=${animal.id_animal}`}>
-                      Quiero adoptar
-                    </a>
+          {estadoCarga === 'listo' && animales.length > 0 && (
+            <>
+              <div className="pet-groups">
+                {gruposAnimales.map((grupo) => (
+                  <section className="pet-group" key={grupo.key} aria-labelledby={`pet-group-${grupo.key}`}>
+                    <h3 id={`pet-group-${grupo.key}`}>{grupo.titulo}</h3>
+                    <div className="pet-group__cards">
+                      {grupo.animales.length === 0 ? (
+                        <p className="pet-group__empty">No hay {grupo.titulo.toLowerCase()} disponibles por el momento.</p>
+                      ) : grupo.animales.map((animal) => (
+                        <TarjetaAnimal
+                          animal={animal}
+                          key={animal.id_animal}
+                          onVerDetalles={setAnimalDetalles}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </div>
+              {otrosAnimales.length > 0 && (
+                <section className="pet-group pet-group--other" aria-labelledby="pet-group-otros">
+                  <h3 id="pet-group-otros">Otras mascotas</h3>
+                  <div className="pet-group__cards">
+                    {otrosAnimales.map((animal) => (
+                      <TarjetaAnimal
+                        animal={animal}
+                        key={animal.id_animal}
+                        onVerDetalles={setAnimalDetalles}
+                      />
+                    ))}
                   </div>
-                </div>
-              </article>
-            );
-          })}
+                </section>
+              )}
+            </>
+          )}
         </section>
       </main>
 
