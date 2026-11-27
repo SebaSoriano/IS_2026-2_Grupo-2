@@ -15,3 +15,7 @@ export const createCuenta = async (req, res) => {
 export const updateCuenta = async (req, res) => {
   res.json(await cuentasService.updateCuenta(req.params.id, req.body));
 };
+
+export const deleteCuenta = async (req, res) => {
+  res.json(await cuentasService.eliminarCuenta(req.params.id));
+};

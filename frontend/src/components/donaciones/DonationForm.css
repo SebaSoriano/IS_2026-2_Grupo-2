@@ -134,3 +134,32 @@
     grid-template-columns: 1fr;
   }
 }
+
+.donation-cuentas-admin {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.donation-cuentas-admin li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #9bd6d3;
+  border-radius: 6px;
+}
+
+.donation-cuentas-admin__datos {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.donation-cuentas-admin__datos span {
+  color: #536d6e;
+  font-size: 0.875rem;
+}

@@ -305,6 +305,27 @@ export async function getCuentasPublicas() {
   return cuentas
 }
 
+// ---------- Cuentas de transferencia (gestión interna, solo Admin) ----------
+export async function getCuentas() {
+  const cuentas = await getJson('/cuentas-transferencia')
+
+  if (!Array.isArray(cuentas)) {
+    throw new Error('La respuesta de la API de cuentas no es válida.')
+  }
+
+  return cuentas
+}
+
+// cuenta: { banco, tipo_cuenta, numero_cuenta, titular_nombre, titular_rut, correo?, rut_usuario }
+export function crearCuenta(cuenta) {
+  return postJson('/cuentas-transferencia', cuenta)
+}
+
+// responde { resultado: 'eliminada' | 'desactivada' }
+export function eliminarCuenta(id) {
+  return sendJson('DELETE', `/cuentas-transferencia/${id}`)
+}
+
 // formData lleva los campos de texto y el archivo en el campo "comprobante"
 export function crearDonacionWebConComprobante(formData) {
   return postFormData('/donaciones/web', formData)

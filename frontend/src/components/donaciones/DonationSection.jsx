@@ -13,6 +13,7 @@ import DonationDetalleModal from './DonationDetalleModal.jsx'
 import { detalleDonacion, formatoFechaHora, nombreDonante } from './DonationFormato.js'
 import { CATEGORIAS_INSUMO } from '../../data/categoriasInsumo.js'
 import DonationRechazarModal from './DonationRechazarModal.jsx'
+import DonationCuentasModal from './DonationCuentasModal.jsx'
 
 const OPCIONES_FILTRO = {
   estado: ['pendiente', 'agendada', 'confirmada', 'rechazada'],
@@ -91,6 +92,8 @@ export default function DonationSection() {
 const [detalle, setDetalle] = useState(null)
   // true mientras está abierto el pop-up de registrar una donación presencial
   const [registrando, setRegistrando] = useState(false)
+    // true mientras está abierto el pop-up de cuentas bancarias (solo Admin)
+  const [gestionandoCuentas, setGestionandoCuentas] = useState(false)
   // solo Admin edita y elimina
   const administrar = usuario.rol === ROLES.ADMIN
   // ids de las donaciones marcadas con la casilla
@@ -193,7 +196,10 @@ const [detalle, setDetalle] = useState(null)
               disabled={seleccionadasLista.length === 0}
               onClick={() => setAccion({ tipo: 'eliminar', donaciones: seleccionadasLista })}
             >
-              Eliminar Donación
+            Eliminar Donación
+            </button>
+            <button className="area-action" type="button" onClick={() => setGestionandoCuentas(true)}>
+              Cuentas Bancarias
             </button>
           </>
         )}
@@ -357,6 +363,9 @@ const [detalle, setDetalle] = useState(null)
           )}
           {registrando && (
             <DonationPresencialForm onClose={() => setRegistrando(false)} onListo={accionTerminada} />
+          )}
+          {gestionandoCuentas && (
+            <DonationCuentasModal usuario={usuario} onClose={() => setGestionandoCuentas(false)} />
           )}
           {detalle && (
             <DonationDetalleModal

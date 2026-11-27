@@ -13,5 +13,6 @@ router.use(requireAuth);
 router.get('/', c.getCuentas);                 // interno
 router.post('/', requireRol(ROLES.ADMIN), validate(createCuentaSchema), c.createCuenta);
 router.patch('/:id', requireRol(ROLES.ADMIN), validate(idParamSchema, 'params'), validate(updateCuentaSchema), c.updateCuenta);
+router.delete('/:id', requireRol(ROLES.ADMIN), validate(idParamSchema, 'params'), c.deleteCuenta);
 
 export default router;
