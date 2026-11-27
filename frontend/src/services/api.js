@@ -321,6 +321,11 @@ export function crearCuenta(cuenta) {
   return postJson('/cuentas-transferencia', cuenta)
 }
 
+// cambios: solo los campos que cambiaron (correo: null para borrarlo)
+export function actualizarCuenta(id, cambios) {
+  return sendJson('PATCH', `/cuentas-transferencia/${id}`, cambios)
+}
+
 // responde { resultado: 'eliminada' | 'desactivada' }
 export function eliminarCuenta(id) {
   return sendJson('DELETE', `/cuentas-transferencia/${id}`)

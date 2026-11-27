@@ -163,3 +163,9 @@
   color: #536d6e;
   font-size: 0.875rem;
 }
+
+.donation-cuentas-admin__acciones {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}

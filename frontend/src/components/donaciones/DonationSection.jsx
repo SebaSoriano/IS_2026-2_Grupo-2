@@ -198,11 +198,12 @@ const [detalle, setDetalle] = useState(null)
             >
             Eliminar Donación
             </button>
-            <button className="area-action" type="button" onClick={() => setGestionandoCuentas(true)}>
-              Cuentas Bancarias
-            </button>
           </>
         )}
+        {/* la admin gestiona todas las cuentas; los demás solo modifican la suya */}
+        <button className="area-action" type="button" onClick={() => setGestionandoCuentas(true)}>
+          Cuentas Bancarias
+        </button>
       </div>
 
       {/* la sección es una grilla de 2 columnas (botones | contenido): el contenido va en un solo bloque */}
