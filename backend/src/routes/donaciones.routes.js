@@ -33,10 +33,11 @@ router.get('/estadisticas', c.getEstadisticas);
 router.get('/:id', id, c.getDonacionById);
 router.get('/:id/comprobante', id, c.getComprobante);
 
-router.post('/', validate(createDonacionPresencialSchema), c.createDonacionPresencial);
+router.post('/', recibirComprobante, validate(createDonacionPresencialSchema), c.createDonacionPresencial);
 
 router.patch('/:id/agendar', id, validate(agendarDonacionSchema), c.agendarDonacion);
 router.patch('/:id/confirmar', id, validate(confirmarDonacionSchema), c.confirmarDonacion);
+router.patch('/:id/rechazar', id, c.rechazarDonacion);
 router.patch('/:id', requireRol(ROLES.ADMIN), id, validate(updateDonacionSchema), c.updateDonacion);
 
 router.delete('/:id', requireRol(ROLES.ADMIN), id, c.deleteDonacion);

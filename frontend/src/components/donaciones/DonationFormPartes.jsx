@@ -1,12 +1,3 @@
-// La API responde los errores como [{ campo, mensaje }]; esto los convierte en { campo: mensaje }
-export function erroresPorCampo(error) {
-  return Object.fromEntries((error.details ?? []).map(({ campo, mensaje }) => [campo, mensaje]))
-}
-
-// Los campos opcionales vacíos NO se envían: un teléfono "" fallaría la validación del backend
-export const sinVacios = (objeto) =>
-  Object.fromEntries(Object.entries(objeto).filter(([, valor]) => valor !== ''))
-
 export function Campo({ etiqueta, error, ayuda, children }) {
   return (
     <label className="donation-field">

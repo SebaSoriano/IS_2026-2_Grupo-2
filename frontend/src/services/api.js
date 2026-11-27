@@ -267,13 +267,17 @@ export function agendarDonacion(id, fecha_agendada) {
 export function confirmarDonacion(id, datos) {
   return sendJson('PATCH', `/donaciones/${id}/confirmar`, datos)
 }
+export function rechazarDonacion(id) {
+  return sendJson('PATCH', `/donaciones/${id}/rechazar`)
+}
 
 export function eliminarDonacion(id) {
   return sendJson('DELETE', `/donaciones/${id}`)
 }
 // Formulario con archivo: el navegador arma solo el Content-Type (incluye un "boundary"), por eso NO se escribe ese header
 async function postFormData(path, formData) {
-  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', body: formData })
+  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', credentials: 'include', body: formData }) // ← credentials
+  revisarSesion(response) // ← nueva
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -304,6 +308,10 @@ export async function getCuentasPublicas() {
 // formData lleva los campos de texto y el archivo en el campo "comprobante"
 export function crearDonacionWebConComprobante(formData) {
   return postFormData('/donaciones/web', formData)
+}
+// formData lleva los campos de texto y el archivo en el campo "comprobante"
+export function crearDonacionPresencialConComprobante(formData) {
+  return postFormData('/donaciones', formData)
 }
 
 // ---------- Historial medico ----------
