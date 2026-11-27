@@ -6,7 +6,7 @@ import CampoFecha from '../fecha/CampoFecha.jsx'
 import HistorialInsumos from './HistorialInsumos.jsx'
 import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
-import '../AnimalForm.css'
+import '../animales/AnimalForm.css'
 // tamaño y orden de los campos propios de esta ventana (más ancha que la de animales)
 import './HistorialForm.css'
 
