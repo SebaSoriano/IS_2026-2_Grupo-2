@@ -16,6 +16,10 @@ const PASSWORD_DE_PRUEBA = 'admin1234';
 
 async function main() {
     console.log('Poblacion de datos iniciada \n -Limpiando datos anteriores.');
+    // los movimientos y los insumos usados se borran primero, porque apuntan a usuarios,
+    // insumos y registros medicos que se borran mas abajo
+    await prisma.movimiento_insumo.deleteMany();
+    await prisma.historial_insumo.deleteMany();
     await prisma.turno.deleteMany();
     await prisma.adopciones.deleteMany();
     await prisma.donaciones.deleteMany();
@@ -149,9 +153,9 @@ async function main() {
         { tipo_insumo: 'Higiene y aseo', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Arena sanitaria para gatos en bolsas de 10 kg', cantidad: 12, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Salud', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: 1090, descripcion: 'Gasas estériles para curaciones bajo supervisión veterinaria', cantidad: 10, rut_usuario: '44444444-4' },
         { tipo_insumo: 'Higiene y aseo', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Guantes de nitrilo para manejo e higiene', cantidad: 14, rut_usuario: '44444444-4' },
-        { tipo_insumo: 'Salud', unidad_medida: 'unidad', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '11111111-1' },
-        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Desinfectante de superficies en bidones de 5 litros para caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
-        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Limpiador enzimático en botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Salud', unidad_medida: 'unidad', tipo_control: 'estado', estado_envase: 'cerrado', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '11111111-1' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', tipo_control: 'estado', estado_envase: 'cerrado', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Desinfectante de superficies en bidones de 5 litros para caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', tipo_control: 'estado', estado_envase: 'cerrado', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Limpiador enzimático en botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
         { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Bolsas resistentes para residuos', cantidad: 25, rut_usuario: '11111111-1' },
         { tipo_insumo: 'Accesorios y juguetes', unidad_medida: 'unidad', dias_ingreso: -5, dias_vencimiento: null, descripcion: 'Correas de 1.5 m para paseos supervisados', cantidad: 10, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Toallas absorbentes para limpieza y cuidado de animales', cantidad: 7, rut_usuario: '44444444-4' },
