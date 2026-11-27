@@ -270,6 +270,11 @@ export async function getAnimalesPublicos() {
       edad: true,
       peso_animal: true,
       foto_animal: true,
+      // Galería para el carrusel: solo la ruta de cada foto, en el orden en que se subieron
+      fotos: {
+        select: { id_foto: true, ruta: true },
+        orderBy: { id_foto: 'asc' },
+      },
     },
     // Muestra primero las mascotas registradas más recientemente.
     orderBy: { id_animal: 'desc' },

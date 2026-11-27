@@ -7,6 +7,7 @@ import Modal from './schedule/Modal.jsx';
 import perroImage from './assets/perro.png';
 import gatoImage from './assets/cat.png';
 import { getAnimalesPublicos } from './services/api.js';
+import AnimalCarrusel from './components/animales/AnimalCarrusel.jsx';
 
 function fotoDeEjemplo(especie) {
   const especieNormalizada = especie.trim().toLowerCase();
@@ -56,6 +57,8 @@ function TarjetaAnimal({ animal, onVerDetalles }) {
 export default function PublicPage() {
   const [vistaDonar, setVistaDonar] = useState(null);
   const [animalDetalles, setAnimalDetalles] = useState(null);
+  // Animal cuyas fotos se están mirando en el carrusel (null = carrusel cerrado)
+  const [animalFotos, setAnimalFotos] = useState(null);
   const [animales, setAnimales] = useState([]);
   const [estadoCarga, setEstadoCarga] = useState('cargando');
   const [errorCarga, setErrorCarga] = useState('');
@@ -231,13 +234,34 @@ export default function PublicPage() {
             </dl>
           </div>
           <div className="modal__actions">
+            {animalDetalles.fotos?.length > 1 && (
+              <button
+                className="pet-card__details-button"
+                type="button"
+                onClick={() => {
+                  setAnimalFotos(animalDetalles);
+                  setAnimalDetalles(null);
+                }}
+              >
+                Ver todas las fotos ({animalDetalles.fotos.length})
+              </button>
+            )}
             <a className="pet-card__adopt-button" href={`/adoptar?animal=${animalDetalles.id_animal}`}>
               Quiero adoptar a {animalDetalles.nombre_animal}
             </a>
           </div>
         </Modal>
       )}
-
+      {animalFotos && (
+        <AnimalCarrusel
+          animal={animalFotos}
+          puedeEliminar={false}
+          onClose={() => {
+            setAnimalDetalles(animalFotos);
+            setAnimalFotos(null);
+          }}
+        />
+      )}
       {vistaDonar === 'opciones' && (
         <DonationPanels onContinuar={setVistaDonar} onClose={cerrarDonar} />
       )}
