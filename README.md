@@ -176,7 +176,7 @@ Formatos que valida la API:
 - **RUT**: sin puntos y con guion, por ejemplo `12345678-9`. Una `k` minúscula se convierte a `K`.
 - **Fechas**: texto en formato `AAAA-MM-DD`.
 - **Teléfono**: entre 8 y 15 dígitos, puede empezar con `+`.
-- **Día (`horario_id`)**: número del `1` (Lunes) al `7` (Domingo).
+- **Día de la semana (`dia_semana_id`)**: número del `1` (Lunes) al `7` (Domingo). Lo calcula el backend a partir de la `fecha` del turno.
 - **Horas de un turno**: bloques de una hora con formato `HH:00`. La llegada (`hora_inicio`) va de `08:00` a `19:00` y la salida (`hora_fin`, opcional) de `09:00` a `20:00`.
 
 Los errores responden JSON con la forma `{ "error": "mensaje" }`. Cuando falla la validación de Zod, la respuesta es `400` e indica qué campo falló:
@@ -216,8 +216,6 @@ Los errores responden JSON con la forma `{ "error": "mensaje" }`. Cuando falla l
 
 | Método | Ruta | Descripción |
 |---|---|---|
-| GET | `/api/turnos` | Lista todos los turnos, ordenados por día y hora |
-| GET | `/api/turnos/:rut` | Turnos de un usuario (`404` si el usuario no existe) |
 | POST | `/api/turnos` | Asigna un usuario a un bloque horario de un día |
 | PUT | `/api/turnos/:id` | Modifica un turno: usuario, día u horas (basta con enviar los campos que cambian) |
 | DELETE | `/api/turnos/:id` | Elimina un turno |
@@ -293,13 +291,13 @@ Cada turno de la respuesta trae su `id`, que se usa para editarlo o borrarlo.
 ```json
 {
   "rut_usuario": "22222222-2",
-  "horario_id": 2,
+  "fecha": "2026-12-01",
   "hora_inicio": "08:00",
   "hora_fin": "10:00"
 }
 ```
 
-Asigna al usuario el martes de 08:00 a 10:00. `hora_fin` es opcional: si solo se registra la hora de llegada, se omite. Responde `201` con el turno creado. Varias personas pueden estar en el mismo bloque, pero si el turno se cruza con otro de la misma persona ese día responde `409`.
+Asigna al usuario el martes 1 de diciembre de 2026 de 08:00 a 10:00. `hora_fin` es opcional: si solo se registra la hora de llegada, se omite. Responde `201` con el turno creado. Varias personas pueden estar en el mismo bloque, pero si el turno se cruza con otro de la misma persona ese día responde `409`.
 
 **Cambiar un turno de día**
 
@@ -309,12 +307,12 @@ Asigna al usuario el martes de 08:00 a 10:00. `hora_fin` es opcional: si solo se
 
 ```json
 {
-  "horario_id": 3,
+  "fecha": "2026-12-02",
   "hora_inicio": "08:00"
 }
 ```
 
-Mueve el turno al miércoles a las 08:00. Para quitar la hora de salida, envía `"hora_fin": null`.
+Mueve el turno al miércoles 2 de diciembre a las 08:00. Para quitar la hora de salida, envía `"hora_fin": null`.
 
 **Borrar un turno**
 

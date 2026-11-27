@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarUsuario, crearUsuario } from '../services/api.js'
-import { roles } from '../data/roles.js'
+import { actualizarUsuario, crearUsuario } from '../../services/api.js'
+import { roles } from '../../data/roles.js'
 import './VolunteerForm.css'
 
 // Valores iniciales al crear
@@ -60,6 +60,12 @@ function armarDatos(formulario, esEdicion) {
 export default function VolunteerForm({ usuario, onClose, onSaved }) {
   // Si recibe un usuario, está modificando; si no, está creando
   const esEdicion = usuario != null
+
+  // El rol Admin no se ofrece al crear ni al modificar a otro usuario.
+  // Solo aparece si se está modificando a alguien que YA es Admin (para no cambiarle el rol sin querer)
+  const rolesQueSePuedenElegir = roles.filter(
+    (rol) => rol.nombre !== 'Admin' || (esEdicion && usuario.rol_id === rol.id),
+  )
 
   const [formulario, setFormulario] = useState(
     esEdicion ? formularioDesdeUsuario(usuario) : formularioVacio,
@@ -176,7 +182,7 @@ export default function VolunteerForm({ usuario, onClose, onSaved }) {
           <label className="volunteer-form__field">
             Rol
             <select name="rol_id" value={formulario.rol_id} onChange={cambiarCampo} required>
-              {roles.map((rol) => (
+              {rolesQueSePuedenElegir.map((rol) => (
                 <option value={rol.id} key={rol.id}>
                   {rol.nombre}
                 </option>

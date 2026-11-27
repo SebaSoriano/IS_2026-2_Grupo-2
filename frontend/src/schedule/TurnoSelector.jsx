@@ -9,7 +9,13 @@ const describirHoras = (turno) =>
 
 // lista de turnos para elegir cual editar o borrar, con un filtro por nombre o dia
 // mensajeVacio se muestra cuando no hay turnos que se puedan elegir
-export default function TurnoSelector({ turnos, onSelect, mensajeVacio = 'No hay turnos que coincidan' }) {
+// placeholder cambia segun quien busca: el Admin ve turnos de todos, el resto solo los propios
+export default function TurnoSelector({
+  turnos,
+  onSelect,
+  mensajeVacio = 'No hay turnos que coincidan',
+  placeholder = 'Nombre o día...',
+}) {
   const [filtro, setFiltro] = useState('')
 
   const visibles = turnos.filter((turno) =>
@@ -24,7 +30,7 @@ export default function TurnoSelector({ turnos, onSelect, mensajeVacio = 'No hay
         className="turno-form__input"
         type="text"
         autoComplete="off"
-        placeholder="Nombre o día..."
+        placeholder={placeholder}
         value={filtro}
         onChange={(event) => setFiltro(event.target.value)}
         autoFocus

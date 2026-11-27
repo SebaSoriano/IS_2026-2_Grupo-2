@@ -29,6 +29,25 @@ export function puedeAsignarTurnos(usuario) {
   return usuario?.rol === ROLES.ADMIN
 }
 
+// Decidir sobre las adopciones (agendar visitas, rechazar y marcar como adoptado) es solo del Admin.
+// Ingresar adoptantes y solicitudes lo pueden hacer todos los roles (puedeAgregar)
+export function puedeGestionarAdopciones(usuario) {
+  return usuario?.rol === ROLES.ADMIN
+}
+
+// Editar y borrar turnos: el Admin puede con cualquier turno;
+// Veterinaria y Voluntario solo con sus propios turnos (los que tienen su rut), no los de otras personas
+export function puedeModificarTurno(usuario, turno) {
+  if (usuario?.rol === ROLES.ADMIN) return true
+  return puedeAgregar(usuario) && turno?.rut_usuario === usuario.rut
+}
+
+// Corregir la asistencia a mano (en la tabla de Asistencia) es solo del Admin;
+// Veterinaria y Voluntario ven la tabla, pero no pueden corregirla
+export function puedeCorregirAsistencia(usuario) {
+  return usuario?.rol === ROLES.ADMIN
+}
+
 // Crear, modificar y eliminar usuarios (la sección Voluntarios) es solo del Admin
 export function puedeGestionarUsuarios(usuario) {
   return usuario?.rol === ROLES.ADMIN

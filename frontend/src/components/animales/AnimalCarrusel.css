@@ -1,0 +1,116 @@
+/* El popup del carrusel es más ancho que los demás (por defecto .modal mide 520px) */
+.modal.animal-carrusel-modal {
+  max-width: 640px;
+}
+
+.animal-carrusel {
+  display: grid;
+  gap: 10px;
+}
+
+/* position: relative permite ubicar las flechas y la etiqueta "Portada" encima de la foto */
+.animal-carrusel__visor {
+  position: relative;
+}
+
+/* aspect-ratio 4/3 deja todas las fotos del mismo tamaño; contain la muestra completa sin recortar */
+.animal-carrusel__foto {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  background: #f0fbfa;
+  object-fit: contain;
+}
+
+/* Flechas centradas verticalmente a cada lado de la foto */
+.animal-carrusel__flecha {
+  position: absolute;
+  top: 50%;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: #071b1c99;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.animal-carrusel__flecha:hover {
+  background: #071b1ccc;
+}
+
+.animal-carrusel__flecha:disabled {
+  display: none;
+}
+
+.animal-carrusel__flecha--anterior {
+  left: 8px;
+}
+
+.animal-carrusel__flecha--siguiente {
+  right: 8px;
+}
+
+.animal-carrusel__portada {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  color: #064c3e;
+  background: #19efa0;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.animal-carrusel__contador {
+  margin: 0;
+  color: #536d6e;
+  text-align: center;
+}
+
+/* Fila de miniaturas: si no caben, se puede deslizar hacia el lado */
+.animal-carrusel__miniaturas {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  overflow-x: auto;
+}
+
+.animal-carrusel__miniatura {
+  flex: none;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: none;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.animal-carrusel__miniatura img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* Miniatura de la foto que se está mirando */
+.animal-carrusel__miniatura[aria-pressed='true'] {
+  border-color: #3ba5a3;
+  opacity: 1;
+}
+
+.animal-carrusel__error {
+  margin: 0;
+  color: #a32121;
+}
+
+.animal-carrusel__vacio {
+  margin: 0;
+  color: #536d6e;
+}

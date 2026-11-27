@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { scheduleActions } from '../data/scheduleActions.js'
-import { actualizarTurno, crearTurno, eliminarTurno, getHorarios } from '../services/api.js'
+import {
+  actualizarTurno,
+  crearTurno,
+  eliminarTurno,
+  getHorarios,
+  getTurnoParaLlegada,
+  registrarLlegada,
+} from '../services/api.js'
 import AttendanceSection from './AttendanceSection.jsx'
 import ExportModal from './ExportModal.jsx'
 import Modal from './Modal.jsx'
@@ -27,19 +34,22 @@ const RUTA_ASISTENCIA = '/intranet/horario/asistencia'
 const vistaDesdeRuta = () =>
   window.location.pathname.replace(/\/+$/, '') === RUTA_ASISTENCIA ? 'asistencia' : 'horario'
 
+// cada cuanto se revisa si la persona tiene un turno en curso, para mostrar u ocultar el boton "Llegué"
+const REVISAR_LLEGADA_CADA_MS = 60 * 1000
+
 export default function ScheduleSection() {
   // cada botón se muestra según lo que hace:
   // - "Añadir turno" crea un turno nuevo: lo ven todos los roles (puedeAgregar)
-  // - "Editar turno" y "Borrar turno" cambian uno que ya existe: solo Admin y Veterinaria (puedeEditar)
+  // - "Editar turno" y "Borrar turno" también los ven todos los roles, pero en la lista solo aparecen
+  //   los turnos que cada uno puede cambiar (puedeModificarTurno): el Admin todos, el resto solo los propios
   // - "Asistencia" y "Exportar" solo muestran información: los ve cualquiera
-  const { puedeAgregar, puedeEditar, puedeAsignarTurnos } = usePermisos()
+  const { puedeAgregar, puedeAsignarTurnos, puedeModificarTurno } = usePermisos()
   // Veterinaria y Voluntario solo añaden turnos a su nombre: el formulario parte con su persona fija
   const sesion = useSesion()
   const personaPropia = sesion ? { rut_usuario: sesion.rut, nombre_usuario: sesion.nombre } : null
   const accionesVisibles = scheduleActions.filter((action) => {
     const modal = MODAL_POR_ACCION[action]
-    if (modal === 'crear') return puedeAgregar
-    if (modal === 'editar' || modal === 'borrar') return puedeEditar
+    if (modal === 'crear' || modal === 'editar' || modal === 'borrar') return puedeAgregar
     return true
   })
   const [horarios, setHorarios] = useState([])
@@ -58,6 +68,42 @@ export default function ScheduleSection() {
   const [mes, setMes] = useState(mesActual)
   // cuenta los cambios de turnos para que la asistencia recargue los dias con turno
   const [cambiosTurnos, setCambiosTurnos] = useState(0)
+  // turno de la persona de la sesion en que puede apretar "Llegué" ahora (null: el boton no se muestra)
+  const [turnoLlegada, setTurnoLlegada] = useState(null)
+  const [registrandoLlegada, setRegistrandoLlegada] = useState(false)
+  const [errorLlegada, setErrorLlegada] = useState('')
+
+  // el servidor decide si hay un turno en curso (desde 10 min antes del inicio hasta que termina)
+  // se revisa al entrar, cada minuto y cuando cambian los turnos (ej: se añadio uno para ahora)
+  // si falla la consulta simplemente no se muestra el boton
+  useEffect(() => {
+    let activo = true
+    const revisar = () =>
+      getTurnoParaLlegada()
+        .then((turno) => activo && setTurnoLlegada(turno))
+        .catch(() => activo && setTurnoLlegada(null))
+    revisar()
+    const intervalo = setInterval(revisar, REVISAR_LLEGADA_CADA_MS)
+    return () => {
+      activo = false
+      clearInterval(intervalo)
+    }
+  }, [cambiosTurnos])
+
+  const marcarLlegada = async () => {
+    setRegistrandoLlegada(true)
+    setErrorLlegada('')
+    try {
+      await registrarLlegada()
+      setTurnoLlegada(null)
+      // recarga la asistencia y vuelve a revisar si queda otro turno en curso
+      setCambiosTurnos((cambios) => cambios + 1)
+    } catch (error) {
+      setErrorLlegada(error.message)
+    } finally {
+      setRegistrandoLlegada(false)
+    }
+  }
 
   // con los botones atras/adelante del navegador (o el link de Horario) la vista sigue a la URL
   useEffect(() => {
@@ -72,13 +118,19 @@ export default function ScheduleSection() {
     setVista(vistaDesdeRuta())
   }
 
+  // numero de la ultima carga pedida: si llega la respuesta de una carga anterior, se descarta
+  const ultimaCarga = useRef(0)
+
   const cargarHorarios = useCallback(() => {
+    const carga = ++ultimaCarga.current
     return getHorarios(semana)
       .then((data) => {
+        if (carga !== ultimaCarga.current) return
         setHorarios(data)
         setEstado('success')
       })
       .catch((error) => {
+        if (carga !== ultimaCarga.current) return
         setErrorCarga(error.message)
         setEstado('error')
       })
@@ -101,14 +153,19 @@ export default function ScheduleSection() {
 
   const dias = horarios.map(({ id, dia }) => ({ id, dia }))
   // turnos de la semana con su dia y fecha (ej: "Jueves 15") para el selector de editar y borrar
-  // los de dias que ya pasaron quedan fuera porque no se pueden editar ni borrar
+  // los de dias que ya pasaron quedan fuera porque no se pueden editar ni borrar,
+  // y los de otras personas tambien, si quien tiene la sesion no es Admin
   const hoy = diaDeHoy()
   const turnosEditables = horarios.flatMap((horario) =>
     horario.turnos
-      .filter((turno) => turno.fecha.slice(0, 10) >= hoy)
+      .filter((turno) => turno.fecha.slice(0, 10) >= hoy && puedeModificarTurno(turno))
       .map((turno) => ({ ...turno, dia: `${horario.dia} ${Number(turno.fecha.slice(8, 10))}` })),
   )
-  const sinTurnosEditables = 'No hay turnos de hoy en adelante en esta semana. Los turnos de días que ya pasaron no se pueden editar ni borrar.'
+  const sinTurnosEditables = puedeAsignarTurnos
+    ? 'No hay turnos de hoy en adelante en esta semana. Los turnos de días que ya pasaron no se pueden editar ni borrar.'
+    : 'No tienes turnos de hoy en adelante en esta semana. Solo puedes editar y borrar tus propios turnos, y los de días que ya pasaron no se pueden cambiar.'
+  // el Admin busca entre los turnos de todos (por nombre o dia); el resto solo ve los suyos, asi que busca por dia
+  const placeholderBuscarTurno = puedeAsignarTurnos ? 'Nombre o día...' : 'Día...'
 
   const abrirModal = (tipo) => {
     setTurnoElegido(null)
@@ -166,6 +223,18 @@ export default function ScheduleSection() {
             {action}
           </button>
         ))}
+        {turnoLlegada && (
+          <button
+            className="area-action area-action--llegue"
+            type="button"
+            onClick={marcarLlegada}
+            disabled={registrandoLlegada}
+            title={`Registrar tu llegada al turno de las ${turnoLlegada.hora_inicio}`}
+          >
+            {registrandoLlegada ? 'Registrando...' : 'Llegué'}
+          </button>
+        )}
+        {errorLlegada && <p className="area-actions__error" role="alert">{errorLlegada}</p>}
       </div>
 
       {vista === 'asistencia' && (
@@ -247,7 +316,12 @@ export default function ScheduleSection() {
               onSubmit={(turno) => guardarYRecargar(actualizarTurno(turnoElegido.id, turno))}
             />
           ) : (
-            <TurnoSelector turnos={turnosEditables} onSelect={setTurnoElegido} mensajeVacio={sinTurnosEditables} />
+            <TurnoSelector
+              turnos={turnosEditables}
+              onSelect={setTurnoElegido}
+              mensajeVacio={sinTurnosEditables}
+              placeholder={placeholderBuscarTurno}
+            />
           )}
         </Modal>
       )}
@@ -278,7 +352,12 @@ export default function ScheduleSection() {
               </div>
             </div>
           ) : (
-            <TurnoSelector turnos={turnosEditables} onSelect={setTurnoElegido} mensajeVacio={sinTurnosEditables} />
+            <TurnoSelector
+              turnos={turnosEditables}
+              onSelect={setTurnoElegido}
+              mensajeVacio={sinTurnosEditables}
+              placeholder={placeholderBuscarTurno}
+            />
           )}
         </Modal>
       )}

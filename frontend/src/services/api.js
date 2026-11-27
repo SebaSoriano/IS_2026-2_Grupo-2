@@ -103,8 +103,19 @@ async function sendJson(method, path, body) {
   return data
 }
 
-export async function getAnimales() {
-  const animales = await getJson('/animales')
+// filtros (opcional): { nombre, especie, via_ingreso, estado, edad_min, edad_max }
+// Los campos vacíos no se envían. Ej: { especie: 'perro', edad_max: '3' } → /animales?especie=perro&edad_max=3
+export async function getAnimales(filtros = {}) {
+  const parametros = new URLSearchParams()
+
+  for (const [clave, valor] of Object.entries(filtros)) {
+    if (valor !== '' && valor !== null && valor !== undefined) {
+      parametros.append(clave, valor)
+    }
+  }
+
+  const query = parametros.toString()
+  const animales = await getJson(query ? `/animales?${query}` : '/animales')
 
   if (!Array.isArray(animales)) {
     throw new Error('La respuesta de la API de animales no es válida.')
@@ -113,12 +124,31 @@ export async function getAnimales() {
   return animales
 }
 
-export function actualizarAnimal(id, animal) {
-  return sendJson('PUT', `/animales/${id}`, animal)
+export async function getAnimalesPublicos() {
+  const response = await fetch(`${API_BASE_URL}/animalesPublicos/animales`, {
+    credentials: 'omit',
+  })
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('application/json')) {
+    throw new Error('La API devolvió una respuesta que no es JSON.')
+  }
+
+  const animales = await response.json()
+
+  if (!response.ok) {
+    throw new Error(animales.error ?? `Error HTTP ${response.status}`)
+  }
+
+  if (!Array.isArray(animales)) {
+    throw new Error('La respuesta de la API pública de animales no es válida.')
+  }
+
+  return animales
 }
 
-export function eliminarAnimal(id) {
-  return sendJson('DELETE', `/animales/${id}`)
+export function actualizarAnimal(id, animal) {
+  return sendJson('PUT', `/animales/${id}`, animal)
 }
 
 export function crearAnimal(animal) {
@@ -149,9 +179,16 @@ export async function getHorarios(semana) {
 }
 
 // todos los usuarios ordenados por nombre, para elegir a quien se le asigna un turno
-//export function getUsuarios() {
-//  return getJson('/horarios/usuarios')
-//}
+// solo trae rut, nombre y correo (no los datos personales de /usuarios)
+export async function getUsuariosHorario() {
+  const usuarios = await getJson('/horarios/usuarios')
+
+  if (!Array.isArray(usuarios)) {
+    throw new Error('La respuesta de la API de usuarios no es válida.')
+  }
+
+  return usuarios
+}
 
 export function crearTurno(turno) {
   return postJson('/turnos', turno)
@@ -165,7 +202,8 @@ export function eliminarTurno(id) {
   return sendJson('DELETE', `/turnos/${id}`)
 }
 
-// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes (cada uno dice si llego a la hora)
+// asistencia de un mes ("AAAA-MM"): todos los usuarios con sus turnos de ese mes
+// cada turno trae hora_llegada y estado ('a-tiempo', 'tarde', 'ausente' o 'pendiente')
 export async function getAsistencias(mes) {
   const usuarios = await getJson(`/asistencias?mes=${mes}`)
 
@@ -176,9 +214,20 @@ export async function getAsistencias(mes) {
   return usuarios
 }
 
-// marca (true) o desmarca (false) que el usuario llego a la hora a un turno
-export function marcarAsistenciaTurno(id, llego_a_la_hora) {
-  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego_a_la_hora })
+// el Admin corrige la asistencia a mano: true la deja como llegada a la hora, false borra la llegada
+export function marcarAsistenciaTurno(id, llego) {
+  return sendJson('PATCH', `/turnos/${id}/asistencia`, { llego })
+}
+
+// turno en que la persona de la sesion puede apretar "Llegué" ahora, o null si no tiene ninguno
+export async function getTurnoParaLlegada() {
+  const { turno } = await getJson('/turnos/llegada')
+  return turno
+}
+
+// registra la llegada de la persona de la sesion a su turno actual (la hora la pone el servidor)
+export function registrarLlegada() {
+  return postJson('/turnos/llegada', {})
 }
 
 // filtros: { estado, tipo_donacion, origen }; los vacíos no se mandan
@@ -350,16 +399,6 @@ export function actualizarUsuario(rut, datos) {
 export function eliminarUsuario(rut) {
   return sendJson('DELETE', `/usuarios/${rut}`)}
 
-// Busca los animales que todavía no han sido adoptados
-export async function getAnimalesDisponibles() {
-  const animales = await getJson('/animales?adoptado=false')
-
-  if (!Array.isArray(animales)) {
-    throw new Error('La respuesta de la API de animales no es válida.')
-  }
-
-  return animales
-}
 
 // Historial de adopciones, de la más reciente a la más antigua
 export async function getAdopciones() {
@@ -372,21 +411,80 @@ export async function getAdopciones() {
   return adopciones
 }
 
-// Registra la adopción de un animal (crea también al adoptante)
-export function registrarAdopcion(idAnimal, datos) {
-  return postJson(`/animales/${idAnimal}/adopcion`, datos)
+// ----- Solicitudes de adopción -----
+
+// Pública: datos de un animal disponible, para mostrarlo en el formulario de la página pública
+export function getAnimalParaAdoptar(idAnimal) {
+  return getJson(`/adopciones/animales/${idAnimal}`)
 }
 
-// Sube la foto de un animal. Se envía como formulario (multipart/form-data), no como JSON
-export async function subirFotoAnimal(idAnimal, archivo) {
+// Pública: envía los datos del adoptante y el animal que le interesa
+export function enviarSolicitudAdopcion(datos) {
+  return postJson('/adopciones/solicitudes', datos)
+}
+
+// Intranet: solicitudes abiertas (pendientes y en proceso)
+export async function getSolicitudesAdopcion() {
+  const solicitudes = await getJson('/adopciones/solicitudes')
+
+  if (!Array.isArray(solicitudes)) {
+    throw new Error('La respuesta de la API de solicitudes no es válida.')
+  }
+
+  return solicitudes
+}
+
+// Intranet: ingresa a mano un adoptante con el animal asignado (queda "en proceso")
+export function registrarSolicitudManual(datos) {
+  return postJson('/adopciones/solicitudes/manual', datos)
+}
+
+// Intranet: adoptantes registrados en la base de datos
+export async function getAdoptantes() {
+  const adoptantes = await getJson('/adopciones/adoptantes')
+
+  if (!Array.isArray(adoptantes)) {
+    throw new Error('La respuesta de la API de adoptantes no es válida.')
+  }
+
+  return adoptantes
+}
+
+// Intranet: inicia una adopción con un adoptante existente. datos: { id_adoptante, id_animal }
+export function registrarSolicitudExistente(datos) {
+  return postJson('/adopciones/solicitudes/existente', datos)
+}
+
+// Intranet: agenda (o cambia) la hora de visita. fecha_visita: "2026-11-20T15:30"
+export function agendarVisita(idSolicitud, fecha_visita) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/visita`, { fecha_visita })
+}
+
+// Intranet: rechaza una solicitud
+export function rechazarSolicitud(idSolicitud) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/rechazar`)
+}
+
+// Intranet: marca la adopción como hecha (crea la adopción con la fecha de hoy)
+export function marcarAdoptado(idSolicitud) {
+  return sendJson('PATCH', `/adopciones/solicitudes/${idSolicitud}/adoptar`)
+}
+
+// Sube una o varias fotos de un animal. Se envía como formulario (multipart/form-data), no como JSON.
+// archivos: arreglo de File (los que entrega un <input type="file" multiple>)
+export async function subirFotosAnimal(idAnimal, archivos) {
   const formulario = new FormData()
-  formulario.append('foto', archivo)
+  for (const archivo of archivos) {
+    formulario.append('fotos', archivo) // el mismo nombre de campo que espera multer: .array('fotos')
+  }
 
   // No se pone 'Content-Type': el navegador lo arma solo con el separador que necesita
-  const response = await fetch(`${API_BASE_URL}/animales/${idAnimal}/foto`, {
+  const response = await fetch(`${API_BASE_URL}/animales/${idAnimal}/fotos`, {
     method: 'POST',
+    credentials: 'include',
     body: formulario,
   })
+  revisarSesion(response)
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -424,4 +522,9 @@ export async function getVeterinariosHistorial() {
   }
 
   return veterinarios
+}
+
+// Elimina una foto de un animal. Devuelve el animal con las fotos que le quedan
+export function eliminarFotoAnimal(idAnimal, idFoto) {
+  return sendJson('DELETE', `/animales/${idAnimal}/fotos/${idFoto}`)
 }

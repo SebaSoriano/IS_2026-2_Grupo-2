@@ -371,13 +371,21 @@ export default function InventorySection({
               <tbody>
                 {insumos.length === 0 ? (
                   <tr>
+<<<<<<< HEAD
                     <td className="inventory-empty" colSpan="9">
+=======
+                    <td className="inventory-empty" colSpan="7">
+>>>>>>> dev
                       No hay insumos registrados.
                     </td>
                   </tr>
                 ) : sortedInsumos.length === 0 ? (
                   <tr>
+<<<<<<< HEAD
                     <td className="inventory-empty" colSpan="9">
+=======
+                    <td className="inventory-empty" colSpan="7">
+>>>>>>> dev
                       No se encontraron insumos para “{search}”.
                     </td>
                   </tr>

@@ -9,6 +9,7 @@ import donacionesRoutes from './donaciones.routes.js';
 import cuentasTransfRoutes from './cuentasTransf.routes.js';
 import historialRoutes from './historial.routes.js';
 import usuariosRoutes from './usuario.routes.js';
+import animalesPublicosRoutes from './animalesPublicos.routes.js';
 
 import authRoutes from './authRoutes.js';
 import { requireAuth, requireEdicion } from '../middlewares/auth.middleware.js';
@@ -29,6 +30,13 @@ router.use('/auth', authRoutes);
 // por eso la protección se pone dentro de donaciones.routes.js y no aquí
 router.use('/donaciones', donacionesRoutes);
 
+// adopciones también tiene rutas públicas (ver el animal y enviar una solicitud),
+// por eso la protección se pone dentro de adopciones.routes.js y no aquí
+router.use('/adopciones', adopcionesRoutes);
+
+// Catálogo público de animales; este router se monta sin conSesion.
+router.use('/animalesPublicos', animalesPublicosRoutes);
+
 // ---------- Rutas de la intranet (piden sesión) ----------
 // Cada sección pasa por dos middlewares, en este orden:
 // 1. requireAuth: si no hay una cookie con un token válido responde 401 (no autenticado)
@@ -40,10 +48,11 @@ const conSesion = [requireAuth, requireEdicion];
 
 router.use('/insumos', conSesion, insumosRouter);
 router.use('/animales', conSesion, animalesRoutes);
-router.use('/turnos', conSesion, turnosRoutes);
+// en turnos el Voluntario también puede editar y borrar, pero solo sus propios turnos,
+// por eso aquí va solo requireAuth y los permisos se revisan en turnos.routes.js y en turno.service.js
+router.use('/turnos', requireAuth, turnosRoutes);
 router.use('/horarios', conSesion, horariosRoutes);
 router.use('/asistencias', conSesion, asistenciasRoutes);
-router.use('/adopciones', conSesion, adopcionesRoutes);
 router.use('/historial', conSesion, historialRoutes);
 // en usuarios, además, modificar y eliminar es solo del Admin (ver usuario.routes.js)
 router.use('/usuarios', conSesion, usuariosRoutes);

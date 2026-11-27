@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // RUT sin puntos y con guion, ej: 12345678-9
 // se pasa a mayuscula para que 12345678-k y 12345678-K sean el mismo RUT
-export const rut = z.string().regex(/^\d{7,8}-[\dkK]$/, 'Debe ser un RUT con formato 12345678-9').toUpperCase();
+export const rut = z.string().trim().regex(/^\d{7,8}-[\dkK]$/, 'Debe ser un RUT con formato 12345678-9').toUpperCase();
 
 // Valida el :rut de la URL
 export const rutParamSchema = z.object({
@@ -14,6 +14,19 @@ const fechaPasada = z.string()
   .refine((valor) => !Number.isNaN(Date.parse(valor)), { message: 'Debe ser una fecha válida', abort: true })
   .refine((valor) => new Date(valor) <= new Date(), 'La fecha no puede ser futura')
   .transform((valor) => new Date(valor));
+
+// POST /api/auth/register -> Crear un usuario (solo el Admin).
+// Valida y limpia los datos ANTES de guardarlos: así el RUT queda guardado igual que como
+// lo busca el login (sin espacios y con la K en mayúscula) y la contraseña nunca llega vacía.
+export const createUsuarioSchema = z.object({
+  rut_usuario:      rut,
+  nombre_usuario:   z.string().trim().min(2, 'Debe tener al menos 2 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
+  correo:           z.string().trim().max(100, 'Debe tener como máximo 100 caracteres').regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Debe ser un correo válido').optional(),
+  telefono:         z.string().regex(/^\+?\d{8,14}$/, 'Debe tener entre 8 y 14 dígitos (puede empezar con +)').optional(),
+  fecha_nacimiento: fechaPasada.optional(),
+  rol_id:           z.number().int().positive('Debe indicar un rol válido'),
+  contrasena:       z.string().min(6, 'Debe tener al menos 6 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
+});
 
 // PUT /api/usuarios/:rut -> Modificación de usuario.
 // Todos los campos son opcionales, pero debe tener al menos uno.

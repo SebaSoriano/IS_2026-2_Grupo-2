@@ -22,11 +22,12 @@ async function main() {
     await prisma.historial_insumo.deleteMany();
     await prisma.turno.deleteMany();
     await prisma.adopciones.deleteMany();
+    await prisma.solicitudes_adopcion.deleteMany();
     await prisma.donaciones.deleteMany();
     await prisma.cuenta_transferencia.deleteMany();
     await prisma.historial_medico.deleteMany();
     await prisma.agendamiento.deleteMany();
-    await prisma.horario.deleteMany();
+    await prisma.diaSemana.deleteMany();
     await prisma.insumo.deleteMany();
     await prisma.animales.deleteMany();
     await prisma.adoptante.deleteMany();
@@ -55,7 +56,7 @@ async function main() {
     // horario estatico: el id identifica el dia de la semana (1 = Lunes ... 7 = Domingo)
     const dias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
     for (const [i, dia] of dias.entries()) {
-        await prisma.horario.upsert({
+        await prisma.diaSemana.upsert({
             where: { id: i + 1 },
             update: { dia },
             create: { id: i + 1, dia },
@@ -92,6 +93,8 @@ async function main() {
     console.log('-Creando turnos');
     // bloques de una hora entre las 08:00 y las 20:00, ej: 8 -> "08:00"
     const hora = (h) => `${String(h).padStart(2, '0')}:00`;
+    // minutos desde las 00:00 -> "HH:MM", ej: 545 -> "09:05"
+    const horaConMinutos = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
     // los turnos son de una fecha puntual: se crean desde 3 semanas atras hasta 3 semanas adelante
     const hoy = new Date();
     const hoyUTC = Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
@@ -99,8 +102,8 @@ async function main() {
     const turnos = [];
     for (let dia = -21; dia <= 21; dia++) {
         const fecha = new Date(hoyUTC + dia * UN_DIA);
-        // horario_id es el dia de la semana de la fecha (1 = Lunes ... 7 = Domingo)
-        const horario_id = fecha.getUTCDay() || 7;
+        // dia_semana_id es el dia de la semana de la fecha (1 = Lunes ... 7 = Domingo)
+        const dia_semana_id = fecha.getUTCDay() || 7;
         for (const rut_usuario of rutUsuarios) {
             // cada usuario se anota mas o menos un tercio de los dias
             if (faker.number.int({ min: 1, max: 3 }) !== 1) continue;
@@ -114,12 +117,14 @@ async function main() {
                 turnos.push({
                     rut_usuario,
                     fecha,
-                    horario_id,
+                    dia_semana_id,
                     hora_inicio: hora(inicio),
                     // a veces se registra solo la llegada (hora_fin null)
                     hora_fin: faker.datatype.boolean() ? hora(inicio + faker.number.int({ min: 1, max: 2 })) : null,
-                    // solo los turnos que ya pasaron pueden tener asistencia
-                    llego_a_la_hora: dia <= 0 && faker.datatype.boolean({ probability: 0.7 }),
+                    // solo los turnos que ya pasaron pueden tener llegada: entre 10 min antes y 40 min despues del inicio
+                    hora_llegada: dia <= 0 && faker.datatype.boolean({ probability: 0.7 })
+                        ? horaConMinutos(inicio * 60 + faker.number.int({ min: -10, max: 40 }))
+                        : null,
                 });
             }
         }

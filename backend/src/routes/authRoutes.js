@@ -4,6 +4,7 @@ import { validate } from '../middlewares/validate.middleware.js';
 import { requireAuth, requireRol } from '../middlewares/auth.middleware.js';
 import { loginSchema } from '../schemas/auth.schema.js';
 import { ROLES } from '../config/roles.js';
+import { createUsuarioSchema } from '../schemas/usuario.schema.js';
 
 const router = Router();
 
@@ -18,6 +19,7 @@ router.get("/me", requireAuth, me);
 
 // crear cuentas solo lo puede hacer un Admin que haya iniciado sesión.
 // El orden importa: primero requireAuth (¿quién es?) y después requireRol (¿puede?)
-router.post("/register", requireAuth, requireRol(ROLES.ADMIN), register);
+// validate revisa y limpia los datos antes de crear la cuenta (ver createUsuarioSchema)
+router.post("/register", requireAuth, requireRol(ROLES.ADMIN), validate(createUsuarioSchema), register);
 
 export default router;
