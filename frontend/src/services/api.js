@@ -528,3 +528,14 @@ export async function getVeterinariosHistorial() {
 export function eliminarFotoAnimal(idAnimal, idFoto) {
   return sendJson('DELETE', `/animales/${idAnimal}/fotos/${idFoto}`)
 }
+
+// Botón "Se terminó" de Inventario: descuenta 1 envase de un insumo de tipo "estado"
+// y anota la salida en los movimientos. Devuelve el insumo actualizado.
+export function terminarEnvase(id) {
+  return sendJson('PATCH', `/insumos/${id}/terminar`)
+}
+
+// Salidas y devoluciones del inventario (las genera el historial médico), de la más reciente a la más antigua
+export function getMovimientosInventario() {
+  return getJson('/insumos/movimientos')
+}
