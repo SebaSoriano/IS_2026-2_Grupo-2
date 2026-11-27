@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { actualizarAnimal, crearAnimal, subirFotosAnimal } from '../../services/api.js'
 import { VIAS_DE_INGRESO } from '../../data/viasIngreso.js'
-import { ESTADOS_ANIMAL } from '../../data/estados.js'
+import { ESTADOS_ANIMAL, SEXOS_ANIMAL } from '../../data/estados.js'
 import './AnimalForm.css'
 
 // Valores iniciales del formulario
 const formularioVacio = {
     nombre_animal: '',
     especie_animal: '',
+    sexo_animal: '',
     via_ingreso: '',
     edad: '',
     peso_animal: '',
@@ -32,6 +33,8 @@ function formularioDesdeAnimal(animal) {
     return {
         nombre_animal: animal.nombre_animal,
         especie_animal: animal.especie_animal,
+        // los animales antiguos no tienen sexo: queda vacío para obligar a elegirlo
+        sexo_animal: animal.sexo_animal ?? '',
         via_ingreso: animal.via_ingreso,
         edad: String(animal.edad),
         peso_animal: String(animal.peso_animal),
@@ -175,6 +178,7 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         let datos = {
             nombre_animal: formulario.nombre_animal,
             especie_animal: formulario.especie_animal,
+            sexo_animal: formulario.sexo_animal,
             via_ingreso: formulario.via_ingreso,
             edad: Number(formulario.edad),
             peso_animal: Number(formulario.peso_animal),
@@ -318,7 +322,25 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
                 <span className="animal-form__error">{errores.especie_animal}</span>
             )}
             </label>
-
+            <label className="animal-form__field">
+            Sexo
+            <select
+                name="sexo_animal"
+                value={formulario.sexo_animal}
+                onChange={cambiarCampo}
+                required
+            >
+                <option value="">Selecciona una opción</option>
+                {Object.entries(SEXOS_ANIMAL).map(([valor, texto]) => (
+                <option value={valor} key={valor}>
+                    {texto}
+                </option>
+                ))}
+            </select>
+            {errores.sexo_animal && (
+                <span className="animal-form__error">{errores.sexo_animal}</span>
+            )}
+            </label>
             <label className="animal-form__field">
             Vía de ingreso
             <select

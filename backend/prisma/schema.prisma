@@ -172,6 +172,8 @@ model animales {
   via_ingreso          String       @db.VarChar(100)
   peso_animal          Float
   especie_animal       String       @db.VarChar(100)
+  // macho o hembra (opcional en la base de datos porque los animales antiguos no lo tenían; la API lo exige)
+  sexo_animal          SexoAnimal
   observaciones_animal String?
   foto_animal          String?      @db.VarChar(255)
   // disponible, en_proceso (de adopción), adoptado o fallecido
@@ -270,6 +272,11 @@ model solicitudes_adopcion {
 
   id_adoptante Int
   adoptante    adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
+}
+
+enum SexoAnimal {
+  macho
+  hembra
 }
 
 // Estados de un animal

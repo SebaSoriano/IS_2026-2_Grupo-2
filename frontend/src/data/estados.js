@@ -8,6 +8,12 @@ export const ESTADOS_ANIMAL = {
   fallecido: 'Fallecido',
 }
 
+// Textos para el enum SexoAnimal de schema.prisma
+export const SEXOS_ANIMAL = {
+  macho: 'Macho',
+  hembra: 'Hembra',
+}
+
 export const ESTADOS_SOLICITUD = {
   pendiente: 'Pendiente',
   en_proceso: 'En proceso',

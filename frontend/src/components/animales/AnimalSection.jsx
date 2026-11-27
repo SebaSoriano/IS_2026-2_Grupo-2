@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getAnimales } from '../../services/api.js'
-import { ESTADOS_ANIMAL } from '../../data/estados.js'
+import { ESTADOS_ANIMAL, SEXOS_ANIMAL } from '../../data/estados.js'
 import AnimalForm from './AnimalForm.jsx'
 import AnimalFiltros from './AnimalFiltros.jsx'
 import AnimalCarrusel from './AnimalCarrusel.jsx'
@@ -205,6 +205,7 @@ export default function AnimalSection() {
                   <th scope="col">Foto</th>
                   <th scope="col">Nombre</th>
                   <th scope="col">Especie</th>
+                  <th scope="col">Sexo</th>
                   <th scope="col">Vía de ingreso</th>
                   <th scope="col">Edad</th>
                   <th scope="col">Peso (kg)</th>
@@ -251,6 +252,7 @@ export default function AnimalSection() {
                       </td>
                       <td>{animal.nombre_animal || '—'}</td>
                       <td>{animal.especie_animal}</td>
+                      <td>{SEXOS_ANIMAL[animal.sexo_animal] ?? '—'}</td>
                       <td>{animal.via_ingreso}</td>
                       <td>{animal.edad}</td>
                       <td>{animal.peso_animal}</td>

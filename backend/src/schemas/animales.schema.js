@@ -3,6 +3,9 @@ import { z } from 'zod';
 // Estados de un animal (los mismos del enum EstadoAnimal de schema.prisma)
 export const ESTADOS_ANIMAL = ['disponible', 'en_proceso', 'adoptado', 'fallecido'];
 
+// Sexo de un animal (los mismos del enum SexoAnimal de schema.prisma)
+export const SEXOS_ANIMAL = ['macho', 'hembra'];
+
 // Desde "Modificar Animal" solo se puede marcar como disponible o fallecido.
 // "en_proceso" y "adoptado" los pone el backend desde la sección Adopción.
 const ESTADOS_EDITABLES = ['disponible', 'fallecido'];
@@ -12,6 +15,7 @@ const ESTADOS_EDITABLES = ['disponible', 'fallecido'];
 const animalSchema = z.object({
   nombre_animal:        z.string().trim().min(1, 'Campo obligatorio').max(100, 'Debe tener como máximo 100 caracteres'),
   especie_animal:       z.string().trim().min(2, 'Debe tener al menos 2 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
+  sexo_animal:          z.enum(SEXOS_ANIMAL, 'Debe elegir macho o hembra'),
   via_ingreso:          z.string().trim().min(2, 'Debe tener al menos 2 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
   edad:                 z.number().int('Debe ser un número entero').min(0).max(40),      // edad estimada, en años
   peso_animal:          z.number().min(0.01).max(150),                                   // en kg
