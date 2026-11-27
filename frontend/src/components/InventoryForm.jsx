@@ -11,19 +11,12 @@ const TIPOS_INSUMO = [
   'Otros',
 ]
 
-const ESTADOS_INSUMO = [
-  'Nuevo',
-  'Recién usado',
-  'A medio usar',
-  'Usado',
-  'Vencido',
-]
-
 const EMPTY_FORM = {
   tipo_insumo: '',
   unidad_medida: '',
   marca: '',
-  estado: 'Nuevo',
+  // por defecto el stock se controla por cantidad, como todos los insumos antes de este cambio
+  tipo_control: 'contable',
   fecha_ingreso: '',
   fecha_vencimiento: '',
   descripcion: '',
@@ -46,7 +39,7 @@ function formFromInsumo(insumo) {
     tipo_insumo: insumo.tipo_insumo ?? '',
     unidad_medida: insumo.unidad_medida ?? 'unidad',
     marca: insumo.marca ?? '',
-    estado: insumo.estado ?? 'Nuevo',
+    tipo_control: insumo.tipo_control ?? 'contable',
     fecha_ingreso: dateForInput(insumo.fecha_ingreso),
     fecha_vencimiento: dateForInput(insumo.fecha_vencimiento),
     descripcion: insumo.descripcion ?? '',
@@ -96,8 +89,10 @@ export default function InventoryForm({
       ...currentForm,
       [name]: value,
       ...(name === 'tipo_insumo'
-        ? { unidad_medida: value === 'Alimentación' ? '' : 'unidad' }
+        ? { unidad_medida: value === 'Alimentación' && currentForm.tipo_control === 'contable' ? '' : 'unidad' }
         : {}),
+      // un insumo por estado de envase se cuenta en envases, así que la unidad pasa a "unidad"
+      ...(name === 'tipo_control' && value === 'estado' ? { unidad_medida: 'unidad' } : {}),
     }))
     setFormErrors((currentErrors) => ({
       ...currentErrors,
@@ -121,7 +116,6 @@ export default function InventoryForm({
       tipo_insumo: form.tipo_insumo.trim(),
       unidad_medida: form.unidad_medida,
       marca: form.marca.trim() || null,
-      estado: form.estado,
       fecha_ingreso: form.fecha_ingreso,
       fecha_vencimiento: form.fecha_vencimiento || null,
       descripcion: form.descripcion.trim() || null,
@@ -131,6 +125,11 @@ export default function InventoryForm({
 
     if (unchangedPastExpiration) {
       delete payload.fecha_vencimiento
+    }
+
+    // tipo_control solo se manda al registrar: el backend no deja cambiarlo después
+    if (!isEditing) {
+      payload.tipo_control = form.tipo_control
     }
 
     try {
@@ -215,7 +214,32 @@ export default function InventoryForm({
           )}
         </label>
 
-        {form.tipo_insumo === 'Alimentación' ? (
+        {/* Cómo se controla el stock. Solo se elige al registrar el insumo; al modificar se muestra como texto */}
+        {isEditing ? (
+          <span className="inventory-form-field">
+            Control de stock: {form.tipo_control === 'estado' ? 'por estado de envase' : 'por cantidad'}
+          </span>
+        ) : (
+          <label className="inventory-form-field">
+            Control de stock
+            <select
+              name="tipo_control"
+              value={form.tipo_control}
+              onChange={updateFormField}
+              aria-describedby="inventory-control-help"
+            >
+              <option value="contable">Por cantidad (cada procedimiento descuenta lo que usa)</option>
+              <option value="estado">Por estado de envase (frascos, bidones, botellas)</option>
+            </select>
+            <span id="inventory-control-help">
+              {form.tipo_control === 'estado'
+                ? 'La cantidad es el número de envases. Se descuenta uno al marcar "Se terminó".'
+                : 'Ej: gasas o jeringas, donde se sabe cuántas se usaron.'}
+            </span>
+          </label>
+        )}
+
+        {form.tipo_insumo === 'Alimentación' && form.tipo_control === 'contable' ? (
           <label className="inventory-form-field">
             Unidad de medida
             <select
@@ -253,25 +277,9 @@ export default function InventoryForm({
         </label>
 
         <label className="inventory-form-field">
-          Estado
-          <select
-            name="estado"
-            value={form.estado}
-            onChange={updateFormField}
-            required
-            aria-invalid={Boolean(formErrors.estado)}
-          >
-            {ESTADOS_INSUMO.map((estado) => (
-              <option key={estado} value={estado}>{estado}</option>
-            ))}
-          </select>
-          {formErrors.estado && (
-            <span className="inventory-form-error">{formErrors.estado}</span>
-          )}
-        </label>
-
-        <label className="inventory-form-field">
-          {form.tipo_insumo === 'Alimentación'
+          {form.tipo_control === 'estado'
+            ? 'Cantidad de envases'
+            : form.tipo_insumo === 'Alimentación'
             ? `Cantidad (${form.unidad_medida === 'unidad' ? 'unidades' : form.unidad_medida || 'kg, g o unidades'})`
             : 'Cantidad'}
           <input

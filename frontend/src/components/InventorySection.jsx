@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { eliminarInsumo, getInsumos } from '../services/api.js'
+import { eliminarInsumo, getInsumos, terminarEnvase } from '../services/api.js'
+import { usePermisos } from '../sesion/sesion.js'
+import { nombreInsumo, textoEstadoEnvase } from '../utils/insumos.js'
 import InventoryForm from './InventoryForm.jsx'
+import InventoryMovimientos from './InventoryMovimientos.jsx'
 import './InventorySection.css'
 
 function formatDate(value) {
@@ -90,13 +93,20 @@ export default function InventorySection({
   const [insumos, setInsumos] = useState([])
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
-  const [sort, setSort] = useState({ key: 'tipo_insumo', direction: 'ascending' })
+  const [sort, setSort] = useState({ key: 'id', direction: 'ascending' })
   const [search, setSearch] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [actionError, setActionError] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const deleteDialogRef = useRef(null)
+  // "Se terminó" modifica el inventario, así que solo lo ven Admin y Veterinaria (igual que Modificar)
+  const { puedeEditar } = usePermisos()
+  // id del insumo cuyo "Se terminó" se está guardando (para desactivar ese botón mientras tanto)
+  const [terminandoId, setTerminandoId] = useState(null)
+  // cada vez que cambia este número se vuelve a crear InventoryMovimientos (por su key),
+  // y al crearse pide de nuevo los movimientos: así aparece la salida recién anotada
+  const [versionMovimientos, setVersionMovimientos] = useState(0)
 
   useEffect(() => {
     onSelectionCountChange(selectedIds.size)
@@ -138,9 +148,9 @@ export default function InventorySection({
     if (!normalizedQuery) return true
 
     const searchableValues = [
+      insumo.id,
       insumo.tipo_insumo,
       insumo.marca,
-      insumo.estado,
       insumo.descripcion,
       insumo.cantidad,
       insumo.fecha_ingreso,
@@ -221,6 +231,35 @@ export default function InventorySection({
     setStatus('success')
     setError('')
     setSuccessMessage('El insumo se modificó correctamente.')
+  }
+
+  // Botón "Se terminó" de un insumo de tipo "estado": pide confirmación, avisa al backend
+  // (que descuenta 1 envase y anota la salida) y reemplaza el insumo en la tabla por el actualizado.
+  const marcarTerminado = async (insumo) => {
+    const confirmado = window.confirm(
+      `¿Se terminó un envase de "${nombreInsumo(insumo)}"?\n\nSe descontará 1 del inventario y quedará anotado como salida.`,
+    )
+    if (!confirmado) return
+
+    setTerminandoId(insumo.id)
+    setActionError('')
+    setSuccessMessage('')
+    try {
+      const actualizado = await terminarEnvase(insumo.id)
+      setInsumos((currentInsumos) =>
+        currentInsumos.map((actual) => (actual.id === actualizado.id ? actualizado : actual)),
+      )
+      setVersionMovimientos((version) => version + 1)
+      setSuccessMessage(
+        actualizado.cantidad > 0
+          ? `Envase terminado. Quedan ${actualizado.cantidad} sin abrir.`
+          : 'Envase terminado. Era el último: el insumo quedó sin stock.',
+      )
+    } catch (requestError) {
+      setActionError(requestError.message)
+    } finally {
+      setTerminandoId(null)
+    }
   }
 
   const closeDeleteDialog = () => {
@@ -320,6 +359,12 @@ export default function InventorySection({
                   </th>
                   <SortableHeader
                     activeSort={sort}
+                    label="ID"
+                    onSort={sortBy}
+                    sortKey="id"
+                  />
+                  <SortableHeader
+                    activeSort={sort}
                     label="Tipo de insumo"
                     onSort={sortBy}
                     sortKey="tipo_insumo"
@@ -329,12 +374,6 @@ export default function InventorySection({
                     label="Marca"
                     onSort={sortBy}
                     sortKey="marca"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Estado"
-                    onSort={sortBy}
-                    sortKey="estado"
                   />
                   <SortableHeader
                     activeSort={sort}
@@ -366,26 +405,19 @@ export default function InventorySection({
                     onSort={sortBy}
                     sortKey="usuario"
                   />
+                  <th scope="col">Envase</th>
                 </tr>
               </thead>
               <tbody>
                 {insumos.length === 0 ? (
                   <tr>
-<<<<<<< HEAD
-                    <td className="inventory-empty" colSpan="9">
-=======
-                    <td className="inventory-empty" colSpan="7">
->>>>>>> dev
+                    <td className="inventory-empty" colSpan="10">
                       No hay insumos registrados.
                     </td>
                   </tr>
                 ) : sortedInsumos.length === 0 ? (
                   <tr>
-<<<<<<< HEAD
-                    <td className="inventory-empty" colSpan="9">
-=======
-                    <td className="inventory-empty" colSpan="7">
->>>>>>> dev
+                    <td className="inventory-empty" colSpan="10">
                       No se encontraron insumos para “{search}”.
                     </td>
                   </tr>
@@ -403,9 +435,9 @@ export default function InventorySection({
                           aria-label={`Seleccionar insumo ${insumo.id}`}
                         />
                       </td>
+                      <td>{insumo.id}</td>
                       <td>{insumo.tipo_insumo}</td>
                       <td>{insumo.marca || '—'}</td>
-                      <td>{insumo.estado || 'Nuevo'}</td>
                       <td>{insumo.descripcion || '—'}</td>
                       <td>
                         {insumo.cantidad} {insumo.unidad_medida === 'kg'
@@ -417,12 +449,36 @@ export default function InventorySection({
                       <td>{formatDate(insumo.fecha_ingreso)}</td>
                       <td>{formatDate(insumo.fecha_vencimiento)}</td>
                       <td>{insumo.usuario?.nombre_usuario || '—'}</td>
+                      <td>
+                        {/* solo los insumos de tipo "estado" tienen envase; los contables muestran una raya */}
+                        {insumo.tipo_control === 'estado' ? (
+                          <div className="inventory-envase">
+                            <span className={`inventory-envase__estado inventory-envase__estado--${insumo.estado_envase}`}>
+                              {textoEstadoEnvase(insumo)}
+                            </span>
+                            {puedeEditar && insumo.estado_envase !== 'terminado' && insumo.cantidad > 0 && (
+                              <button
+                                className="inventory-envase__terminar"
+                                type="button"
+                                onClick={() => marcarTerminado(insumo)}
+                                disabled={terminandoId === insumo.id}
+                              >
+                                {terminandoId === insumo.id ? 'Guardando...' : 'Se terminó'}
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
+          {/* debajo de los insumos, las salidas y devoluciones que generó el historial médico */}
+          <InventoryMovimientos key={versionMovimientos} />
         </>
       )}
       {(isCreateModalOpen || isEditingModalOpen) && (
