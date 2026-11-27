@@ -8,6 +8,7 @@ import adopcionesRoutes from './adopciones.routes.js';
 import donacionesRoutes from './donaciones.routes.js';
 import cuentasTransfRoutes from './cuentasTransf.routes.js';
 import historialRoutes from './historial.routes.js';
+import procedimientosRoutes from './procedimientos.routes.js';
 import usuariosRoutes from './usuario.routes.js';
 import animalesPublicosRoutes from './animalesPublicos.routes.js';
 
@@ -48,10 +49,14 @@ const conSesion = [requireAuth, requireEdicion];
 
 router.use('/insumos', conSesion, insumosRouter);
 router.use('/animales', conSesion, animalesRoutes);
-router.use('/turnos', conSesion, turnosRoutes);
+// en turnos el Voluntario también puede editar y borrar, pero solo sus propios turnos,
+// por eso aquí va solo requireAuth y los permisos se revisan en turnos.routes.js y en turno.service.js
+router.use('/turnos', requireAuth, turnosRoutes);
 router.use('/horarios', conSesion, horariosRoutes);
 router.use('/asistencias', conSesion, asistenciasRoutes);
 router.use('/historial', conSesion, historialRoutes);
+// catálogo de procedimientos médicos que sugiere el formulario del historial
+router.use('/procedimientos', conSesion, procedimientosRoutes);
 // en usuarios, además, modificar y eliminar es solo del Admin (ver usuario.routes.js)
 router.use('/usuarios', conSesion, usuariosRoutes);
 router.use('/cuentas-transferencia', cuentasTransfRoutes);

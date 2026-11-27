@@ -30,3 +30,49 @@
   left: 0;
   white-space: nowrap;
 }
+/* recuadro de "Insumos utilizados": se le quita el borde y el espacio que el navegador
+   le pone por defecto a un fieldset, para que se vea igual que los demás campos */
+.historial-form__insumos {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.historial-form__insumos legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 700;
+}
+.historial-form__agregar-procedimiento {
+  flex: none;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 5px;
+  color: #315052;
+  background: #c3eeee;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.historial-form__agregar-procedimiento:hover:not(:disabled),
+.historial-form__agregar-procedimiento:focus-visible {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.historial-form__agregar-procedimiento:disabled {
+  color: #788b8b;
+  background: #e1e8e8;
+  cursor: not-allowed;
+}
+
+/* espacio debajo del campo "Tipo de tratamiento" para que su mensaje de error
+   (que va en position: absolute) no quede encima de "Insumos utilizados" */
+.historial-form__tratamiento {
+  padding-bottom: 1.1rem;
+}

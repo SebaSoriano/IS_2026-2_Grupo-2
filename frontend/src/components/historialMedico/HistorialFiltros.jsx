@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getInsumos } from '../../services/api.js'
+import { nombreInsumo } from '../../utils/insumos.js'
 import Autocompletar from '../Autocompletar.jsx'
 import CampoFecha from '../fecha/CampoFecha.jsx'
 import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 
 // Valores iniciales del buscador: todos los campos vacíos significan "sin filtros"
-const filtrosVacios = { animal: '', veterinario: '', desde: '', hasta: '' }
+const filtrosVacios = { animal: '', veterinario: '', insumo: '', desde: '', hasta: '' }
 
 // buscador del historial médico. Guarda lo que se escribe en sus propios campos.
 export default function HistorialFiltros({
@@ -20,6 +22,21 @@ export default function HistorialFiltros({
 
   // Listas para la búsqueda con predicción de los campos Animal y Veterinario
   const { opcionesAnimales, opcionesVeterinarios } = useSugerenciasHistorial()
+
+  // Nombres de los insumos del inventario, para sugerirlos en el campo Insumo.
+  // Puede haber varios insumos con el mismo nombre
+  const [nombresInsumos, setNombresInsumos] = useState([])
+  useEffect(() => {
+    let activo = true
+    getInsumos()
+      .then((insumos) => activo && setNombresInsumos([...new Set(insumos.map(nombreInsumo))]))
+      .catch(() => {})
+    return () => {
+      activo = false
+    }
+  }, [])
+  // el nombre sirve como valor y como texto, igual que los veterinarios
+  const opcionesInsumos = nombresInsumos.map((nombre) => ({ valor: nombre, texto: nombre }))
 
   // Cambia un solo campo del buscador sin tocar los demás (lo usan los Autocompletar)
   function cambiarValor(campo, valor) {
@@ -107,11 +124,20 @@ export default function HistorialFiltros({
         />
       </label>
 
-      {/* Espacio reservado: el filtro por insumo se habilita cuando la base de datos
-          registre qué insumos se usaron en cada tratamiento */}
+      {/* Muestra solo los registros que usaron un insumo cuyo nombre contenga lo escrito.
+          Sugiere los insumos del inventario, pero se puede escribir solo una parte
+          (por ejemplo "gasas") o un tipo de insumo (por ejemplo "Salud"). */}
       <label className="historial-filtros__campo">
         Insumo
-        <input type="search" placeholder="Pendiente" disabled />
+        <Autocompletar
+          name="insumo"
+          opciones={opcionesInsumos}
+          texto={filtros.insumo}
+          onCambiarTexto={(texto) => cambiarValor('insumo', texto)}
+          onElegir={(opcion) => cambiarValor('insumo', opcion.texto)}
+          placeholder="Ej: Gasas"
+          maxLength={255}
+        />
       </label>
 
       <div className="historial-filtros__acciones">

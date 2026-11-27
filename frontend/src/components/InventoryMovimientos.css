@@ -1,0 +1,29 @@
+/* separa la tabla de movimientos de la tabla de insumos que está arriba */
+.inventory-movimientos {
+  margin-top: 24px;
+}
+
+/* etiqueta de color en la columna Tipo */
+.inventory-movimiento {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.inventory-movimiento--salida {
+  color: #a32121;
+  background: #fde8e8;
+}
+
+.inventory-movimiento--devolucion {
+  color: #064c3e;
+  background: #dff5ec;
+}
+
+/* la cantidad ("-2 unidades") no se corta en dos líneas */
+.inventory-movimiento__cantidad {
+  white-space: nowrap;
+}

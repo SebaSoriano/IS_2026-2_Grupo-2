@@ -1,13 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarHistorial, crearHistorial } from '../../services/api.js'
+import { actualizarHistorial, crearHistorial, crearProcedimiento } from '../../services/api.js'
 import { hoyIso } from '../../utils/fechas.js'
 import Autocompletar from '../Autocompletar.jsx'
 import CampoFecha from '../fecha/CampoFecha.jsx'
+import HistorialInsumos from './HistorialInsumos.jsx'
+import { useProcedimientos } from './useProcedimientos.js'
 import { useSugerenciasHistorial } from './useSugerenciasHistorial.js'
 // se reutilizan los estilos del popup de animales para que todos los formularios se vean iguales
 import '../animales/AnimalForm.css'
 // tamaño y orden de los campos propios de esta ventana (más ancha que la de animales)
 import './HistorialForm.css'
+
+// Mínimo de letras para poder agregar un procedimiento nuevo al catálogo
+// (el backend pide lo mismo en procedimientos.schema.js)
+const MINIMO_PROCEDIMIENTO = 3
+
+// Deja un nombre listo para comparar: sin espacios en los bordes, en minúsculas y sin tildes.
+// Así "vacuna antirrabica" se reconoce como el mismo procedimiento que "Vacuna Antirrábica".
+// (Es la misma idea que normalizar en Autocompletar.jsx)
+const normalizarNombre = (texto) =>
+  texto.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 // valores iniciales del formulario
 const formularioVacio = {
@@ -18,6 +30,8 @@ const formularioVacio = {
   fecha_tratamiento: '',
   veterinario: '',
   observaciones: '',
+  // insumos usados: lista de { id_insumo, cantidad } que arma HistorialInsumos
+  insumos: [],
 }
 
 // los inputs trabajan con texto: el id se pasa a String y de la fecha
@@ -30,6 +44,12 @@ function formularioDesdeRegistro(registro) {
     fecha_tratamiento: registro.fecha_tratamiento.slice(0, 10),
     veterinario: registro.veterinario,
     observaciones: registro.observaciones ?? '',
+    // los insumos que el registro ya tenía, con la cantidad como texto (como en los inputs).
+    // Los de tipo "estado" no tienen cantidad: se dejan en null (String(null) daría el texto "null")
+    insumos: registro.insumos.map((insumo) => ({
+      id_insumo: insumo.id_insumo,
+      cantidad: insumo.cantidad == null ? null : String(insumo.cantidad),
+    })),
   }
 }
 
@@ -43,6 +63,10 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
   )
   // Listas para la búsqueda con predicción de los campos Animal y Veterinario
   const { opcionesAnimales, opcionesVeterinarios } = useSugerenciasHistorial()
+  // Catálogo de procedimientos para el campo "Tipo de tratamiento"
+  const { procedimientos, estado: estadoProcedimientos, recargar: recargarProcedimientos } = useProcedimientos()
+  // true mientras se guarda un procedimiento nuevo (el botón dice "Agregando...")
+  const [agregandoProcedimiento, setAgregandoProcedimiento] = useState(false)
   const [errores, setErrores] = useState({})
   const [mensajeError, setMensajeError] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -75,6 +99,62 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
       ? 'Elige un animal de la lista'
       : ''
 
+  // Opciones para el Autocompletar: el nombre sirve como valor y como texto
+  const opcionesProcedimientos = procedimientos.map((procedimiento) => ({
+    valor: procedimiento.id_procedimiento,
+    texto: procedimiento.nombre,
+  }))
+
+  // ¿Lo escrito ya es un procedimiento del catálogo? (sin importar mayúsculas ni tildes)
+  const textoTratamiento = normalizarNombre(formulario.tratamiento)
+  const procedimientoExiste = procedimientos.some(
+    (procedimiento) => normalizarNombre(procedimiento.nombre) === textoTratamiento,
+  )
+
+  // El tipo de tratamiento se elige de la lista, igual que el animal.
+  // Si se escribió algo que no está en el catálogo, se muestra un error y no se puede guardar
+  // hasta elegir uno de la lista o agregarlo con el botón "Agregar tratamiento".
+  const tratamientoOriginal = esEdicion && formulario.tratamiento === registro.tratamiento
+  const errorTratamiento =
+    textoTratamiento !== '' &&
+    estadoProcedimientos === 'listo' &&
+    !procedimientoExiste &&
+    !tratamientoOriginal
+      ? 'Elige un tratamiento de la lista o agrégalo con el botón'
+      : ''
+
+  // El botón "Agregar tratamiento" se enciende cuando hay al menos 3 letras escritas
+  // y ese nombre todavía no está en el catálogo (si ya está, basta con elegirlo de la lista)
+  const puedeAgregarProcedimiento =
+    formulario.tratamiento.trim().length >= MINIMO_PROCEDIMIENTO &&
+    estadoProcedimientos === 'listo' &&
+    !procedimientoExiste &&
+    !agregandoProcedimiento
+
+  // Agrega lo escrito al catálogo de procedimientos (POST /api/procedimientos).
+  // Antes de guardar se muestra un aviso con el nombre tal como quedará,
+  // para que la persona revise si lo escribió bien. Si aprieta "Cancelar", no se guarda nada.
+  async function agregarProcedimiento() {
+    const nombre = formulario.tratamiento.trim()
+    const confirmado = window.confirm(`Se creará el procedimiento llamado: ${nombre}`)
+    if (!confirmado) return
+
+    setMensajeError('')
+    setAgregandoProcedimiento(true)
+    try {
+      const creado = await crearProcedimiento(nombre)
+      // se vuelve a pedir la lista para que el nuevo aparezca en las sugerencias,
+      // y se deja escrito en el campo con el nombre exacto que guardó el backend
+      await recargarProcedimientos()
+      cambiarValores({ tratamiento: creado.nombre })
+    } catch (error) {
+      // por ejemplo 409 "Ya existe el procedimiento ..." si otra persona lo agregó recién
+      setMensajeError(error.details ? error.message : 'No se pudo conectar con el servidor')
+    } finally {
+      setAgregandoProcedimiento(false)
+    }
+  }
+
   function cerrar() {
     if (enviando) return
     onClose()
@@ -86,14 +166,22 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
     setMensajeError('')
     setEnviando(true)
 
-    // Se arma lo que espera el backend: id_animal como número (no como texto)
-    // y observaciones vacías como null, para que se guarden como "sin observaciones"
+    // Se arma lo que espera el backend: id_animal y las cantidades como número (no como texto)
+    // y observaciones vacías como null, para que se guarden como "sin observaciones".
+    // Los insumos se mandan siempre como la lista COMPLETA: al crear se descuentan todos,
+    // y al modificar el backend compara con la lista anterior y solo ajusta la diferencia
+    // (si no se tocaron, todas las diferencias dan 0 y el inventario no cambia).
     const datos = {
       id_animal: Number(formulario.id_animal),
       tratamiento: formulario.tratamiento,
       fecha_tratamiento: formulario.fecha_tratamiento,
       veterinario: formulario.veterinario,
       observaciones: formulario.observaciones.trim() || null,
+      // los insumos de estado van con cantidad null (Number(null) daría 0, que el backend rechaza)
+      insumos: formulario.insumos.map((insumo) => ({
+        id_insumo: insumo.id_insumo,
+        cantidad: insumo.cantidad == null ? null : Number(insumo.cantidad),
+      })),
     }
 
     try {
@@ -113,7 +201,8 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
         setErrores(erroresPorCampo)
         setMensajeError('Revisa los campos marcados')
       } else if (error.details) {
-        // El backend respondió con otro error (por ejemplo 400 "El animal indicado no existe" o 404)
+        // El backend respondió con otro error, por ejemplo 400 "El animal indicado no existe",
+        // 404, o 409 "No hay stock suficiente de ..." si otra persona usó el insumo mientras tanto
         setMensajeError(error.message)
       } else {
         // No hubo respuesta del backend
@@ -213,29 +302,61 @@ export default function HistorialForm({ registro, onClose, onSaved }) {
           </label>
         </div>
 
-        <label className="animal-form__field">
+        {/* historial-form__tratamiento deja espacio abajo para el mensaje de error del campo */}
+        <label className="animal-form__field historial-form__tratamiento">
           Tipo de tratamiento
-          <input
+          {/* Sugiere los procedimientos del catálogo mientras se escribe.
+              "extra" pone el botón "Agregar tratamiento" a la derecha del campo, en la misma fila
+              (ver autocompletar__fila en Autocompletar.css). Es type="button" para que al
+              apretarlo no se envíe el formulario completo. */}
+          <Autocompletar
             name="tratamiento"
-            type="text"
-            value={formulario.tratamiento}
-            onChange={cambiarCampo}
-            placeholder="Ej: Vacuna antirrábica"
-            minLength={2}
-            maxLength={500}
+            opciones={opcionesProcedimientos}
+            texto={formulario.tratamiento}
+            onCambiarTexto={(texto) => cambiarValores({ tratamiento: texto })}
+            onElegir={(opcion) => cambiarValores({ tratamiento: opcion.texto })}
+            placeholder="Ej: Vacuna Antirrábica"
+            maxLength={100}
+            error={errorTratamiento}
             required
+            extra={
+              <button
+                className="historial-form__agregar-procedimiento"
+                type="button"
+                onClick={agregarProcedimiento}
+                disabled={!puedeAgregarProcedimiento}
+                title={
+                  procedimientoExiste
+                    ? 'Este tratamiento ya está en la lista'
+                    : `Escribe al menos ${MINIMO_PROCEDIMIENTO} letras para agregarlo a la lista`
+                }
+              >
+                {agregandoProcedimiento ? 'Agregando...' : 'Agregar tratamiento'}
+              </button>
+            }
           />
           {errores.tratamiento && (
             <span className="animal-form__error">{errores.tratamiento}</span>
           )}
         </label>
 
-        {/* Espacio reservado para los insumos: se habilita cuando la base de datos
-            registre qué insumos se usaron en cada tratamiento */}
-        <label className="animal-form__field">
-          Insumos utilizados
-          <input type="text" placeholder="Pendiente: aún no se registran en la base de datos" disabled />
-        </label>
+        {/* fieldset agrupa los campos del selector de insumos bajo un mismo título (legend).
+            Se usa en vez de label porque adentro hay varios campos, no uno solo */}
+        <fieldset className="historial-form__insumos">
+          <legend>Insumos utilizados</legend>
+          <HistorialInsumos
+            elegidos={formulario.insumos}
+            onChange={(insumos) => cambiarValores({ insumos })}
+            usadosAntes={esEdicion ? registro.insumos : []}
+          />
+          {esEdicion && (
+            <p className="historial-insumos__ayuda">
+              Al guardar, el inventario se ajusta: si usas más se descuenta la diferencia y si usas menos
+              o quitas un insumo, se devuelve.
+            </p>
+          )}
+          {errores.insumos && <span className="animal-form__error">{errores.insumos}</span>}
+        </fieldset>
 
         <label className="animal-form__field">
           Observaciones

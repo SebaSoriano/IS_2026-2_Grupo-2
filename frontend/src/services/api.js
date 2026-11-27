@@ -536,3 +536,38 @@ export async function getVeterinariosHistorial() {
 export function eliminarFotoAnimal(idAnimal, idFoto) {
   return sendJson('DELETE', `/animales/${idAnimal}/fotos/${idFoto}`)
 }
+
+// Botón "Se terminó" de Inventario: descuenta 1 envase de un insumo de tipo "estado"
+// y anota la salida en los movimientos. Devuelve el insumo actualizado.
+export function terminarEnvase(id) {
+  return sendJson('PATCH', `/insumos/${id}/terminar`)
+}
+
+// Salidas y devoluciones del inventario (las genera el historial médico), de la más reciente a la más antigua
+export function getMovimientosInventario() {
+  return getJson('/insumos/movimientos')
+}
+
+// ---------- Procedimientos médicos (catálogo) ----------
+// Lista de procedimientos comunes (vacunas, controles, cirugías...) que el formulario
+// del historial médico sugiere mientras se escribe el tipo de tratamiento.
+export async function getProcedimientos() {
+  const procedimientos = await getJson('/procedimientos')
+
+  if (!Array.isArray(procedimientos)) {
+    throw new Error('La respuesta de la API de procedimientos no es válida.')
+  }
+
+  return procedimientos
+}
+
+// Agrega un procedimiento al catálogo. Devuelve el procedimiento creado, con su id
+export function crearProcedimiento(nombre) {
+  return postJson('/procedimientos', { nombre })
+}
+
+// Borra un procedimiento del catálogo (solo Admin y Veterinaria).
+// Los registros médicos que ya lo usaban no cambian, porque guardan el nombre como texto.
+export function eliminarProcedimiento(id) {
+  return sendJson('DELETE', `/procedimientos/${id}`)
+}

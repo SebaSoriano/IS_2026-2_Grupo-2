@@ -40,16 +40,16 @@ const REVISAR_LLEGADA_CADA_MS = 60 * 1000
 export default function ScheduleSection() {
   // cada botón se muestra según lo que hace:
   // - "Añadir turno" crea un turno nuevo: lo ven todos los roles (puedeAgregar)
-  // - "Editar turno" y "Borrar turno" cambian uno que ya existe: solo Admin y Veterinaria (puedeEditar)
+  // - "Editar turno" y "Borrar turno" también los ven todos los roles, pero en la lista solo aparecen
+  //   los turnos que cada uno puede cambiar (puedeModificarTurno): el Admin todos, el resto solo los propios
   // - "Asistencia" y "Exportar" solo muestran información: los ve cualquiera
-  const { puedeAgregar, puedeEditar, puedeAsignarTurnos } = usePermisos()
+  const { puedeAgregar, puedeAsignarTurnos, puedeModificarTurno } = usePermisos()
   // Veterinaria y Voluntario solo añaden turnos a su nombre: el formulario parte con su persona fija
   const sesion = useSesion()
   const personaPropia = sesion ? { rut_usuario: sesion.rut, nombre_usuario: sesion.nombre } : null
   const accionesVisibles = scheduleActions.filter((action) => {
     const modal = MODAL_POR_ACCION[action]
-    if (modal === 'crear') return puedeAgregar
-    if (modal === 'editar' || modal === 'borrar') return puedeEditar
+    if (modal === 'crear' || modal === 'editar' || modal === 'borrar') return puedeAgregar
     return true
   })
   const [horarios, setHorarios] = useState([])
@@ -153,14 +153,19 @@ export default function ScheduleSection() {
 
   const dias = horarios.map(({ id, dia }) => ({ id, dia }))
   // turnos de la semana con su dia y fecha (ej: "Jueves 15") para el selector de editar y borrar
-  // los de dias que ya pasaron quedan fuera porque no se pueden editar ni borrar
+  // los de dias que ya pasaron quedan fuera porque no se pueden editar ni borrar,
+  // y los de otras personas tambien, si quien tiene la sesion no es Admin
   const hoy = diaDeHoy()
   const turnosEditables = horarios.flatMap((horario) =>
     horario.turnos
-      .filter((turno) => turno.fecha.slice(0, 10) >= hoy)
+      .filter((turno) => turno.fecha.slice(0, 10) >= hoy && puedeModificarTurno(turno))
       .map((turno) => ({ ...turno, dia: `${horario.dia} ${Number(turno.fecha.slice(8, 10))}` })),
   )
-  const sinTurnosEditables = 'No hay turnos de hoy en adelante en esta semana. Los turnos de días que ya pasaron no se pueden editar ni borrar.'
+  const sinTurnosEditables = puedeAsignarTurnos
+    ? 'No hay turnos de hoy en adelante en esta semana. Los turnos de días que ya pasaron no se pueden editar ni borrar.'
+    : 'No tienes turnos de hoy en adelante en esta semana. Solo puedes editar y borrar tus propios turnos, y los de días que ya pasaron no se pueden cambiar.'
+  // el Admin busca entre los turnos de todos (por nombre o dia); el resto solo ve los suyos, asi que busca por dia
+  const placeholderBuscarTurno = puedeAsignarTurnos ? 'Nombre o día...' : 'Día...'
 
   const abrirModal = (tipo) => {
     setTurnoElegido(null)
@@ -311,7 +316,12 @@ export default function ScheduleSection() {
               onSubmit={(turno) => guardarYRecargar(actualizarTurno(turnoElegido.id, turno))}
             />
           ) : (
-            <TurnoSelector turnos={turnosEditables} onSelect={setTurnoElegido} mensajeVacio={sinTurnosEditables} />
+            <TurnoSelector
+              turnos={turnosEditables}
+              onSelect={setTurnoElegido}
+              mensajeVacio={sinTurnosEditables}
+              placeholder={placeholderBuscarTurno}
+            />
           )}
         </Modal>
       )}
@@ -342,7 +352,12 @@ export default function ScheduleSection() {
               </div>
             </div>
           ) : (
-            <TurnoSelector turnos={turnosEditables} onSelect={setTurnoElegido} mensajeVacio={sinTurnosEditables} />
+            <TurnoSelector
+              turnos={turnosEditables}
+              onSelect={setTurnoElegido}
+              mensajeVacio={sinTurnosEditables}
+              placeholder={placeholderBuscarTurno}
+            />
           )}
         </Modal>
       )}
