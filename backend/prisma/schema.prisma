@@ -11,56 +11,63 @@ datasource db {
 
 // Relacion 1:N, un usuario puede tener muchos agendamientos, pero un agendamiento solo puede tener un usuario
 model Usuario {
-    rut_usuario String @id
-    nombre_usuario String
-    correo String? @db.VarChar(100) //el "?" indica que es opcional
-    telefono String? @db.VarChar(15)
-    fecha_nacimiento DateTime?
-    contrasena String @db.VarChar(100)
-    agendamientos  Agendamiento[] //el "Muchos" de la relacion
-    insumos        Insumo[] //el "Muchos" de la relacion
-    turnos        Turno[] //el "Muchos" de la relacion
-    donaciones    donaciones[] //el "Muchos" de la relacion
-    adopciones  adopciones[]
-    rol_id Int
-    rol Rol @relation(fields: [rol_id], references: [id])
-    cuentas       cuenta_transferencia[]
+  rut_usuario        String                 @id
+  nombre_usuario     String
+  correo             String?                @db.VarChar(100) //el "?" indica que es opcional
+  telefono           String?                @db.VarChar(15)
+  fecha_nacimiento   DateTime?
+  contrasena         String                 @db.VarChar(100)
+  agendamientos      Agendamiento[] //el "Muchos" de la relacion
+  insumos            Insumo[] //el "Muchos" de la relacion
+  turnos             Turno[] //el "Muchos" de la relacion
+  donaciones         donaciones[] //el "Muchos" de la relacion
+  adopciones         adopciones[]
+  rol_id             Int
+  rol                Rol                    @relation(fields: [rol_id], references: [id])
+  cuentas            cuenta_transferencia[]
+  movimientos_insumo movimiento_insumo[] //movimientos del inventario que registró este usuario
 }
 
 model Agendamiento {
-    id Int @id @default(autoincrement())
-    fecha DateTime
-    hora_inicio DateTime
-    hora_fin DateTime
-    rut_usuario String
-    usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario]) //Establecer la FK 
+  id          Int      @id @default(autoincrement())
+  fecha       DateTime
+  hora_inicio DateTime
+  hora_fin    DateTime
+  rut_usuario String
+  usuario     Usuario  @relation(fields: [rut_usuario], references: [rut_usuario]) //Establecer la FK 
 }
 
 // Relacion 1:N, un usuario puede registrar muchos insumos, pero un insumo solo puede ser registrado por un usuario
-model Insumo{
-  id Int @id @default(autoincrement())
-  tipo_insumo String @db.VarChar(100)
-  marca String? @db.VarChar(100)
-  estado String @default("Nuevo") @db.VarChar(20)
-  fecha_ingreso DateTime
+model Insumo {
+  id                Int                 @id @default(autoincrement())
+  tipo_insumo       String              @db.VarChar(100)
+  marca             String?             @db.VarChar(100)
+  fecha_ingreso     DateTime
   fecha_vencimiento DateTime?
-  descripcion String? @db.VarChar(255)
-  cantidad Int
-  unidad_medida String @default("unidad") @db.VarChar(10)
-  rut_usuario String
-  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
-  id_donacion Int?
-  donacion    donaciones? @relation(fields: [id_donacion], references: [id_donacion])
+  descripcion       String?             @db.VarChar(255)
+  cantidad          Int
+  unidad_medida     String              @default("unidad") @db.VarChar(10)
+  // contable: el procedimiento descuenta la cantidad que usó (gasas, jeringas)
+  // estado: no se mide cuánto se usa, solo el estado del envase (frascos, bidones)
+  tipo_control      TipoControl         @default(contable)
+  // solo para los de tipo "estado" (en los contables queda null):
+  // cerrado -> abierto (primer uso en un procedimiento) -> se termina (botón "Se terminó")
+  estado_envase     EstadoEnvase?
+  fecha_apertura    DateTime? //cuándo se abrió el envase que está en uso
+  rut_usuario       String
+  usuario           Usuario             @relation(fields: [rut_usuario], references: [rut_usuario])
+  id_donacion       Int?
+  donacion          donaciones?         @relation(fields: [id_donacion], references: [id_donacion])
+  historial         historial_insumo[] //registros médicos en los que se usó este insumo
+  movimientos       movimiento_insumo[] //salidas y devoluciones de este insumo
 }
-
 
 // Relacion N:N, un usuario puede tener muchos horarios, y un horario puede ser compartido por muchos usuarios
 // Horario estatico con los dias de la semana: el id identifica el dia (1 = Lunes ... 7 = Domingo)
-model Horario{
-  id Int @id
-  dia String @unique @db.VarChar(20)
+model Horario {
+  id     Int     @id
+  dia    String  @unique @db.VarChar(20)
   turnos Turno[] //el "Muchos" de la relacion
-
 }
 
 // Un turno es de una fecha puntual: el voluntario se anota para ese dia, no se repite cada semana
@@ -70,42 +77,94 @@ model Horario{
 // hora_fin es la hora en que se va, es opcional (si no viene, el turno dura solo ese bloque)
 // llego_a_la_hora es la asistencia del turno (por ahora no se guarda tarde ni ausente)
 model Turno {
-  id Int @id @default(autoincrement())
-  rut_usuario String
-  fecha DateTime @db.Date //solo el dia, sin hora
-  horario_id Int
-  hora_inicio String @db.VarChar(5)
-  hora_fin String? @db.VarChar(5)
-  llego_a_la_hora Boolean @default(false)
-  usuario Usuario @relation(fields: [rut_usuario], references: [rut_usuario])
-  horario Horario @relation(fields: [horario_id], references: [id])
+  id              Int      @id @default(autoincrement())
+  rut_usuario     String
+  fecha           DateTime @db.Date //solo el dia, sin hora
+  horario_id      Int
+  hora_inicio     String   @db.VarChar(5)
+  hora_fin        String?  @db.VarChar(5)
+  llego_a_la_hora Boolean  @default(false)
+  usuario         Usuario  @relation(fields: [rut_usuario], references: [rut_usuario])
+  horario         Horario  @relation(fields: [horario_id], references: [id])
 
   @@unique([rut_usuario, fecha, hora_inicio]) //el mismo usuario no puede repetir el bloque en la misma fecha
 }
 
 model historial_medico {
-  id_historial      Int       @id @default(autoincrement())
-  nombre            String?   @db.VarChar(100)
-  tratamiento       String    @db.VarChar(500)
+  id_historial      Int      @id @default(autoincrement())
+  nombre            String?  @db.VarChar(100)
+  tratamiento       String   @db.VarChar(500)
   fecha_tratamiento DateTime
-  veterinario       String    @db.VarChar(100)
-  observaciones     String?   @db.VarChar(500)
+  veterinario       String   @db.VarChar(100)
+  observaciones     String?  @db.VarChar(500)
 
   id_animal Int
   animal    animales @relation(fields: [id_animal], references: [id_animal])
+
+  insumos     historial_insumo[] //insumos usados en este tratamiento, con su cantidad
+  movimientos movimiento_insumo[] //movimientos del inventario que generó este registro
+}
+
+// Relacion N:N entre historial_medico e Insumo
+model historial_insumo {
+  id_historial Int
+  id_insumo    Int
+  // cuanto se uso; queda en null si el insumo es de tipo "estado" (solo se registra que se uso)
+  cantidad     Int?
+
+  historial historial_medico @relation(fields: [id_historial], references: [id_historial], onDelete: Cascade)
+  insumo    Insumo           @relation(fields: [id_insumo], references: [id], onDelete: Restrict)
+
+  @@id([id_historial, id_insumo])
+}
+
+// Como se controla el stock de un insumo
+enum TipoControl {
+  contable
+  estado
+}
+
+// Estado del envase que esta en uso de un insumo de tipo "estado"
+enum EstadoEnvase {
+  cerrado
+  abierto
+  terminado
+}
+
+// salida: el insumo salio del inventario (se uso en un tratamiento)
+// devolucion: el insumo volvio al inventario (se corrigio o se elimino el registro medico)
+enum TipoMovimiento {
+  salida
+  devolucion
+}
+
+// Registro de movimientos del inventario
+model movimiento_insumo {
+  id_movimiento Int            @id @default(autoincrement())
+  tipo          TipoMovimiento
+  cantidad      Int
+  fecha         DateTime       @default(now())
+  descripcion   String         @db.VarChar(255)
+
+  id_insumo    Int
+  insumo       Insumo            @relation(fields: [id_insumo], references: [id], onDelete: Cascade)
+  rut_usuario  String
+  usuario      Usuario           @relation(fields: [rut_usuario], references: [rut_usuario])
+  id_historial Int?
+  historial    historial_medico? @relation(fields: [id_historial], references: [id_historial], onDelete: SetNull)
 }
 
 model animales {
-  id_animal             Int               @id @default(autoincrement())
-  nombre_animal        String            @db.VarChar(100) 
-  edad                  Int
-  via_ingreso           String            @db.VarChar(100)
-  peso_animal           Float
-  especie_animal        String            @db.VarChar(100)
-  observaciones_animal  String?
-  foto_animal           String?           @db.VarChar(255)
+  id_animal            Int     @id @default(autoincrement())
+  nombre_animal        String  @db.VarChar(100)
+  edad                 Int
+  via_ingreso          String  @db.VarChar(100)
+  peso_animal          Float
+  especie_animal       String  @db.VarChar(100)
+  observaciones_animal String?
+  foto_animal          String? @db.VarChar(255)
 
-  historial historial_medico[]
+  historial  historial_medico[]
   adopciones adopciones[]
 }
 
@@ -131,53 +190,53 @@ enum MetodoPago {
 }
 
 model donaciones {
-  id_donacion         Int            @id @default(autoincrement())
-  tipo_donacion       TipoDonacion
-  origen              OrigenDonacion
-  estado              EstadoDonacion
+  id_donacion   Int            @id @default(autoincrement())
+  tipo_donacion TipoDonacion
+  origen        OrigenDonacion
+  estado        EstadoDonacion
 
   monto_donacion      Int?
   metodo_pago         MetodoPago?
-  comprobante_url     String?        @db.VarChar(255)
-  descripcion_insumos String?        @db.VarChar(500)
+  comprobante_url     String?     @db.VarChar(255)
+  descripcion_insumos String?     @db.VarChar(500)
 
-  fecha_donacion      DateTime
-  fecha_agendada      DateTime?
-  fecha_confirmacion  DateTime?
+  fecha_donacion     DateTime
+  fecha_agendada     DateTime?
+  fecha_confirmacion DateTime?
 
-  donante_nombre      String?        @db.VarChar(100)
-  donante_correo      String?        @db.VarChar(100)
-  donante_telefono    String?        @db.VarChar(15)
+  donante_nombre   String? @db.VarChar(100)
+  donante_correo   String? @db.VarChar(100)
+  donante_telefono String? @db.VarChar(15)
 
-  rut_usuario         String?
-  usuario             Usuario?       @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
-  id_cuenta           Int?
-  cuenta              cuenta_transferencia? @relation(fields: [id_cuenta], references: [id_cuenta], onDelete: Restrict)
-  
-  insumos             Insumo[]
-  }
+  rut_usuario String?
+  usuario     Usuario?              @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
+  id_cuenta   Int?
+  cuenta      cuenta_transferencia? @relation(fields: [id_cuenta], references: [id_cuenta], onDelete: Restrict)
+
+  insumos Insumo[]
+}
 
 model adoptante {
-  id_adoptante              Int         @id @default(autoincrement())
-  direccion                 String
-  telefono                  String
-  correo                    String
-  fecha_nacimiento          DateTime
-  observaciones_adoptante   String?
-  adopciones adopciones[]
+  id_adoptante            Int          @id @default(autoincrement())
+  direccion               String
+  telefono                String
+  correo                  String
+  fecha_nacimiento        DateTime
+  observaciones_adoptante String?
+  adopciones              adopciones[]
 }
 
 model adopciones {
   fecha_adopcion DateTime
 
   id_usuario String
-  usuario Usuario @relation(fields: [id_usuario], references: [rut_usuario])
+  usuario    Usuario @relation(fields: [id_usuario], references: [rut_usuario])
 
   id_animal Int
-  animal animales @relation(fields: [id_animal], references:[id_animal])
+  animal    animales @relation(fields: [id_animal], references: [id_animal])
 
   id_adoptante Int
-  adoptante adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
+  adoptante    adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
 
   @@id([id_usuario, id_animal, id_adoptante])
 }
@@ -200,14 +259,14 @@ model cuenta_transferencia {
   activa         Boolean    @default(true)
 
   // voluntario que administra la cuenta y confirma las donaciones que llegan a ella
-  rut_usuario    String
-  usuario        Usuario    @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
+  rut_usuario String
+  usuario     Usuario @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
 
-  donaciones     donaciones[]
+  donaciones donaciones[]
 }
 
 model Rol {
-  id Int @id
-  nombre String @unique @db.VarChar(50)
-  usuarios Usuario []
+  id       Int       @id
+  nombre   String    @unique @db.VarChar(50)
+  usuarios Usuario[]
 }
