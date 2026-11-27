@@ -129,11 +129,15 @@ export default function PublicPage() {
 
       <main className="public-pets">
         <section className="public-pets__intro" aria-labelledby="public-pets-title">
-          <h2 id="public-pets-title">Descubre a tu nuevo compañero.</h2>
-          <p>
-            Ellos buscan una familia que los cuide y les brinde un hogar lleno de amor.
-          </p>
-          
+          <img className="public-pets__mascot public-pets__mascot--dog" src={perroImage} alt="" aria-hidden="true" />
+          <div className="public-pets__intro-copy">
+            <span className="public-pets__eyebrow">ADOPTA CON EL CORAZÓN</span>
+            <h2 id="public-pets-title">Descubre a tu nuevo compañero.</h2>
+            <p>
+              Ellos buscan una familia que los cuide y les brinde un hogar lleno de amor.
+            </p>
+          </div>
+          <img className="public-pets__mascot public-pets__mascot--cat" src={gatoImage} alt="" aria-hidden="true" />
         </section>
 
         <section className="pet-grid" aria-label="Mascotas disponibles para adopción">
