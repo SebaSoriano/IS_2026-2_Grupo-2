@@ -8,6 +8,7 @@ import adopcionesRoutes from './adopciones.routes.js';
 import donacionesRoutes from './donaciones.routes.js';
 import cuentasTransfRoutes from './cuentasTransf.routes.js';
 import historialRoutes from './historial.routes.js';
+import procedimientosRoutes from './procedimientos.routes.js';
 import usuariosRoutes from './usuario.routes.js';
 import animalesPublicosRoutes from './animalesPublicos.routes.js';
 
@@ -54,6 +55,8 @@ router.use('/turnos', requireAuth, turnosRoutes);
 router.use('/horarios', conSesion, horariosRoutes);
 router.use('/asistencias', conSesion, asistenciasRoutes);
 router.use('/historial', conSesion, historialRoutes);
+// catálogo de procedimientos médicos que sugiere el formulario del historial
+router.use('/procedimientos', conSesion, procedimientosRoutes);
 // en usuarios, además, modificar y eliminar es solo del Admin (ver usuario.routes.js)
 router.use('/usuarios', conSesion, usuariosRoutes);
 router.use('/cuentas-transferencia', cuentasTransfRoutes);

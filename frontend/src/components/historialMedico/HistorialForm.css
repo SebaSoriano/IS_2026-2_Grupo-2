@@ -46,3 +46,33 @@
   padding: 0;
   font-weight: 700;
 }
+.historial-form__agregar-procedimiento {
+  flex: none;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 5px;
+  color: #315052;
+  background: #c3eeee;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.historial-form__agregar-procedimiento:hover:not(:disabled),
+.historial-form__agregar-procedimiento:focus-visible {
+  color: #064c3e;
+  background: #19efa0;
+}
+
+.historial-form__agregar-procedimiento:disabled {
+  color: #788b8b;
+  background: #e1e8e8;
+  cursor: not-allowed;
+}
+
+/* espacio debajo del campo "Tipo de tratamiento" para que su mensaje de error
+   (que va en position: absolute) no quede encima de "Insumos utilizados" */
+.historial-form__tratamiento {
+  padding-bottom: 1.1rem;
+}

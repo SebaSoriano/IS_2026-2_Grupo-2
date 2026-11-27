@@ -109,6 +109,13 @@ model historial_medico {
   movimientos movimiento_insumo[] //movimientos del inventario que generó este registro
 }
 
+// Catálogo de procedimientos médicos comunes (vacunas, controles, cirugías, etc.).
+// El formulario del historial médico los sugiere mientras se escribe el tipo de tratamiento.
+model procedimiento {
+  id_procedimiento Int    @id @default(autoincrement())
+  nombre           String @unique @db.VarChar(100)
+}
+
 // Relacion N:N entre historial_medico e Insumo
 model historial_insumo {
   id_historial Int

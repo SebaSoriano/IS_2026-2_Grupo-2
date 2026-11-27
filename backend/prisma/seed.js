@@ -26,6 +26,7 @@ async function main() {
     await prisma.donaciones.deleteMany();
     await prisma.cuenta_transferencia.deleteMany();
     await prisma.historial_medico.deleteMany();
+    await prisma.procedimiento.deleteMany();
     await prisma.agendamiento.deleteMany();
     await prisma.diaSemana.deleteMany();
     await prisma.insumo.deleteMany();
@@ -212,8 +213,49 @@ async function main() {
     const animalesCreados = await prisma.animales.createManyAndReturn({ data: animales });
     console.log(`Animales creados: ${animalesCreados.length}`);
 
+    console.log('-Creando procedimientos medicos');
+    // catalogo de procedimientos comunes en un centro veterinario.
+    // el formulario del historial medico los sugiere mientras se escribe el tipo de tratamiento
+    const procedimientos = [
+        'Control General',
+        'Control post operatorio',
+        'Vacuna Antirrábica',
+        'Vacuna Óctuple',
+        'Vacuna triple felina',
+        'Vacuna leucemia felina',
+        'Vacuna tos de las perreras',
+        'Desparasitación',
+        'Desparasitación externa (pulgas y garrapatas)',
+        'Esterilización',
+        'Castración',
+        'Implantación de microchip',
+        'Curación de herida',
+        'Sutura de herida',
+        'Retiro de puntos',
+        'Limpieza dental',
+        'Extracción dental',
+        'Corte de uñas',
+        'Limpieza de oídos',
+        'Examen de sangre (hemograma)',
+        'Examen de orina',
+        'Examen de deposiciones',
+        'Radiografía',
+        'Ecografía',
+        'Fluidoterapia (suero)',
+        'Administración de antibiótico',
+        'Administración de antiinflamatorio',
+        'Tratamiento dermatológico',
+        'Baño medicado',
+        'Hospitalización',
+    ];
+    const resultadoProcedimientos = await prisma.procedimiento.createMany({
+        data: procedimientos.map((nombre) => ({ nombre })),
+    });
+    console.log(`Procedimientos creados: ${resultadoProcedimientos.count}`);
+
     console.log('-Creando historial medico');
     const veterinarios = ['Dra. Sofía González', 'Dr. Alan Arriagada', 'Dra. Camila Rojas'];
+    // los tratamientos del historial de prueba se escriben igual que en el catalogo de arriba
     const tratamientos = ['Control General', 'Vacuna Antirrábica', 'Desparasitación', 'Curación de herida', 'Esterilización'];
     // la vacuna múltiple es distinta según la especie
     const vacunaSegunEspecie = { Perro: 'Vacuna Óctuple', Gato: 'Vacuna triple felina' };
