@@ -199,21 +199,20 @@
 
 .historial-tabla caption {
   padding: 12px;
+  color: #173d3e;
   font-weight: 700;
   text-align: left;
 }
 
 .historial-tabla th,
 .historial-tabla td {
-  padding: 14px 12px;
+  padding: 12px;
   border-bottom: 1px solid #d8eeee;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
-/* Encabezado oscuro como en el diseño */
 .historial-tabla th {
-  color: #fff;
-  background: #1f5f61;
+  background: #c3eeee;
   white-space: nowrap;
 }
 
@@ -229,18 +228,13 @@
   background: #dcf8f5;
 }
 
-/* La fecha se muestra como una "pastilla" gris */
-.historial-tabla__fecha {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 999px;
-  background: #e3e6e6;
-  white-space: nowrap;
+.historial-tabla tbody tr:last-child td {
+  border-bottom: 0;
 }
 
-.historial-tabla__insumos {
-  color: #6b8080;
-  font-style: italic;
+/* la fecha no se parte en dos líneas aunque la columna sea angosta */
+.historial-tabla__fecha {
+  white-space: nowrap;
 }
 
 .historial-tabla__vacia {

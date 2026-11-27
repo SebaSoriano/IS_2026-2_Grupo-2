@@ -68,13 +68,11 @@ export default function HistorialTabla({
                   {/* El nombre viene del animal relacionado (animales.nombre_animal) */}
                   <td>{registro.animal.nombre_animal}</td>
                   <td>{registro.tratamiento}</td>
-                  <td>
-                    <span className="historial-tabla__fecha">
-                      {formatearFecha(registro.fecha_tratamiento)}
-                    </span>
+                  <td className="historial-tabla__fecha">
+                    {formatearFecha(registro.fecha_tratamiento)}
                   </td>
                   <td>{registro.veterinario}</td>
-                  <td className="historial-tabla__insumos">{textoInsumos(registro.insumos)}</td>
+                  <td>{textoInsumos(registro.insumos)}</td>
                 </tr>
               ))
             )}
