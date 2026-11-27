@@ -1,0 +1,66 @@
+/* Ventana "Ver tratamientos": más angosta que la de añadir registro, porque la tabla
+   tiene solo dos columnas. La tabla tiene su propia barra de desplazamiento (max-height)
+   para que el encabezado de la ventana y el botón cerrar queden siempre a la vista. */
+.animal-dialog.historial-procedimientos {
+  width: min(560px, calc(100% - 32px));
+  max-height: 92vh;
+}
+
+.historial-procedimientos__ayuda {
+  margin: 0;
+  color: #536d6e;
+  font-size: 0.9rem;
+}
+
+/* el mensaje de éxito o error no necesita margen: animal-form ya separa los elementos */
+.historial-procedimientos .historial-mensaje {
+  margin: 0;
+}
+
+.historial-procedimientos__scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* En esta tabla las filas no se seleccionan, así que no se muestra la "manito" del mouse */
+.historial-procedimientos .historial-tabla tbody tr {
+  cursor: default;
+}
+
+/* el nombre queda a la altura del centro del botón Borrar, y las filas son más bajas */
+.historial-procedimientos .historial-tabla td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  vertical-align: middle;
+}
+
+/* La columna del botón Borrar queda a la derecha y solo ocupa lo que mide el botón */
+.historial-procedimientos__columna-accion {
+  width: 1%;
+  text-align: right;
+}
+
+/* Botón Borrar: rojo suave, para que se note que borra algo */
+.historial-procedimientos__borrar {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 5px;
+  color: #a32121;
+  background: #fde8e8;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.historial-procedimientos__borrar:hover:not(:disabled),
+.historial-procedimientos__borrar:focus-visible {
+  color: #fff;
+  background: #c62828;
+}
+
+.historial-procedimientos__borrar:disabled {
+  color: #788b8b;
+  background: #e1e8e8;
+  cursor: not-allowed;
+}
