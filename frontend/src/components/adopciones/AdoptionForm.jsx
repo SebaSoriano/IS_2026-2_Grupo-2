@@ -260,7 +260,7 @@ export default function AdoptionForm({ onClose, onSaved }) {
             Cancelar
           </button>
           <button className="adoption-form__submit" type="submit" disabled={enviando}>
-            {enviando ? 'Guardando...' : 'Ingresar y asignar'}
+            {enviando ? 'Guardando...' : formulario.id_animal ? 'Ingresar y asignar' : 'Ingresar adoptante'}
           </button>
         </div>
       </form>

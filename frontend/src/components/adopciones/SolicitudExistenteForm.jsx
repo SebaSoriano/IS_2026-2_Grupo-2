@@ -64,7 +64,7 @@ export default function SolicitudExistenteForm({ onClose, onSaved }) {
             <option value="">Selecciona un animal</option>
             {animales.map((animal) => (
               <option value={animal.id_animal} key={animal.id_animal}>
-                {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
+                {animal.nombre_animal} ({animal.especie_animal}, {animal.edad} años)
               </option>
             ))}
           </select>

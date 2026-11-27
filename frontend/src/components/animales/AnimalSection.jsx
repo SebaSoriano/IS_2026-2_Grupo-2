@@ -108,14 +108,14 @@ export default function AnimalSection() {
       // fotos: [] va primero: si el backend devolvió fotos, las de "animal" la reemplazan
       // (el backend ya devuelve estado_animal: 'disponible')
       setAnimales([{ fotos: [], ...animal }, ...animales])
-      setMensaje({ tipo: 'exito', texto: `Animal registrado con el id ${animal.id_animal}` })
+      setMensaje({ tipo: 'exito', texto: `Animal registrado con el id ${animal.nombre_animal}` })
     } else {
       setAnimales(
         animales.map((actual) =>
           actual.id_animal === animal.id_animal ? { ...actual, ...animal } : actual,
         ),
       )
-      setMensaje({ tipo: 'exito', texto: `Animal ${animal.id_animal} modificado` })
+      setMensaje({ tipo: 'exito', texto: `Animal ${animal.nombre_animal} modificado` })
     }
 
     // Si el animal se guardó pero la foto falló, se avisa
@@ -203,7 +203,6 @@ export default function AnimalSection() {
                 <tr>
                   <th scope="col">Seleccionar</th>
                   <th scope="col">Foto</th>
-                  <th scope="col">ID</th>
                   <th scope="col">Nombre</th>
                   <th scope="col">Especie</th>
                   <th scope="col">Vía de ingreso</th>
@@ -216,7 +215,7 @@ export default function AnimalSection() {
               <tbody>
                 {animales.length === 0 ? (
                   <tr>
-                    <td className="animal-table-empty" colSpan="10">
+                    <td className="animal-table-empty" colSpan="9">
                       {hayFiltros
                         ? 'No hay animales que coincidan con los filtros.'
                         : 'No hay animales registrados.'}
@@ -233,7 +232,7 @@ export default function AnimalSection() {
                         {/* checkbox en vez de radio: un radio no se puede desmarcar */}
                         <input
                           type="checkbox"
-                          aria-label={`Seleccionar animal ${animal.id_animal}`}
+                          aria-label={`Seleccionar animal ${animal.nombre_animal}`}
                           checked={animal.id_animal === seleccionadoId}
                           onChange={() => alternarSeleccion(animal.id_animal)}
                           onClick={(event) => event.stopPropagation()}
@@ -250,7 +249,6 @@ export default function AnimalSection() {
                           '—'
                         )}
                       </td>
-                      <td>{animal.id_animal}</td>
                       <td>{animal.nombre_animal || '—'}</td>
                       <td>{animal.especie_animal}</td>
                       <td>{animal.via_ingreso}</td>

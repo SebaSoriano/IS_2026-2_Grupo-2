@@ -244,7 +244,7 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         <form className="animal-form" onSubmit={enviarFormulario}>
             <div className="animal-dialog-header">
             <h2 id="animal-dialog-title">
-                {esEdicion ? `Modificar animal ${animal.id_animal}` : 'Registrar animal'}
+                {esEdicion ? `Modificar animal ${animal.nombre_animal}` : 'Registrar animal'}
             </h2>
             <button
                 className="animal-dialog-close"

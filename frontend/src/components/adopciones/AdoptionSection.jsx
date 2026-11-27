@@ -266,7 +266,7 @@ export default function AdoptionSection() {
                       <td>
                         <input
                           type="checkbox"
-                          aria-label={`Seleccionar solicitud ${solicitud.id_solicitud}`}
+                          aria-label={`Seleccionar solicitud de ${solicitud.adoptante.nombre_adoptante} por ${solicitud.animal.nombre_animal}`}
                           checked={solicitud.id_solicitud === seleccionadoId}
                           onChange={() => alternarSeleccion(solicitud.id_solicitud)}
                           onClick={(event) => event.stopPropagation()}
