@@ -31,6 +31,7 @@ export const getAnimalParaAdoptar = async (id_animal) => {
       id_animal: true,
       nombre_animal: true,
       especie_animal: true,
+      sexo_animal: true,
       edad: true,
       foto_animal: true,
       estado_animal: true,

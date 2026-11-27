@@ -7,6 +7,7 @@ import Modal from './schedule/Modal.jsx';
 import perroImage from './assets/perro.png';
 import gatoImage from './assets/cat.png';
 import { getAnimalesPublicos } from './services/api.js';
+import { SEXOS_ANIMAL } from './data/estados.js';
 import AnimalCarrusel from './components/animales/AnimalCarrusel.jsx';
 
 function fotoDeEjemplo(especie) {
@@ -219,6 +220,12 @@ export default function PublicPage() {
                 <dt>Especie</dt>
                 <dd>{animalDetalles.especie_animal}</dd>
               </div>
+              {animalDetalles.sexo_animal && (
+                <div>
+                  <dt>Sexo</dt>
+                  <dd>{SEXOS_ANIMAL[animalDetalles.sexo_animal]}</dd>
+                </div>
+              )}
               <div>
                 <dt>Edad</dt>
                 <dd>{textoEdad(animalDetalles.edad)}</dd>

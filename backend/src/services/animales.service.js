@@ -267,6 +267,7 @@ export async function getAnimalesPublicos() {
       id_animal: true,
       nombre_animal: true,
       especie_animal: true,
+      sexo_animal: true,
       edad: true,
       peso_animal: true,
       foto_animal: true,

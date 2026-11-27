@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { enviarSolicitudAdopcion, getAnimalParaAdoptar } from '../../services/api.js'
+import { SEXOS_ANIMAL } from '../../data/estados.js'
 import './AdoptionRequestPage.css'
 
 // Campos del formulario: los datos de la tabla "adoptante"
@@ -138,7 +139,9 @@ export default function AdoptionRequestPage() {
             <div>
               <h1>Quiero adoptar a {animal.nombre_animal}</h1>
               <p>
-                {animal.especie_animal} · {animal.edad === 0 ? 'Menos de 1 año' : `${animal.edad} años`}
+                {animal.especie_animal}
+                {animal.sexo_animal && ` · ${SEXOS_ANIMAL[animal.sexo_animal]}`}
+                {' · '}{animal.edad === 0 ? 'Menos de 1 año' : `${animal.edad} años`}
               </p>
             </div>
           </div>

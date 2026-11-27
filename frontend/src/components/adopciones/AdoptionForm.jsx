@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getAnimales, registrarSolicitudManual } from '../../services/api.js'
+import { SEXOS_ANIMAL } from '../../data/estados.js'
 import './AdoptionForm.css'
 
 // Fecha de hoy en formato AAAA-MM-DD usando la hora de Chile (no la hora UTC)
@@ -149,7 +150,7 @@ export default function AdoptionForm({ onClose, onSaved }) {
               <option value="">Selecciona un animal</option>
               {animales.map((animal) => (
                 <option value={animal.id_animal} key={animal.id_animal}>
-                  {animal.nombre_animal} ({animal.especie_animal}, {animal.edad} años)
+                  {animal.nombre_animal} ({animal.especie_animal}, {SEXOS_ANIMAL[animal.sexo_animal]}, {animal.edad} años)
                 </option>
               ))}
             </select>
