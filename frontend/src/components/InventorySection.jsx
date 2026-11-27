@@ -148,7 +148,6 @@ export default function InventorySection({
     if (!normalizedQuery) return true
 
     const searchableValues = [
-      insumo.id,
       insumo.tipo_insumo,
       insumo.marca,
       insumo.descripcion,
@@ -359,12 +358,6 @@ export default function InventorySection({
                   </th>
                   <SortableHeader
                     activeSort={sort}
-                    label="ID"
-                    onSort={sortBy}
-                    sortKey="id"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
                     label="Tipo de insumo"
                     onSort={sortBy}
                     sortKey="tipo_insumo"
@@ -411,13 +404,13 @@ export default function InventorySection({
               <tbody>
                 {insumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="10">
+                    <td className="inventory-empty" colSpan="9">
                       No hay insumos registrados.
                     </td>
                   </tr>
                 ) : sortedInsumos.length === 0 ? (
                   <tr>
-                    <td className="inventory-empty" colSpan="10">
+                    <td className="inventory-empty" colSpan="9">
                       No se encontraron insumos para “{search}”.
                     </td>
                   </tr>
@@ -435,7 +428,6 @@ export default function InventorySection({
                           aria-label={`Seleccionar insumo ${insumo.id}`}
                         />
                       </td>
-                      <td>{insumo.id}</td>
                       <td>{insumo.tipo_insumo}</td>
                       <td>{insumo.marca || '—'}</td>
                       <td>{insumo.descripcion || '—'}</td>
