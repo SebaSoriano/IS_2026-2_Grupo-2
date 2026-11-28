@@ -1,0 +1,29 @@
+/* Pastilla con el estado de una vacuna o desparasitación (EstadoSalud.jsx) */
+.estado-salud {
+  flex-shrink: 0;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.estado-salud--al-dia {
+  color: #0d5b3a;
+  background: #cdeedd;
+}
+
+.estado-salud--por-vencer {
+  color: #7a4a00;
+  background: #ffe6b8;
+}
+
+.estado-salud--vencida {
+  color: #8a1c1c;
+  background: #fbd5d5;
+}
+
+.estado-salud--sin-registro {
+  color: #4f5f5e;
+  background: #e3eaea;
+}
