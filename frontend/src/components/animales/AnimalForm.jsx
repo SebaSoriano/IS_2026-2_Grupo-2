@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { actualizarAnimal, crearAnimal, subirFotosAnimal } from '../../services/api.js'
 import { VIAS_DE_INGRESO } from '../../data/viasIngreso.js'
-import { ESTADOS_ANIMAL } from '../../data/estados.js'
+import { ESTADOS_ANIMAL, SEXOS_ANIMAL } from '../../data/estados.js'
 import './AnimalForm.css'
 
 // Valores iniciales del formulario
 const formularioVacio = {
     nombre_animal: '',
     especie_animal: '',
+    sexo_animal: '',
     via_ingreso: '',
     edad: '',
     peso_animal: '',
@@ -32,6 +33,8 @@ function formularioDesdeAnimal(animal) {
     return {
         nombre_animal: animal.nombre_animal,
         especie_animal: animal.especie_animal,
+        // los animales antiguos no tienen sexo: queda vacío para obligar a elegirlo
+        sexo_animal: animal.sexo_animal ?? '',
         via_ingreso: animal.via_ingreso,
         edad: String(animal.edad),
         peso_animal: String(animal.peso_animal),
@@ -90,12 +93,6 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         setArchivosFotos(archivos)
         setVistasPrevias(archivos.map((archivo) => URL.createObjectURL(archivo)))
     }
-    // Libera la memoria de las vistas previas cuando cambian o se cierra el popup
-    useEffect(() => {
-        return () => {
-            for (const vista of vistasPrevias) URL.revokeObjectURL(vista)
-        }
-    }, [vistasPrevias])
 
     // Se ejecuta cuando el usuario elige uno o varios archivos
     function seleccionarFotos(event) {
@@ -143,6 +140,9 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
 
     // Solo se puede cambiar el estado al modificar un animal disponible o fallecido
     const puedeCambiarEstado = esEdicion && ESTADOS_EDITABLES.includes(animal.estado_animal)
+    
+    // Un animal adoptado no se puede modificar: solo se puede devolver a "disponible"
+    const soloEstado = esEdicion && animal.estado_animal === 'adoptado'
 
     // Si el animal tiene una vía de ingreso que no está en la lista, se agrega como opción
     const opcionesVia =
@@ -163,14 +163,22 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
 
     async function enviarFormulario(event) {
         event.preventDefault()
+        
+        // Animal adoptado y el estado no se cambió: no hay nada que guardar
+        if (soloEstado && formulario.estado_animal === 'adoptado') {
+            onClose()
+            return
+        }
+
         setErrores({})
         setMensajeError('')
         setEnviando(true)
 
         // Los inputs entregan texto; el backend espera números en edad y peso
-        const datos = {
+        let datos = {
             nombre_animal: formulario.nombre_animal,
             especie_animal: formulario.especie_animal,
+            sexo_animal: formulario.sexo_animal,
             via_ingreso: formulario.via_ingreso,
             edad: Number(formulario.edad),
             peso_animal: Number(formulario.peso_animal),
@@ -180,6 +188,11 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         // El estado solo se envía al modificar y si se puede cambiar desde aquí
         if (puedeCambiarEstado) {
             datos.estado_animal = formulario.estado_animal
+        }
+        
+        // Si está adoptado, se envía SOLO el estado (el backend rechaza cualquier otro campo)
+        if (soloEstado) {
+            datos = { estado_animal: 'disponible' }
         }
 
         try {
@@ -235,7 +248,7 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
         <form className="animal-form" onSubmit={enviarFormulario}>
             <div className="animal-dialog-header">
             <h2 id="animal-dialog-title">
-                {esEdicion ? `Modificar animal ${animal.id_animal}` : 'Registrar animal'}
+                {esEdicion ? `Modificar animal ${animal.nombre_animal}` : 'Registrar animal'}
             </h2>
             <button
                 className="animal-dialog-close"
@@ -253,7 +266,27 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
                 {mensajeError}
             </p>
             )}
-            
+            {/* Animal adoptado: solo se muestra el estado */}
+            {soloEstado && (
+                <label className="animal-form__field">
+                Estado
+                <select name="estado_animal" value={formulario.estado_animal} onChange={cambiarCampo}>
+                    <option value="adoptado">{ESTADOS_ANIMAL.adoptado}</option>
+                    <option value="disponible">{ESTADOS_ANIMAL.disponible} (fue devuelto al hogar)</option>
+                </select>
+                <span className="animal-form__help">
+                    Este animal ya fue adoptado: sus datos no se pueden modificar.
+                    Solo puedes marcarlo como disponible si lo devolvieron.
+                </span>
+                {errores.estado_animal && (
+                    <span className="animal-form__error">{errores.estado_animal}</span>
+                )}
+                </label>
+            )}
+
+            {/* Animal NO adoptado: el formulario completo de siempre */}
+            {!soloEstado && (
+            <>
             <label className="animal-form__field">
             Nombre
             <input
@@ -289,7 +322,25 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
                 <span className="animal-form__error">{errores.especie_animal}</span>
             )}
             </label>
-
+            <label className="animal-form__field">
+            Sexo
+            <select
+                name="sexo_animal"
+                value={formulario.sexo_animal}
+                onChange={cambiarCampo}
+                required
+            >
+                <option value="">Selecciona una opción</option>
+                {Object.entries(SEXOS_ANIMAL).map(([valor, texto]) => (
+                <option value={valor} key={valor}>
+                    {texto}
+                </option>
+                ))}
+            </select>
+            {errores.sexo_animal && (
+                <span className="animal-form__error">{errores.sexo_animal}</span>
+            )}
+            </label>
             <label className="animal-form__field">
             Vía de ingreso
             <select
@@ -411,6 +462,8 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
             <span className="animal-form__help">JPG, PNG o WEBP, máximo 3 MB cada una, hasta 5 por vez.</span>
             {errorFoto && <span className="animal-form__error">{errorFoto}</span>}
             </div>
+            </>
+            )}
 
             <div className="animal-form__actions">
             <button
@@ -422,7 +475,7 @@ export default function AnimalForm({ animal, onClose, onSaved }) {
                 Cancelar
             </button>
             <button className="animal-form__submit" type="submit" disabled={enviando}>
-                {enviando ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Registrar animal'}
+                {enviando ? 'Guardando...' : soloEstado ? 'Guardar estado' : esEdicion ? 'Guardar cambios' : 'Registrar animal'}
             </button>
             </div>
         </form>

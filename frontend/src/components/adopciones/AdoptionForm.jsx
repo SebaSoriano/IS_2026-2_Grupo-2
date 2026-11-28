@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getAnimales, registrarSolicitudManual } from '../../services/api.js'
+import { SEXOS_ANIMAL, TIPOS_VIVIENDA } from '../../data/estados.js'
 import './AdoptionForm.css'
 
 // Fecha de hoy en formato AAAA-MM-DD usando la hora de Chile (no la hora UTC)
@@ -18,6 +19,7 @@ const formularioVacio = {
   telefono: '',
   correo: '',
   fecha_nacimiento: '',
+  tipo_vivienda: '',
   observaciones_adoptante: '',
 }
 
@@ -65,13 +67,18 @@ export default function AdoptionForm({ onClose, onSaved }) {
     setEnviando(true)
 
     const datos = {
-      // el <select> entrega texto ("5"); el backend espera un número
-      id_animal: Number(formulario.id_animal),
       nombre_adoptante: formulario.nombre_adoptante,
       direccion: formulario.direccion,
       telefono: formulario.telefono.trim(),
       correo: formulario.correo.trim(),
       fecha_nacimiento: formulario.fecha_nacimiento,
+      tipo_vivienda: formulario.tipo_vivienda,
+    }
+    // El animal es opcional: solo se envía si se eligió uno
+    const conAnimal = formulario.id_animal !== ''
+    if (conAnimal) {
+      // el <select> entrega texto ("5"); el backend espera un número
+      datos.id_animal = Number(formulario.id_animal)
     }
     // Las observaciones son opcionales: solo se envían si se escribió algo
     if (formulario.observaciones_adoptante.trim() !== '') {
@@ -133,7 +140,7 @@ export default function AdoptionForm({ onClose, onSaved }) {
         )}
 
         <fieldset className="adoption-form__group">
-          <legend>Animal asignado</legend>
+          <legend>Animal asignado (opcional)</legend>
 
           <label className="adoption-form__field">
             Animal disponible
@@ -141,12 +148,11 @@ export default function AdoptionForm({ onClose, onSaved }) {
               name="id_animal"
               value={formulario.id_animal}
               onChange={cambiarCampo}
-              required
             >
               <option value="">Selecciona un animal</option>
               {animales.map((animal) => (
                 <option value={animal.id_animal} key={animal.id_animal}>
-                  {animal.nombre_animal} ({animal.especie_animal}, id {animal.id_animal})
+                  {animal.nombre_animal} ({animal.especie_animal}, {SEXOS_ANIMAL[animal.sexo_animal]}, {animal.edad} años)
                 </option>
               ))}
             </select>
@@ -191,6 +197,26 @@ export default function AdoptionForm({ onClose, onSaved }) {
             )}
           </label>
 
+          <label className="adoption-form__field">
+            Tipo de vivienda
+            <select
+              name="tipo_vivienda"
+              value={formulario.tipo_vivienda}
+              onChange={cambiarCampo}
+              required
+            >
+              <option value="">Selecciona una opción</option>
+              {Object.entries(TIPOS_VIVIENDA).map(([valor, texto]) => (
+                <option value={valor} key={valor}>
+                  {texto}
+                </option>
+              ))}
+            </select>
+            {errores.tipo_vivienda && (
+              <span className="adoption-form__error">{errores.tipo_vivienda}</span>
+            )}
+          </label>
+          
           <div className="adoption-form__row">
             <label className="adoption-form__field">
               Teléfono
@@ -260,7 +286,7 @@ export default function AdoptionForm({ onClose, onSaved }) {
             Cancelar
           </button>
           <button className="adoption-form__submit" type="submit" disabled={enviando}>
-            {enviando ? 'Guardando...' : 'Ingresar y asignar'}
+            {enviando ? 'Guardando...' : formulario.id_animal ? 'Ingresar y asignar' : 'Ingresar adoptante'}
           </button>
         </div>
       </form>

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Modal from '../../schedule/Modal.jsx'
 import { agendarVisita } from '../../services/api.js'
 // usa los estilos del formulario de donaciones (donation-form, donation-field)
-import '../DonationForm.css'
+import '../donaciones/DonationForm.css'
 
 // Convierte una fecha al formato del <input type="datetime-local">: "AAAA-MM-DDTHH:MM"
 function formatoInput(fecha) {
@@ -25,8 +25,9 @@ export default function VisitaForm({ solicitud, onClose, onSaved }) {
     setError('')
     setEnviando(true)
     try {
-      await agendarVisita(solicitud.id_solicitud, fechaVisita)
-      onSaved()
+      const respuesta = await agendarVisita(solicitud.id_solicitud, fechaVisita)
+      // Se le avisa a AdoptionSection si el correo al adoptante salió o no
+      onSaved(respuesta.correo_enviado)
     } catch (errorGuardar) {
       // Si es un error de validación, se muestra el mensaje del campo
       setError(errorGuardar.details?.[0]?.mensaje ?? errorGuardar.message)

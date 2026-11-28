@@ -16,12 +16,17 @@ const PASSWORD_DE_PRUEBA = 'admin1234';
 
 async function main() {
     console.log('Poblacion de datos iniciada \n -Limpiando datos anteriores.');
+    // los movimientos y los insumos usados se borran primero, porque apuntan a usuarios,
+    // insumos y registros medicos que se borran mas abajo
+    await prisma.movimiento_insumo.deleteMany();
+    await prisma.historial_insumo.deleteMany();
     await prisma.turno.deleteMany();
     await prisma.adopciones.deleteMany();
     await prisma.solicitudes_adopcion.deleteMany();
     await prisma.donaciones.deleteMany();
     await prisma.cuenta_transferencia.deleteMany();
     await prisma.historial_medico.deleteMany();
+    await prisma.procedimiento.deleteMany();
     await prisma.agendamiento.deleteMany();
     await prisma.diaSemana.deleteMany();
     await prisma.insumo.deleteMany();
@@ -154,9 +159,9 @@ async function main() {
         { tipo_insumo: 'Higiene y aseo', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Arena sanitaria para gatos en bolsas de 10 kg', cantidad: 12, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Salud', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: 1090, descripcion: 'Gasas estériles para curaciones bajo supervisión veterinaria', cantidad: 10, rut_usuario: '44444444-4' },
         { tipo_insumo: 'Higiene y aseo', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Guantes de nitrilo para manejo e higiene', cantidad: 14, rut_usuario: '44444444-4' },
-        { tipo_insumo: 'Salud', unidad_medida: 'unidad', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '11111111-1' },
-        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Desinfectante de superficies en bidones de 5 litros para caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
-        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Limpiador enzimático en botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
+        { tipo_insumo: 'Salud', unidad_medida: 'unidad', tipo_control: 'estado', estado_envase: 'cerrado', dias_ingreso: -5, dias_vencimiento: 725, descripcion: 'Suero fisiológico en frascos de 500 ml para uso veterinario según indicación profesional', cantidad: 20, rut_usuario: '11111111-1' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', tipo_control: 'estado', estado_envase: 'cerrado', dias_ingreso: -6, dias_vencimiento: 725, descripcion: 'Desinfectante de superficies en bidones de 5 litros para caniles y áreas comunes', cantidad: 6, rut_usuario: '22222222-2' },
+        { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', tipo_control: 'estado', estado_envase: 'cerrado', dias_ingreso: -4, dias_vencimiento: 570, descripcion: 'Limpiador enzimático en botellas de 1 litro para eliminar olores en espacios de animales', cantidad: 9, rut_usuario: '44444444-4' },
         { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -7, dias_vencimiento: null, descripcion: 'Bolsas resistentes para residuos', cantidad: 25, rut_usuario: '11111111-1' },
         { tipo_insumo: 'Accesorios y juguetes', unidad_medida: 'unidad', dias_ingreso: -5, dias_vencimiento: null, descripcion: 'Correas de 1.5 m para paseos supervisados', cantidad: 10, rut_usuario: '22222222-2' },
         { tipo_insumo: 'Limpieza', unidad_medida: 'unidad', dias_ingreso: -6, dias_vencimiento: null, descripcion: 'Toallas absorbentes para limpieza y cuidado de animales', cantidad: 7, rut_usuario: '44444444-4' },
@@ -181,35 +186,76 @@ async function main() {
 
     console.log('-Creando animales');
     // 20 animales de ejemplo entre perros y gatos
-    const animales = [
-        { nombre_animal: 'Firulais', especie_animal: 'Perro', edad: 4, peso_animal: 18.5, via_ingreso: 'Rescate', observaciones_animal: 'Muy sociable con otros perros' },
-        { nombre_animal: 'Canela', especie_animal: 'Perro', edad: 2, peso_animal: 12.3, via_ingreso: 'Abandono', observaciones_animal: 'Le teme a los ruidos fuertes' },
-        { nombre_animal: 'Bruno', especie_animal: 'Perro', edad: 7, peso_animal: 27.0, via_ingreso: 'Entrega voluntaria' },
-        { nombre_animal: 'Rocky', especie_animal: 'Perro', edad: 5, peso_animal: 22.4, via_ingreso: 'Rescate', observaciones_animal: 'Cojea levemente de la pata trasera izquierda' },
-        { nombre_animal: 'Toby', especie_animal: 'Perro', edad: 1, peso_animal: 8.7, via_ingreso: 'Abandono' },
-        { nombre_animal: 'Kiara', especie_animal: 'Perro', edad: 3, peso_animal: 15.1, via_ingreso: 'Traslado' },
-        { nombre_animal: 'Maximiliano', especie_animal: 'Perro', edad: 9, peso_animal: 30.2, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Perro senior, tranquilo' },
-        { nombre_animal: 'Pelusa', especie_animal: 'Perro', edad: 6, peso_animal: 6.4, via_ingreso: 'Rescate' },
-        { nombre_animal: 'Copito', especie_animal: 'Perro', edad: 0, peso_animal: 3.2, via_ingreso: 'Abandono', observaciones_animal: 'Cachorro de unos 4 meses' },
-        { nombre_animal: 'Negrita', especie_animal: 'Perro', edad: 8, peso_animal: 19.8, via_ingreso: 'Rescate' },
-        { nombre_animal: 'Manchas', especie_animal: 'Perro', edad: 3, peso_animal: 24.6, via_ingreso: 'Otro' },
-        { nombre_animal: 'Michi', especie_animal: 'Gato', edad: 2, peso_animal: 4.1, via_ingreso: 'Rescate' },
-        { nombre_animal: 'Luna', especie_animal: 'Gato', edad: 4, peso_animal: 3.8, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Esterilizada' },
-        { nombre_animal: 'Garfield', especie_animal: 'Gato', edad: 6, peso_animal: 6.2, via_ingreso: 'Abandono', observaciones_animal: 'Necesita dieta controlada' },
-        { nombre_animal: 'Nieve', especie_animal: 'Gato', edad: 1, peso_animal: 2.9, via_ingreso: 'Rescate' },
-        { nombre_animal: 'Simba', especie_animal: 'Gato', edad: 3, peso_animal: 4.7, via_ingreso: 'Traslado' },
-        { nombre_animal: 'Pantufla', especie_animal: 'Gato', edad: 10, peso_animal: 4.4, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Gata senior, muy cariñosa' },
-        { nombre_animal: 'Tigre', especie_animal: 'Gato', edad: 5, peso_animal: 5.3, via_ingreso: 'Rescate' },
-        { nombre_animal: 'Oreo', especie_animal: 'Gato', edad: 0, peso_animal: 1.6, via_ingreso: 'Abandono', observaciones_animal: 'Gatito de unos 3 meses' },
-        { nombre_animal: 'Mostaza', especie_animal: 'Gato', edad: 7, peso_animal: 5.0, via_ingreso: 'Otro' },
+        const animales = [
+        { nombre_animal: 'Firulais', especie_animal: 'Perro', sexo_animal: 'macho', edad: 4, peso_animal: 18.5, via_ingreso: 'Rescate', observaciones_animal: 'Muy sociable con otros perros' },
+        { nombre_animal: 'Canela', especie_animal: 'Perro', sexo_animal: 'hembra', edad: 2, peso_animal: 12.3, via_ingreso: 'Abandono', observaciones_animal: 'Le teme a los ruidos fuertes' },
+        { nombre_animal: 'Bruno', especie_animal: 'Perro', sexo_animal: 'macho', edad: 7, peso_animal: 27.0, via_ingreso: 'Entrega voluntaria' },
+        { nombre_animal: 'Rocky', especie_animal: 'Perro', sexo_animal: 'macho', edad: 5, peso_animal: 22.4, via_ingreso: 'Rescate', observaciones_animal: 'Cojea levemente de la pata trasera izquierda' },
+        { nombre_animal: 'Toby', especie_animal: 'Perro', sexo_animal: 'macho', edad: 1, peso_animal: 8.7, via_ingreso: 'Abandono' },
+        { nombre_animal: 'Kiara', especie_animal: 'Perro', sexo_animal: 'hembra', edad: 3, peso_animal: 15.1, via_ingreso: 'Traslado' },
+        { nombre_animal: 'Maximiliano', especie_animal: 'Perro', sexo_animal: 'macho', edad: 9, peso_animal: 30.2, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Perro senior, tranquilo' },
+        { nombre_animal: 'Pelusa', especie_animal: 'Perro', sexo_animal: 'hembra', edad: 6, peso_animal: 6.4, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Copito', especie_animal: 'Perro', sexo_animal: 'macho', edad: 0, peso_animal: 3.2, via_ingreso: 'Abandono', observaciones_animal: 'Cachorro de unos 4 meses' },
+        { nombre_animal: 'Negrita', especie_animal: 'Perro', sexo_animal: 'hembra', edad: 8, peso_animal: 19.8, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Manchas', especie_animal: 'Perro', sexo_animal: 'macho', edad: 3, peso_animal: 24.6, via_ingreso: 'Otro' },
+        { nombre_animal: 'Michi', especie_animal: 'Gato', sexo_animal: 'macho', edad: 2, peso_animal: 4.1, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Luna', especie_animal: 'Gato', sexo_animal: 'hembra', edad: 4, peso_animal: 3.8, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Esterilizada' },
+        { nombre_animal: 'Garfield', especie_animal: 'Gato', sexo_animal: 'macho', edad: 6, peso_animal: 6.2, via_ingreso: 'Abandono', observaciones_animal: 'Necesita dieta controlada' },
+        { nombre_animal: 'Nieve', especie_animal: 'Gato', sexo_animal: 'hembra', edad: 1, peso_animal: 2.9, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Simba', especie_animal: 'Gato', sexo_animal: 'macho', edad: 3, peso_animal: 4.7, via_ingreso: 'Traslado' },
+        { nombre_animal: 'Pantufla', especie_animal: 'Gato', sexo_animal: 'hembra', edad: 10, peso_animal: 4.4, via_ingreso: 'Entrega voluntaria', observaciones_animal: 'Gata senior, muy cariñosa' },
+        { nombre_animal: 'Tigre', especie_animal: 'Gato', sexo_animal: 'macho', edad: 5, peso_animal: 5.3, via_ingreso: 'Rescate' },
+        { nombre_animal: 'Oreo', especie_animal: 'Gato', sexo_animal: 'macho', edad: 0, peso_animal: 1.6, via_ingreso: 'Abandono', observaciones_animal: 'Gatito de unos 3 meses' },
+        { nombre_animal: 'Mostaza', especie_animal: 'Gato', sexo_animal: 'hembra', edad: 7, peso_animal: 5.0, via_ingreso: 'Otro' },
     ];
     // createManyAndReturn (a diferencia de createMany) devuelve los animales creados con su id,
     // que se necesita para asociarles los registros médicos
     const animalesCreados = await prisma.animales.createManyAndReturn({ data: animales });
     console.log(`Animales creados: ${animalesCreados.length}`);
 
+    console.log('-Creando procedimientos medicos');
+    // catalogo de procedimientos comunes en un centro veterinario.
+    // el formulario del historial medico los sugiere mientras se escribe el tipo de tratamiento
+    const procedimientos = [
+        'Control General',
+        'Control post operatorio',
+        'Vacuna Antirrábica',
+        'Vacuna Óctuple',
+        'Vacuna triple felina',
+        'Vacuna leucemia felina',
+        'Vacuna tos de las perreras',
+        'Desparasitación',
+        'Desparasitación externa (pulgas y garrapatas)',
+        'Esterilización',
+        'Castración',
+        'Implantación de microchip',
+        'Curación de herida',
+        'Sutura de herida',
+        'Retiro de puntos',
+        'Limpieza dental',
+        'Extracción dental',
+        'Corte de uñas',
+        'Limpieza de oídos',
+        'Examen de sangre (hemograma)',
+        'Examen de orina',
+        'Examen de deposiciones',
+        'Radiografía',
+        'Ecografía',
+        'Fluidoterapia (suero)',
+        'Administración de antibiótico',
+        'Administración de antiinflamatorio',
+        'Tratamiento dermatológico',
+        'Baño medicado',
+        'Hospitalización',
+    ];
+    const resultadoProcedimientos = await prisma.procedimiento.createMany({
+        data: procedimientos.map((nombre) => ({ nombre })),
+    });
+    console.log(`Procedimientos creados: ${resultadoProcedimientos.count}`);
+
     console.log('-Creando historial medico');
     const veterinarios = ['Dra. Sofía González', 'Dr. Alan Arriagada', 'Dra. Camila Rojas'];
+    // los tratamientos del historial de prueba se escriben igual que en el catalogo de arriba
     const tratamientos = ['Control General', 'Vacuna Antirrábica', 'Desparasitación', 'Curación de herida', 'Esterilización'];
     // la vacuna múltiple es distinta según la especie
     const vacunaSegunEspecie = { Perro: 'Vacuna Óctuple', Gato: 'Vacuna triple felina' };

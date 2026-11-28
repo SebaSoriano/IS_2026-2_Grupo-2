@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { eliminarDonacion } from '../services/api.js'
+import Modal from '../../schedule/Modal.jsx'
+import { eliminarDonacion } from '../../services/api.js'
 import './DonationForm.css'
-
+import { formatoFechaHora, nombreDonante } from './DonationFormato.js'
 // Pide confirmación antes de borrar una o varias donaciones (solo el Admin)
 export default function DonationEliminarModal({ donaciones, onClose, onListo }) {
   const [error, setError] = useState('')
@@ -35,16 +35,25 @@ export default function DonationEliminarModal({ donaciones, onClose, onListo }) 
   const cerrar = () => (huboBorradas ? onListo() : onClose())
 
   return (
-    <Modal title={total === 1 ? `Eliminar donación #${donaciones[0].id_donacion}` : 'Eliminar donaciones'} onClose={cerrar}>
+    <Modal
+      title={total === 1 ? `Eliminar donación de ${nombreDonante(donaciones[0])}` : 'Eliminar donaciones'}
+      onClose={cerrar}
+    >
       <div className="donation-form">
         <p className="donation-form__nota">
           {total === 1
-            ? `¿Eliminar la donación #${donaciones[0].id_donacion} (${donaciones[0].tipo_donacion}${
-                donaciones[0].donante_nombre ? ` de ${donaciones[0].donante_nombre}` : ''
-              })?`
-            : `¿Eliminar las ${total} donaciones seleccionadas (#${donaciones.map((d) => d.id_donacion).join(', #')})?`}{' '}
+            ? `¿Eliminar la donación ${donaciones[0].tipo_donacion === 'monetaria' ? 'monetaria' : 'de insumos'} de ${nombreDonante(donaciones[0])}?`
+            : `¿Eliminar las ${total} donaciones seleccionadas?`}{' '}
           Esta acción no se puede deshacer.
         </p>
+
+        {total > 1 && (
+          <ul>
+            {donaciones.map((d) => (
+              <li key={d.id_donacion}>{nombreDonante(d)} · {formatoFechaHora(d.fecha_donacion)}</li>
+            ))}
+          </ul>
+        )}
 
         {conComprobante > 0 && (
           <p className="donation-form__nota">

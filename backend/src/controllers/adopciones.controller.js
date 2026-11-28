@@ -10,7 +10,8 @@ export const getAnimalParaAdoptar = async (req, res) => {
 
 // POST /api/adopciones/solicitudes
 export const createSolicitudPublica = async (req, res) => {
-  const solicitud = await adopcionesService.crearSolicitudPublica(req.body);
+  // req.file es el PDF que dejó el middleware recibirCertificado
+  const solicitud = await adopcionesService.crearSolicitudPublica(req.body, req.file);
   res.status(201).json(solicitud);
 };
 
@@ -38,6 +39,12 @@ export const createSolicitudManual = async (req, res) => {
 export const getAdoptantes = async (req, res) => {
   const adoptantes = await adopcionesService.getAdoptantes();
   res.json(adoptantes);
+};
+
+// GET /api/adopciones/adoptantes/:id/certificado
+// res.sendFile envía el archivo; por la extensión .pdf el navegador lo abre como PDF
+export const getCertificado = async (req, res) => {
+  res.sendFile(await adopcionesService.getCertificado(req.params.id));
 };
 
 // POST /api/adopciones/solicitudes/existente

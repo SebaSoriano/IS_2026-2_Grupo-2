@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { descargarHistorialPdf, eliminarHistorial, getAnimales, getHistoriales } from '../../services/api.js'
 import HistorialFiltros from './HistorialFiltros.jsx'
 import HistorialForm from './HistorialForm.jsx'
+import HistorialProcedimientos from './HistorialProcedimientos.jsx'
 import HistorialTabla from './HistorialTabla.jsx'
 import HistorialTarjetas from './HistorialTarjetas.jsx'
 import './HistorialSection.css'
@@ -42,6 +43,8 @@ export default function HistorialSection() {
   const [versionBuscador, setVersionBuscador] = useState(0)
   // true mientras se genera y descarga el PDF (el botón dice "Exportando...")
   const [exportando, setExportando] = useState(false)
+  // true mientras está abierta la ventana "Ver tratamientos"
+  const [verTratamientos, setVerTratamientos] = useState(false)
 
   // Se pide la lista al backend cada vez que cambian los filtros, la página o "recarga".
   // "cancelado" evita un problema clásico: si el usuario busca dos veces seguidas,
@@ -159,9 +162,14 @@ export default function HistorialSection() {
   async function eliminarSeleccionado() {
     if (!registroSeleccionado) return
 
-    // window.confirm muestra un aviso del navegador con "Aceptar" y "Cancelar"
+    // window.confirm muestra un aviso del navegador con "Aceptar" y "Cancelar".
+    // Si el registro usó insumos, se avisa que vuelven al inventario (el backend los devuelve).
+    const avisoInsumos =
+      registroSeleccionado.insumos.length > 0
+        ? '\n\nLos insumos que usó este registro se devolverán al inventario.'
+        : ''
     const confirmado = window.confirm(
-      `¿Eliminar el registro "${registroSeleccionado.tratamiento}" de ${registroSeleccionado.animal.nombre_animal}?`,
+      `¿Eliminar el registro "${registroSeleccionado.tratamiento}" de ${registroSeleccionado.animal.nombre_animal}?${avisoInsumos}`,
     )
     if (!confirmado) return
 
@@ -225,6 +233,11 @@ export default function HistorialSection() {
           title={vista !== 'tabla' ? 'Cambia a la vista Tabla para exportar' : 'Descarga la tabla con los filtros aplicados'}
         >
           {exportando ? 'Exportando...' : 'Exportar PDF'}
+        </button>
+        {/* "Ver tratamientos" lo ven los tres roles: abre la lista de procedimientos.
+            Dentro de la ventana, el botón Borrar solo aparece para Admin y Veterinaria */}
+        <button className="area-action" type="button" onClick={() => setVerTratamientos(true)}>
+          Ver tratamientos
         </button>
         {vista !== 'tabla' && (
           <p className="historial-ayuda">Las tarjetas no se exportan: cambia a la vista Tabla para exportar.</p>
@@ -291,6 +304,8 @@ export default function HistorialSection() {
           onSaved={registroGuardado}
         />
       )}
+
+      {verTratamientos && <HistorialProcedimientos onClose={() => setVerTratamientos(false)} />}
     </>
   )
 }

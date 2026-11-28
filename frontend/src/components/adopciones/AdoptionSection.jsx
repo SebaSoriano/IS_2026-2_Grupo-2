@@ -4,8 +4,9 @@ import {
   getSolicitudesAdopcion,
   marcarAdoptado,
   rechazarSolicitud,
+  urlCertificado,
 } from '../../services/api.js'
-import { ESTADOS_SOLICITUD } from '../../data/estados.js'
+import { ESTADOS_SOLICITUD, TIPOS_VIVIENDA } from '../../data/estados.js'
 import AdoptionForm from './AdoptionForm.jsx'
 import VisitaForm from './VisitaForm.jsx'
 import SolicitudExistenteForm from './SolicitudExistenteForm.jsx'
@@ -93,9 +94,15 @@ export default function AdoptionSection() {
   }
 
   // Los popups llaman a estas funciones cuando el backend guardó
-  function adoptanteIngresado() {
+  
+  // AdoptionForm avisa si se eligió un animal (true) o solo se registró la persona (false)
+  function adoptanteIngresado(conAnimal) {
     setPopup(null)
-    recargar('Adoptante ingresado: el animal quedó en proceso de adopción')
+    if (conAnimal) {
+      recargar('Adoptante ingresado: el animal quedó en proceso de adopción')
+    } else {
+      recargar('Adoptante registrado: puedes asignarle un animal con "Ingresar Solicitud"')
+    }
   }
 
   function solicitudIngresada() {
@@ -103,9 +110,14 @@ export default function AdoptionSection() {
     recargar('Solicitud ingresada: el animal quedó en proceso de adopción')
   }
 
-  function visitaAgendada() {
+  // VisitaForm avisa si el correo al adoptante se envió (true) o falló (false)
+  function visitaAgendada(correoEnviado) {
     setPopup(null)
-    recargar('Visita agendada: el animal quedó en proceso de adopción')
+    if (correoEnviado) {
+      recargar('Visita agendada: se le envió un correo al adoptante con la fecha')
+    } else {
+      recargar('Visita agendada, pero no se pudo enviar el correo: avísale al adoptante por teléfono')
+    }
   }
 
   // Para "Rechazar" y "Marcar como adoptado": confirma, llama al backend y recarga
@@ -244,6 +256,8 @@ export default function AdoptionSection() {
                   <th scope="col">Adoptante</th>
                   <th scope="col">Teléfono</th>
                   <th scope="col">Correo</th>
+                  <th scope="col">Vivienda</th>
+                  <th scope="col">Certificado</th>
                   <th scope="col">Estado</th>
                   <th scope="col">Visita</th>
                   <th scope="col">Observaciones</th>
@@ -252,7 +266,7 @@ export default function AdoptionSection() {
               <tbody>
                 {solicitudes.length === 0 ? (
                   <tr>
-                    <td className="adoption-table-empty" colSpan="10">
+                    <td className="adoption-table-empty" colSpan="12">
                       No hay solicitudes abiertas.
                     </td>
                   </tr>
@@ -266,7 +280,7 @@ export default function AdoptionSection() {
                       <td>
                         <input
                           type="checkbox"
-                          aria-label={`Seleccionar solicitud ${solicitud.id_solicitud}`}
+                          aria-label={`Seleccionar solicitud de ${solicitud.adoptante.nombre_adoptante} por ${solicitud.animal.nombre_animal}`}
                           checked={solicitud.id_solicitud === seleccionadoId}
                           onChange={() => alternarSeleccion(solicitud.id_solicitud)}
                           onClick={(event) => event.stopPropagation()}
@@ -278,6 +292,22 @@ export default function AdoptionSection() {
                       <td>{solicitud.adoptante.nombre_adoptante ?? '—'}</td>
                       <td>{solicitud.adoptante.telefono}</td>
                       <td>{solicitud.adoptante.correo}</td>
+                      <td>{TIPOS_VIVIENDA[solicitud.adoptante.tipo_vivienda] ?? '—'}</td>
+                      <td>
+                        {/* Solo el Admin puede abrir el PDF (el backend también lo exige) */}
+                        {solicitud.adoptante.certificado_antecedentes && puedeGestionarAdopciones ? (
+                          <a
+                            href={urlCertificado(solicitud.adoptante.id_adoptante)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            Ver PDF
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td>{ESTADOS_SOLICITUD[solicitud.estado] ?? solicitud.estado}</td>
                       <td>{formatearFechaHora(solicitud.fecha_visita)}</td>
                       <td>{solicitud.adoptante.observaciones_adoptante || '—'}</td>

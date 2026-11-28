@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { crearDonacionWeb } from '../services/api.js'
-import { Campo, CamposDonante, erroresPorCampo, sinVacios } from './DonationFormPartes.jsx'
+import Modal from '../../schedule/Modal.jsx'
+import { crearDonacionWeb } from '../../services/api.js'
+import { Campo, CamposDonante } from './DonationFormPartes.jsx'
+import { erroresPorCampo, sinVacios } from './DonationFormValidacion.js'
 import './DonationForm.css'
 
 const INICIAL = {

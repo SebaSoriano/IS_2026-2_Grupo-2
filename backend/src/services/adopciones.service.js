@@ -1,5 +1,8 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
+import { borrarCertificado, guardarCertificado, rutaCertificado } from '../utils/certificados.js';
+import { ESTADOS_ABIERTOS, MAXIMO_SOLICITUDES } from '../config/adopciones.js';
+import { sendVisitaAgendada } from './email.service.js';
 
 // Lo que se trae de cada solicitud para mostrarla en la intranet
 const datosSolicitud = {
@@ -20,6 +23,22 @@ async function buscarSolicitud(tx, id_solicitud) {
   return solicitud;
 }
 
+// Cuenta las solicitudes abiertas (pendientes y en proceso) de un animal.
+// db puede ser prisma o la transacción (tx): las dos tienen los mismos métodos
+function contarSolicitudesAbiertas(db, id_animal) {
+  return db.solicitudes_adopcion.count({
+    where: { id_animal, estado: { in: ESTADOS_ABIERTOS } },
+  });
+}
+
+// Si el animal ya tiene el máximo de solicitudes abiertas, no se acepta otra
+async function revisarCupo(tx, id_animal) {
+  const abiertas = await contarSolicitudesAbiertas(tx, id_animal);
+  if (abiertas >= MAXIMO_SOLICITUDES) {
+    throw new HttpError(409, `Este animal ya tiene ${MAXIMO_SOLICITUDES} solicitudes en revisión; no recibe más por ahora`);
+  }
+}
+
 // ---------- Públicas (página principal, sin sesión) ----------
 
 // Datos públicos de un animal para mostrarlo arriba del formulario de adopción.
@@ -31,6 +50,7 @@ export const getAnimalParaAdoptar = async (id_animal) => {
       id_animal: true,
       nombre_animal: true,
       especie_animal: true,
+      sexo_animal: true,
       edad: true,
       foto_animal: true,
       estado_animal: true,
@@ -38,6 +58,10 @@ export const getAnimalParaAdoptar = async (id_animal) => {
   });
   if (!animal || animal.estado_animal !== 'disponible') {
     throw new HttpError(404, 'Este animal no está disponible para adopción');
+  }
+  // Si ya llegó al máximo de solicitudes, tampoco se muestra el formulario
+  if (await contarSolicitudesAbiertas(prisma, id_animal) >= MAXIMO_SOLICITUDES) {
+    throw new HttpError(404, 'Este animal ya recibió el máximo de solicitudes. Vuelve a revisar más adelante');
   }
   return animal;
 };
@@ -58,6 +82,7 @@ async function crearSolicitud(datos, estado) {
     if (animal.estado_animal !== 'disponible') {
       throw new HttpError(409, 'El animal no está disponible para adopción');
     }
+    await revisarCupo(tx, id_animal);
 
     const adoptante = await tx.adoptante.create({ data: datosAdoptante });
 
@@ -78,11 +103,47 @@ async function crearSolicitud(datos, estado) {
   });
 }
 
-export const crearSolicitudPublica = (datos) => crearSolicitud(datos, 'pendiente');
+// Solicitud desde la página pública: además de los datos, trae el PDF del certificado de antecedentes
+export async function crearSolicitudPublica(datos, archivo) {
+  if (!archivo) throw new HttpError(400, 'Adjunta tu certificado de antecedentes en PDF');
+
+  // 1) Se guarda el PDF en el disco (si no es un PDF de verdad, responde 400)
+  const certificado_antecedentes = await guardarCertificado(archivo);
+
+  try {
+    // 2) Se crea el adoptante (con el nombre del archivo) y su solicitud
+    return await crearSolicitud({ ...datos, certificado_antecedentes }, 'pendiente');
+  } catch (error) {
+    // Si algo falló (ej: el animal ya no está disponible), se borra el PDF para no dejar basura
+    await borrarCertificado(certificado_antecedentes);
+    throw error;
+  }
+}
 
 // ---------- Intranet (piden sesión) ----------
 
-export const crearSolicitudManual = (datos) => crearSolicitud(datos, 'en_proceso');
+// Ingreso manual: el animal es opcional
+export async function crearSolicitudManual(datos) {
+  // Sin animal: solo se guarda el adoptante (la solicitud se crea después con "Ingresar Solicitud")
+  if (datos.id_animal === undefined) {
+    return prisma.adoptante.create({ data: datos });
+  }
+  // Con animal: adoptante + solicitud "en proceso" + animal "en proceso" (como antes)
+  return crearSolicitud(datos, 'en_proceso');
+}
+
+// Ruta del PDF del certificado de un adoptante (para que el Admin lo vea)
+export async function getCertificado(id_adoptante) {
+  const adoptante = await prisma.adoptante.findUnique({
+    where: { id_adoptante },
+    select: { certificado_antecedentes: true },
+  });
+  if (!adoptante) throw new HttpError(404, 'Adoptante no encontrado');
+  if (!adoptante.certificado_antecedentes) {
+    throw new HttpError(404, 'Este adoptante no tiene certificado de antecedentes');
+  }
+  return rutaCertificado(adoptante.certificado_antecedentes);
+}
 
 // Adoptantes registrados (desde la página pública o la intranet), ordenados por nombre
 export const getAdoptantes = () =>
@@ -106,6 +167,7 @@ export const crearSolicitudExistente = ({ id_adoptante, id_animal }) =>
     if (animal.estado_animal !== 'disponible') {
       throw new HttpError(409, 'El animal no está disponible para adopción');
     }
+    await revisarCupo(tx, id_animal);
 
     await tx.animales.update({
       where: { id_animal },
@@ -127,7 +189,31 @@ export const getSolicitudes = () =>
   });
 
 // Agenda (o cambia) la hora de visita. La solicitud pasa a "en proceso" y el animal también.
-export const agendarVisita = (id_solicitud, fecha_visita) =>
+// Agenda (o cambia) la hora de visita. La solicitud pasa a "en proceso" y el animal también.
+// Después le manda un correo al adoptante con la fecha.
+export async function agendarVisita(id_solicitud, fecha_visita) {
+  // 1) Se guarda la visita en la base de datos
+  const solicitud = await guardarVisita(id_solicitud, fecha_visita);
+
+  // 2) Se manda el correo. Va FUERA de la transacción: si el correo falla,
+  //    la visita igual queda guardada (no tiene sentido deshacerla por un problema de Gmail)
+  let correo_enviado = true;
+  try {
+    await sendVisitaAgendada({
+      correo: solicitud.adoptante.correo,
+      nombre: solicitud.adoptante.nombre_adoptante ?? 'adoptante',
+      animal: solicitud.animal.nombre_animal,
+      fechaVisita: solicitud.fecha_visita,
+    });
+  } catch (error) {
+    console.error('No se pudo enviar el correo de la visita:', error.message);
+    correo_enviado = false;
+  }
+
+  // 3) Se responde la solicitud + si el correo salió o no (el frontend lo muestra)
+  return { ...solicitud, correo_enviado };
+}
+const guardarVisita = (id_solicitud, fecha_visita) =>
   prisma.$transaction(async (tx) => {
     const solicitud = await buscarSolicitud(tx, id_solicitud);
 

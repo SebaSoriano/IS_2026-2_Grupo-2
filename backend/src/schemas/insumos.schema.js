@@ -39,13 +39,6 @@ export const tipoInsumo = z.string()
   ], 'tipo_insumo debe ser uno de los tipos permitidos'));
 
 export const unidadMedida = z.enum(['kg', 'g', 'unidad']);
-export const estadosInsumo = [
-  'Nuevo',
-  'Recien usado',
-  'A medio usar',
-  'Usado',
-  'Vencido',
-];
 
 function validarUnidadYCantidad(datos, ctx, esCreacion = false) {
   const error = (campo, mensaje) => ctx.addIssue({
@@ -89,7 +82,6 @@ const insumoSchema = z.object({
     .max(100, 'marca no puede superar 100 caracteres')
     .nullable()
     .optional(),
-  estado: z.enum(estadosInsumo).optional(),
   fecha_ingreso: fecha,
   fecha_vencimiento: fechaVencimiento.nullable().optional(),
   descripcion: z.string()
@@ -105,8 +97,22 @@ const insumoSchema = z.object({
     .min(1, 'rut_usuario debe ser un texto no vacío'),
 }).strict();
 
-export const createInsumoSchema = insumoSchema.superRefine((datos, ctx) =>
-  validarUnidadYCantidad(datos, ctx, true));
+
+export const tipoControl = z.enum(['contable', 'estado'], 'tipo_control debe ser contable o estado');
+
+export const createInsumoSchema = insumoSchema
+  .extend({ tipo_control: tipoControl.default('contable') })
+  .superRefine((datos, ctx) => {
+    validarUnidadYCantidad(datos, ctx, true);
+    // los envases se cuentan uno por uno: no tiene sentido un "frasco" medido en kg
+    if (datos.tipo_control === 'estado' && datos.unidad_medida !== 'unidad') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['unidad_medida'],
+        message: 'Los insumos controlados por estado de envase se cuentan en unidades (envases)',
+      });
+    }
+  });
 export const updateInsumoSchema = insumoSchema
   .partial()
   .strict()

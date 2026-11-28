@@ -267,13 +267,17 @@ export function agendarDonacion(id, fecha_agendada) {
 export function confirmarDonacion(id, datos) {
   return sendJson('PATCH', `/donaciones/${id}/confirmar`, datos)
 }
+export function rechazarDonacion(id) {
+  return sendJson('PATCH', `/donaciones/${id}/rechazar`)
+}
 
 export function eliminarDonacion(id) {
   return sendJson('DELETE', `/donaciones/${id}`)
 }
 // Formulario con archivo: el navegador arma solo el Content-Type (incluye un "boundary"), por eso NO se escribe ese header
 async function postFormData(path, formData) {
-  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', body: formData })
+  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', credentials: 'include', body: formData }) // ← credentials
+  revisarSesion(response) // ← nueva
   const contentType = response.headers.get('content-type') ?? ''
 
   if (!contentType.includes('application/json')) {
@@ -304,6 +308,10 @@ export async function getCuentasPublicas() {
 // formData lleva los campos de texto y el archivo en el campo "comprobante"
 export function crearDonacionWebConComprobante(formData) {
   return postFormData('/donaciones/web', formData)
+}
+// formData lleva los campos de texto y el archivo en el campo "comprobante"
+export function crearDonacionPresencialConComprobante(formData) {
+  return postFormData('/donaciones', formData)
 }
 
 // ---------- Historial medico ----------
@@ -418,9 +426,15 @@ export function getAnimalParaAdoptar(idAnimal) {
   return getJson(`/adopciones/animales/${idAnimal}`)
 }
 
-// Pública: envía los datos del adoptante y el animal que le interesa
-export function enviarSolicitudAdopcion(datos) {
-  return postJson('/adopciones/solicitudes', datos)
+// Pública: envía los datos del adoptante, el animal que le interesa y el PDF del certificado.
+// formData es un FormData (texto + archivo); por eso usa postFormData y no postJson
+export function enviarSolicitudAdopcion(formData) {
+  return postFormData('/adopciones/solicitudes', formData)
+}
+
+// Intranet (solo Admin): dirección para abrir el PDF del certificado en una pestaña nueva
+export function urlCertificado(idAdoptante) {
+  return `${API_BASE_URL}/adopciones/adoptantes/${idAdoptante}/certificado`
 }
 
 // Intranet: solicitudes abiertas (pendientes y en proceso)
@@ -527,4 +541,39 @@ export async function getVeterinariosHistorial() {
 // Elimina una foto de un animal. Devuelve el animal con las fotos que le quedan
 export function eliminarFotoAnimal(idAnimal, idFoto) {
   return sendJson('DELETE', `/animales/${idAnimal}/fotos/${idFoto}`)
+}
+
+// Botón "Se terminó" de Inventario: descuenta 1 envase de un insumo de tipo "estado"
+// y anota la salida en los movimientos. Devuelve el insumo actualizado.
+export function terminarEnvase(id) {
+  return sendJson('PATCH', `/insumos/${id}/terminar`)
+}
+
+// Salidas y devoluciones del inventario (las genera el historial médico), de la más reciente a la más antigua
+export function getMovimientosInventario() {
+  return getJson('/insumos/movimientos')
+}
+
+// ---------- Procedimientos médicos (catálogo) ----------
+// Lista de procedimientos comunes (vacunas, controles, cirugías...) que el formulario
+// del historial médico sugiere mientras se escribe el tipo de tratamiento.
+export async function getProcedimientos() {
+  const procedimientos = await getJson('/procedimientos')
+
+  if (!Array.isArray(procedimientos)) {
+    throw new Error('La respuesta de la API de procedimientos no es válida.')
+  }
+
+  return procedimientos
+}
+
+// Agrega un procedimiento al catálogo. Devuelve el procedimiento creado, con su id
+export function crearProcedimiento(nombre) {
+  return postJson('/procedimientos', { nombre })
+}
+
+// Borra un procedimiento del catálogo (solo Admin y Veterinaria).
+// Los registros médicos que ya lo usaban no cambian, porque guardan el nombre como texto.
+export function eliminarProcedimiento(id) {
+  return sendJson('DELETE', `/procedimientos/${id}`)
 }

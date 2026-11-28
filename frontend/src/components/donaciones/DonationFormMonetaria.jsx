@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { crearDonacionWebConComprobante, getCuentasPublicas } from '../services/api.js'
-import { Campo, CamposDonante, erroresPorCampo, sinVacios } from './DonationFormPartes.jsx'
+import Modal from '../../schedule/Modal.jsx'
+import { crearDonacionWebConComprobante, getCuentasPublicas } from '../../services/api.js'
+import { Campo, CamposDonante } from './DonationFormPartes.jsx'
+import { errorDeArchivo, erroresPorCampo, sinVacios } from './DonationFormValidacion.js'
 import './DonationForm.css'
 
 const INICIAL = {
@@ -12,16 +13,6 @@ const INICIAL = {
 }
 
 const NOMBRE_TIPO_CUENTA = { corriente: 'corriente', vista: 'vista', ahorro: 'de ahorro', rut: 'RUT' }
-const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png']
-const TAMANO_MAXIMO = 5 * 1024 * 1024 // 5 MB, igual que el servidor
-
-// Comodidad para el usuario: el servidor vuelve a validar todo igual
-function errorDeArchivo(archivo) {
-  if (!archivo) return ''
-  if (!TIPOS_PERMITIDOS.includes(archivo.type)) return 'Debe ser una imagen JPG o PNG'
-  if (archivo.size > TAMANO_MAXIMO) return 'El archivo no puede superar los 5 MB'
-  return ''
-}
 
 export default function DonationMonetariaForm({ onVolver, onClose }) {
   const [cuentas, setCuentas] = useState([])

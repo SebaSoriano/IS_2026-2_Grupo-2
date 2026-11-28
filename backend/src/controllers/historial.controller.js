@@ -27,10 +27,11 @@ const periodoChileno = (texto) =>
 export const getHistorialPdf = async (req, res) => {
   const { registros, total } = await historialService.getHistorialesParaPdf(req.validateQuery);
 
-  const { animal, veterinario, desde, hasta } = req.query;
+  const { animal, veterinario, insumo, desde, hasta } = req.query;
   const descripcionFiltros = [];
   if (animal) descripcionFiltros.push(`Animal: "${animal}"`);
   if (veterinario) descripcionFiltros.push(`Veterinario: "${veterinario}"`);
+  if (insumo) descripcionFiltros.push(`Insumo: "${insumo}"`);
   if (desde) descripcionFiltros.push(`Desde: ${periodoChileno(desde)}`);
   if (hasta) descripcionFiltros.push(`Hasta: ${periodoChileno(hasta)}`);
 
@@ -49,19 +50,22 @@ export const getHistorialById = async (req, res) => {
 };
 
 // POST /api/historial
+// req.usuario.rut es quien inició sesión (lo pone requireAuth). Se le pasa al servicio
+// para anotarlo como "registrado por" en las salidas del inventario.
 export const createHistorial = async (req, res) => {
-  const registro = await historialService.createHistorial(req.body);
+  const registro = await historialService.createHistorial(req.body, req.usuario.rut);
   res.status(201).json(registro);
 };
 
 // PUT /api/historial/:id
 export const updateHistorial = async (req, res) => {
-  const registro = await historialService.updateHistorial(req.params.id, req.body);
+  const registro = await historialService.updateHistorial(req.params.id, req.body, req.usuario.rut);
   res.json(registro);
 };
 
 // DELETE /api/historial/:id
+// Al eliminar, el servicio devuelve los insumos al inventario y anota quién lo hizo.
 export const deleteHistorial = async (req, res) => {
-  await historialService.deleteHistorial(req.params.id);
+  await historialService.deleteHistorial(req.params.id, req.usuario.rut);
   res.status(204).send();
 };

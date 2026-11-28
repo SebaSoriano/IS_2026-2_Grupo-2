@@ -14,18 +14,27 @@ const fechaHoraFutura = z.string()
     .refine((valor) => new Date(valor) > new Date(), 'La visita debe ser en el futuro')
     .transform((valor) => new Date(valor));
 
-// POST /api/adopciones/solicitudes (página pública)
-// POST /api/adopciones/solicitudes/manual (intranet)
-// Datos del adoptante (los de la tabla "adoptante") + el animal que le interesa
-export const solicitudAdopcionSchema = z.object({
-    id_animal: z.number().int().positive('Debe elegir un animal'),
-
+// Datos de una persona adoptante (las columnas de la tabla "adoptante")
+export const adoptanteSchema = z.object({
     nombre_adoptante: z.string().trim().min(2, 'Debe tener al menos 2 caracteres').max(100, 'Debe tener como máximo 100 caracteres'),
     direccion: z.string().trim().min(5, 'Debe tener al menos 5 caracteres').max(200, 'Debe tener como máximo 200 caracteres'),
     telefono: z.string().trim().regex(/^\+?\d{8,15}$/, 'Debe tener entre 8 y 15 dígitos (puede empezar con +)'),
     correo: z.string().trim().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Debe ser un correo válido'),
     fecha_nacimiento: fechaNoFutura,
+    tipo_vivienda: z.enum(['casa', 'departamento'], 'Debe elegir casa o departamento'),
     observaciones_adoptante: z.string().trim().max(500, 'Debe tener como máximo 500 caracteres').optional(),
+});
+
+// Llega como multipart/form-data (por el PDF): ahí TODO viaja como texto,
+// por eso z.coerce.number() convierte "5" en 5
+export const solicitudAdopcionSchema = adoptanteSchema.extend({
+    id_animal: z.coerce.number().int().positive('Debe elegir un animal'),
+});
+
+// POST /api/adopciones/solicitudes/manual (intranet)
+// Adoptante + animal OPCIONAL: si no viene, solo se registra la persona
+export const ingresoManualSchema = adoptanteSchema.extend({
+    id_animal: z.number().int().positive('Debe elegir un animal').optional(),
 });
 
 // POST /api/adopciones/solicitudes/existente

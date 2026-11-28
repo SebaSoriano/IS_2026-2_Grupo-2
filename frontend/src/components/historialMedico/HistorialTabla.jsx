@@ -1,10 +1,19 @@
 import { formatearFecha } from '../../utils/fechas.js'
+import { cantidadConUnidad, nombreInsumo } from '../../utils/insumos.js'
 // formatearFecha muestra las fechas en formato chileno DD-MM-AAAA (ver utils/fechas.js)
 
-// Texto de la columna Insumos. Por ahora el backend siempre entrega una lista vacía
+// Texto de la columna Insumos: cada insumo usado con su cantidad, separados por coma.
+// Los de tipo "estado" no tienen cantidad, así que dicen solo "(usado)".
+// Por ejemplo: "Gasas estériles (2 unidades), Suero fisiológico (usado)"
 function textoInsumos(insumos) {
-  if (!insumos || insumos.length === 0) return 'Sin registrar'
-  return insumos.map((insumo) => insumo.tipo_insumo).join(', ')
+  if (!insumos || insumos.length === 0) return 'Sin insumos'
+  return insumos
+    .map((insumo) =>
+      insumo.cantidad == null
+        ? `${nombreInsumo(insumo)} (usado)`
+        : `${nombreInsumo(insumo)} (${cantidadConUnidad(insumo.cantidad, insumo.unidad_medida)})`,
+    )
+    .join(', ')
 }
 
 // Tabla del historial médico con su paginación. Este componente solo muestra datos:
@@ -59,13 +68,11 @@ export default function HistorialTabla({
                   {/* El nombre viene del animal relacionado (animales.nombre_animal) */}
                   <td>{registro.animal.nombre_animal}</td>
                   <td>{registro.tratamiento}</td>
-                  <td>
-                    <span className="historial-tabla__fecha">
-                      {formatearFecha(registro.fecha_tratamiento)}
-                    </span>
+                  <td className="historial-tabla__fecha">
+                    {formatearFecha(registro.fecha_tratamiento)}
                   </td>
                   <td>{registro.veterinario}</td>
-                  <td className="historial-tabla__insumos">{textoInsumos(registro.insumos)}</td>
+                  <td>{textoInsumos(registro.insumos)}</td>
                 </tr>
               ))
             )}

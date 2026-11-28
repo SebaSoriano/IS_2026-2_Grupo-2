@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { agendarDonacion } from '../services/api.js'
-import { Campo, erroresPorCampo } from './DonationFormPartes.jsx'
+import Modal from '../../schedule/Modal.jsx'
+import { agendarDonacion } from '../../services/api.js'
+import { Campo } from './DonationFormPartes.jsx'
+import { erroresPorCampo } from './DonationFormValidacion.js'
 import './DonationForm.css'
+import { nombreDonante } from './DonationFormato.js'
 
 // primera fecha que se puede elegir: mañana, en formato AAAA-MM-DD (hora del navegador)
 function fechaManana() {
@@ -38,7 +40,7 @@ export default function DonationAgendarModal({ donacion, onClose, onListo }) {
   }
 
   return (
-    <Modal title={`Agendar donación #${donacion.id_donacion}`} onClose={onClose}>
+    <Modal title={`Agendar donación de ${nombreDonante(donacion)}`} onClose={onClose}>
       <form className="donation-form" onSubmit={enviar}>
         <p className="donation-form__nota">
           {donacion.donante_nombre} entregará: {donacion.descripcion_insumos}
