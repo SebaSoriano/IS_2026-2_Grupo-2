@@ -109,9 +109,14 @@ export default function AdoptionSection() {
     recargar('Solicitud ingresada: el animal quedó en proceso de adopción')
   }
 
-  function visitaAgendada() {
+  // VisitaForm avisa si el correo al adoptante se envió (true) o falló (false)
+  function visitaAgendada(correoEnviado) {
     setPopup(null)
-    recargar('Visita agendada: el animal quedó en proceso de adopción')
+    if (correoEnviado) {
+      recargar('Visita agendada: se le envió un correo al adoptante con la fecha')
+    } else {
+      recargar('Visita agendada, pero no se pudo enviar el correo: avísale al adoptante por teléfono')
+    }
   }
 
   // Para "Rechazar" y "Marcar como adoptado": confirma, llama al backend y recarga

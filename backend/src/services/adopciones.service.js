@@ -2,6 +2,7 @@ import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 import { borrarCertificado, guardarCertificado, rutaCertificado } from '../utils/certificados.js';
 import { ESTADOS_ABIERTOS, MAXIMO_SOLICITUDES } from '../config/adopciones.js';
+import { sendVisitaAgendada } from './email.service.js';
 
 // Lo que se trae de cada solicitud para mostrarla en la intranet
 const datosSolicitud = {
@@ -188,7 +189,31 @@ export const getSolicitudes = () =>
   });
 
 // Agenda (o cambia) la hora de visita. La solicitud pasa a "en proceso" y el animal también.
-export const agendarVisita = (id_solicitud, fecha_visita) =>
+// Agenda (o cambia) la hora de visita. La solicitud pasa a "en proceso" y el animal también.
+// Después le manda un correo al adoptante con la fecha.
+export async function agendarVisita(id_solicitud, fecha_visita) {
+  // 1) Se guarda la visita en la base de datos
+  const solicitud = await guardarVisita(id_solicitud, fecha_visita);
+
+  // 2) Se manda el correo. Va FUERA de la transacción: si el correo falla,
+  //    la visita igual queda guardada (no tiene sentido deshacerla por un problema de Gmail)
+  let correo_enviado = true;
+  try {
+    await sendVisitaAgendada({
+      correo: solicitud.adoptante.correo,
+      nombre: solicitud.adoptante.nombre_adoptante ?? 'adoptante',
+      animal: solicitud.animal.nombre_animal,
+      fechaVisita: solicitud.fecha_visita,
+    });
+  } catch (error) {
+    console.error('No se pudo enviar el correo de la visita:', error.message);
+    correo_enviado = false;
+  }
+
+  // 3) Se responde la solicitud + si el correo salió o no (el frontend lo muestra)
+  return { ...solicitud, correo_enviado };
+}
+const guardarVisita = (id_solicitud, fecha_visita) =>
   prisma.$transaction(async (tx) => {
     const solicitud = await buscarSolicitud(tx, id_solicitud);
 

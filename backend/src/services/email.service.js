@@ -128,6 +128,34 @@ export async function sendExpiringSuppliesNotification(insumos) {
   });
 }
 
+// Le avisa al adoptante la fecha y hora de su visita al refugio
+export async function sendVisitaAgendada({ correo, nombre, animal, fechaVisita }) {
+  // Ej: "martes, 1 de diciembre de 2026, 15:30"
+  const fecha = fechaVisita.toLocaleString('es-CL', { dateStyle: 'full', timeStyle: 'short' });
+
+  await getTransporter().sendMail({
+    from: process.env.SMTP_USER,
+    to: correo,
+    subject: `Visita agendada para conocer a ${animal}`,
+    attachments: [emailLogoAttachment()],
+    // Versión de solo texto, para los programas de correo que no muestran HTML
+    text: [
+      `Hola, ${nombre}:`,
+      '',
+      `Revisamos tu solicitud para adoptar a ${animal} y agendamos una visita al refugio.`,
+      `Fecha y hora: ${fecha}`,
+      '',
+      'Si no puedes asistir, responde este correo para coordinar otra fecha.',
+    ].join('\n'),
+    html: await loadEmailTemplate('visita-agendada.html', {
+      preheader: `Tu visita para conocer a ${animal} es el ${fecha}.`,
+      nombre,
+      animal,
+      fecha,
+    }),
+  });
+}
+
 export function isLowStock(cantidad) {
   return cantidad <= LOW_STOCK_THRESHOLD;
 }
