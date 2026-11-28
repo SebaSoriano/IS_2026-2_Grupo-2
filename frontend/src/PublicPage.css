@@ -287,6 +287,24 @@
   margin: 0 0 8px;
 }
 
+/* Vacunas de la tarjeta: nombre a la izquierda y su estado a la derecha */
+.pet-card__vacunas {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+
+.pet-card__vacunas li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #123e40;
+  font-size: 0.9rem;
+}
+
 .pet-card__details-button {
   border: 0;
   border-radius: 6px;
