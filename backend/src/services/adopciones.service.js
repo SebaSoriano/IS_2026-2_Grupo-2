@@ -1,6 +1,7 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 import { borrarCertificado, guardarCertificado, rutaCertificado } from '../utils/certificados.js';
+import { ESTADOS_ABIERTOS, MAXIMO_SOLICITUDES } from '../config/adopciones.js';
 
 // Lo que se trae de cada solicitud para mostrarla en la intranet
 const datosSolicitud = {
@@ -19,6 +20,22 @@ async function buscarSolicitud(tx, id_solicitud) {
   });
   if (!solicitud) throw new HttpError(404, 'Solicitud no encontrada');
   return solicitud;
+}
+
+// Cuenta las solicitudes abiertas (pendientes y en proceso) de un animal.
+// db puede ser prisma o la transacción (tx): las dos tienen los mismos métodos
+function contarSolicitudesAbiertas(db, id_animal) {
+  return db.solicitudes_adopcion.count({
+    where: { id_animal, estado: { in: ESTADOS_ABIERTOS } },
+  });
+}
+
+// Si el animal ya tiene el máximo de solicitudes abiertas, no se acepta otra
+async function revisarCupo(tx, id_animal) {
+  const abiertas = await contarSolicitudesAbiertas(tx, id_animal);
+  if (abiertas >= MAXIMO_SOLICITUDES) {
+    throw new HttpError(409, `Este animal ya tiene ${MAXIMO_SOLICITUDES} solicitudes en revisión; no recibe más por ahora`);
+  }
 }
 
 // ---------- Públicas (página principal, sin sesión) ----------
@@ -41,6 +58,10 @@ export const getAnimalParaAdoptar = async (id_animal) => {
   if (!animal || animal.estado_animal !== 'disponible') {
     throw new HttpError(404, 'Este animal no está disponible para adopción');
   }
+  // Si ya llegó al máximo de solicitudes, tampoco se muestra el formulario
+  if (await contarSolicitudesAbiertas(prisma, id_animal) >= MAXIMO_SOLICITUDES) {
+    throw new HttpError(404, 'Este animal ya recibió el máximo de solicitudes. Vuelve a revisar más adelante');
+  }
   return animal;
 };
 
@@ -60,6 +81,7 @@ async function crearSolicitud(datos, estado) {
     if (animal.estado_animal !== 'disponible') {
       throw new HttpError(409, 'El animal no está disponible para adopción');
     }
+    await revisarCupo(tx, id_animal);
 
     const adoptante = await tx.adoptante.create({ data: datosAdoptante });
 
@@ -144,6 +166,7 @@ export const crearSolicitudExistente = ({ id_adoptante, id_animal }) =>
     if (animal.estado_animal !== 'disponible') {
       throw new HttpError(409, 'El animal no está disponible para adopción');
     }
+    await revisarCupo(tx, id_animal);
 
     await tx.animales.update({
       where: { id_animal },

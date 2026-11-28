@@ -3,6 +3,7 @@ import { HttpError } from '../middlewares/error.middleware.js';
 import fs from 'fs/promises';
 import path from 'path';
 import { CARPETA_FOTOS_ANIMALES } from '../config/uploads.js';
+import { ESTADOS_ABIERTOS, MAXIMO_SOLICITUDES } from '../config/adopciones.js';
 
 
 // Lista de animales (con filtros opcionales)
@@ -257,8 +258,8 @@ export async function eliminarFotoAnimal(id, idFoto) {
 }
 
 export async function getAnimalesPublicos() {
-  return prisma.animales.findMany({
-    // Una mascota está disponible si no tiene registros relacionados en "adopciones".
+  const animales = await prisma.animales.findMany({
+    // Solo los animales disponibles
     where: {
       estado_animal: 'disponible',
     },
@@ -276,8 +277,20 @@ export async function getAnimalesPublicos() {
         select: { id_foto: true, ruta: true },
         orderBy: { id_foto: 'asc' },
       },
+      // Cuántas solicitudes abiertas tiene cada animal (para el límite de 3)
+      _count: {
+        select: {
+          solicitudes: { where: { estado: { in: ESTADOS_ABIERTOS } } },
+        },
+      },
     },
     // Muestra primero las mascotas registradas más recientemente.
     orderBy: { id_animal: 'desc' },
   });
+
+  // Se quitan los que ya llegaron al máximo de solicitudes,
+  // y se saca _count de la respuesta (la página pública no lo necesita)
+  return animales
+    .filter((animal) => animal._count.solicitudes < MAXIMO_SOLICITUDES)
+    .map(({ _count, ...animal }) => animal);
 }
