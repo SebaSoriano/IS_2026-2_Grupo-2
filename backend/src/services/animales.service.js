@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { CARPETA_FOTOS_ANIMALES } from '../config/uploads.js';
 import { ESTADOS_ABIERTOS, MAXIMO_SOLICITUDES } from '../config/adopciones.js';
+import { historialParaSalud, resumenVacunas } from './saludPublica.service.js';
 
 
 // Lista de animales (con filtros opcionales)
@@ -277,6 +278,8 @@ export async function getAnimalesPublicos() {
         select: { id_foto: true, ruta: true },
         orderBy: { id_foto: 'asc' },
       },
+      // Qué se le hizo y cuándo (sin veterinario ni observaciones), para calcular el estado de sus vacunas
+      historial: historialParaSalud,
       // Cuántas solicitudes abiertas tiene cada animal (para el límite de 3)
       _count: {
         select: {
@@ -288,9 +291,14 @@ export async function getAnimalesPublicos() {
     orderBy: { id_animal: 'desc' },
   });
 
-  // Se quitan los que ya llegaron al máximo de solicitudes,
-  // y se saca _count de la respuesta (la página pública no lo necesita)
+  // Se quitan los que ya llegaron al máximo de solicitudes.
+  // Se calcula cada vez que se pide la lista, por eso la tarjeta cambia apenas se registra una vacuna.
   return animales
     .filter((animal) => animal._count.solicitudes < MAXIMO_SOLICITUDES)
-    .map(({ _count, ...animal }) => animal);
+    .map(({ _count, historial, ...animal }) => ({
+      ...animal,
+      vacunas: resumenVacunas(animal.especie_animal, historial)
+        .filter((vacuna) => vacuna.obligatoria)
+        .map(({ nombre, estado }) => ({ nombre, estado })),
+    }));
 }
