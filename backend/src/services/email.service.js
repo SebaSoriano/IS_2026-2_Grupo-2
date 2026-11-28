@@ -165,3 +165,38 @@ export async function sendDonacionConfirmadaNotification(donacion) {
     }),
   });
 }
+
+// fecha_agendada se guarda como el día a las 00:00 UTC, por eso se formatea en UTC
+const formatoFechaLarga = new Intl.DateTimeFormat('es-CL', {
+  timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+});
+
+// Aviso al donante de insumos cuando un voluntario agenda la entrega
+export async function sendDonationScheduledNotification(donacion) {
+  if (!donacion.donante_correo) return; // sin correo no hay a quién avisar
+
+  const fecha = formatoFechaLarga.format(donacion.fecha_agendada);
+  const nombre = donacion.donante_nombre ?? 'donante';
+  const direccion = process.env.REFUGIO_DIRECCION; // opcional
+
+  await getTransporter().sendMail({
+    from: process.env.SMTP_USER,
+    to: donacion.donante_correo,
+    subject: 'Tu donación de insumos quedó agendada',
+    attachments: [emailLogoAttachment()],
+    text: [
+      `Hola ${nombre}, ¡gracias por tu donación!`,
+      `Agendamos la entrega de tus insumos para el ${fecha}.`,
+      `Insumos: ${donacion.descripcion_insumos}`,
+      direccion ? `Dirección: ${direccion}` : null,
+      'Si necesitas cambiar la fecha, responde a este correo.',
+    ].filter(Boolean).join('\n'),
+    html: await loadEmailTemplate('donation-scheduled.html', {
+      preheader: `Entrega agendada para el ${fecha}.`,
+      nombre,
+      fecha,
+      insumos: donacion.descripcion_insumos,
+      direccion,
+    }),
+  });
+}

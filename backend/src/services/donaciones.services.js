@@ -2,6 +2,7 @@ import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 import { borrarComprobante, guardarComprobante, rutaComprobante } from '../utils/comprobantes.js';
 import { sendDonacionConfirmadaNotification } from './email.service.js';
+import { sendDonationScheduledNotification } from './email.service.js';
 
 const usuarioPublico = { select: { rut_usuario: true, nombre_usuario: true } };
 const cuentaPublica = { select: { id_cuenta: true, banco: true, titular_nombre: true, rut_usuario: true } };
@@ -209,11 +210,18 @@ export const agendarDonacion = async (id, { fecha_agendada }) => {
     throw new HttpError(409, 'Solo las donaciones de insumos se pueden agendar');
   }
   verificarTransicion(donacion.estado, 'agendada');
-  return prisma.donaciones.update({
+  const agendada = await prisma.donaciones.update({
     where: { id_donacion: id },
     data: { estado: 'agendada', fecha_agendada },
     include: incluir,
   });
+
+  // el correo no frena la respuesta: si falla, la donación igual queda agendada
+  sendDonationScheduledNotification(agendada).catch((error) => {
+    console.error(`No se pudo enviar el aviso de agenda de la donación ${id}:`, error);
+  });
+
+  return agendada;
 };
 
 // archivo = req.file de multer: la captura que sube el voluntario (solo monetarias web)
