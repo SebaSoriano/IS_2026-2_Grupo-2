@@ -3,6 +3,7 @@ import { HttpError } from '../middlewares/error.middleware.js';
 import { borrarComprobante, guardarComprobante, rutaComprobante } from '../utils/comprobantes.js';
 import { sendDonacionConfirmadaNotification } from './email.service.js';
 import { sendDonationScheduledNotification } from './email.service.js';
+import { fechaChilena, hoy, inicioDelDiaEnChile, lunesDeLaSemana } from '../utils/fechas.js';
 
 const usuarioPublico = { select: { rut_usuario: true, nombre_usuario: true } };
 const cuentaPublica = { select: { id_cuenta: true, banco: true, titular_nombre: true, rut_usuario: true } };
@@ -330,5 +331,29 @@ export const getEstadisticas = async () => {
     .sort((a, b) => b.cantidad - a.cantidad || b.total - a.total || porNombre(a, b))
     .slice(0, TOP_DONANTES);
 
-  return { porMonto, porCantidad };
+  // (todo lo de arriba de getEstadisticas queda igual)
+  return { porMonto, porCantidad, semana: await getRecaudacionSemanal() };
+};
+
+// Dinero confirmado desde el lunes 00:00 (hora de Chile) de esta semana hasta ahora
+const getRecaudacionSemanal = async () => {
+  const hoyChile = hoy();
+  const lunes = lunesDeLaSemana(hoyChile);
+
+  const { _sum, _count } = await prisma.donaciones.aggregate({
+    where: {
+      estado: 'confirmada',
+      tipo_donacion: 'monetaria',
+      fecha_donacion: { gte: inicioDelDiaEnChile(lunes) },
+    },
+    _sum: { monto_donacion: true },
+    _count: true,
+  });
+
+  return {
+    desde: fechaChilena(lunes),
+    hasta: fechaChilena(hoyChile),
+    total: _sum.monto_donacion ?? 0,
+    cantidad: _count,
+  };
 };

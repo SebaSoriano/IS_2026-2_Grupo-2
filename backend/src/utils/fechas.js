@@ -71,3 +71,17 @@ export const fechaChilena = (fecha) => {
     const dosDigitos = (numero) => String(numero).padStart(2, '0');
     return `${dosDigitos(fecha.getUTCDate())}-${dosDigitos(fecha.getUTCMonth() + 1)}-${fecha.getUTCFullYear()}`;
 };
+
+const horaChile = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+});
+
+// Día (00:00 UTC, como los turnos) -> instante exacto en que empieza ese día en Chile.
+// Chile está en UTC-3 o UTC-4 según el horario de verano: se prueba cuál da medianoche
+export const inicioDelDiaEnChile = (fecha) => {
+    for (const horas of [3, 4]) {
+        const instante = new Date(fecha.getTime() + horas * 60 * 60 * 1000);
+        if (horaChile.format(instante) === '00:00') return instante;
+    }
+    return new Date(fecha.getTime() + 4 * 60 * 60 * 1000);
+};

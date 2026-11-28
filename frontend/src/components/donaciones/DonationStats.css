@@ -90,3 +90,25 @@
     grid-row: 2;
   }
 }
+
+.donation-semana {
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  border: 1px solid #c3eeee;
+  border-radius: 10px;
+  background: #f2fbfb;
+}
+
+.donation-semana h3 {
+  margin: 0;
+  color: #173d3e;
+  font-size: 1rem;
+}
+
+.donation-semana__monto {
+  margin: 4px 0;
+  color: #064c3e;
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
