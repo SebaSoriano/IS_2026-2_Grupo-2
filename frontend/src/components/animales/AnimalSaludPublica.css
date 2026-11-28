@@ -1,0 +1,65 @@
+/* Resumen de salud dentro del "Ver detalles" de la página pública.
+   Los colores de las pastillas de estado están en EstadoSalud.css */
+
+.salud-publica {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #d5e7e4;
+}
+
+.salud-publica h3 {
+  margin: 0 0 4px;
+  color: #123e40;
+  font-size: 1.1rem;
+}
+
+/* "Vacunas" y "Otros cuidados" */
+.salud-publica__subtitulo {
+  margin: 12px 0 8px;
+  color: #627776;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.salud-publica__lista {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.salud-publica__fila {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #f3faf8;
+}
+
+/* nombre a la izquierda y estado a la derecha */
+.salud-publica__fila-principal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #123e40;
+  font-weight: 700;
+}
+
+.salud-publica__detalle {
+  margin: 4px 0 0;
+  color: #627776;
+  font-size: 0.88rem;
+}
+
+.salud-publica__fecha {
+  color: #123e40;
+  white-space: nowrap;
+}
+
+.salud-publica__nota,
+.salud-publica__mensaje {
+  margin: 12px 0 0;
+  color: #627776;
+  font-size: 0.85rem;
+}

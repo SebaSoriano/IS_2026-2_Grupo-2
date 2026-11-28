@@ -592,3 +592,23 @@ export function crearProcedimiento(nombre) {
 export function eliminarProcedimiento(id) {
   return sendJson('DELETE', `/procedimientos/${id}`)
 }
+
+// Resumen de salud de un animal para el "Ver detalles" de la página pública
+export async function getSaludAnimalPublico(id) {
+  const response = await fetch(`${API_BASE_URL}/animalesPublicos/animales/${id}/salud`, {
+    credentials: 'omit',
+  })
+  const contentType = response.headers.get('content-type') ?? ''
+
+  if (!contentType.includes('application/json')) {
+    throw new Error('La API devolvió una respuesta que no es JSON.')
+  }
+
+  const salud = await response.json()
+
+  if (!response.ok) {
+    throw new Error(salud.error ?? `Error HTTP ${response.status}`)
+  }
+
+  return salud
+}

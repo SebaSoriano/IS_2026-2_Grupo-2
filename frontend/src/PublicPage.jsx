@@ -9,6 +9,9 @@ import gatoImage from './assets/cat.png';
 import { getAnimalesPublicos } from './services/api.js';
 import { SEXOS_ANIMAL } from './data/estados.js';
 import AnimalCarrusel from './components/animales/AnimalCarrusel.jsx';
+import AnimalSaludPublica from './components/animales/AnimalSaludPublica.jsx';
+import EstadoSalud from './components/animales/EstadoSalud.jsx';
+import { nombreCortoVacuna } from './data/saludPublica.js';
 
 function fotoDeEjemplo(especie) {
   const especieNormalizada = especie.trim().toLowerCase();
@@ -37,6 +40,18 @@ function TarjetaAnimal({ animal, onVerDetalles }) {
       </div>
       <div className="pet-card__details">
         <h3>{animal.nombre_animal}</h3>
+        {/* Estado de las vacunas obligatorias de su especie (ej: Antirrábica y Óctuple en perros).
+            El backend lo calcula cada vez que se carga la página, así que cambia apenas se registra una vacuna */}
+        {animal.vacunas?.length > 0 && (
+          <ul className="pet-card__vacunas" aria-label="Vacunas">
+            {animal.vacunas.map((vacuna) => (
+              <li key={vacuna.nombre}>
+                <span>{nombreCortoVacuna(vacuna.nombre)}</span>
+                <EstadoSalud estado={vacuna.estado} />
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="pet-card__actions">
           <button
             className="pet-card__details-button"
@@ -240,6 +255,8 @@ export default function PublicPage() {
               </div>
             </dl>
           </div>
+          {/* key: si se abre otro animal, el resumen se crea de nuevo y vuelve a pedir sus datos */}
+          <AnimalSaludPublica key={animalDetalles.id_animal} animal={animalDetalles} />
           <div className="modal__actions">
             {animalDetalles.fotos?.length > 1 && (
               <button
