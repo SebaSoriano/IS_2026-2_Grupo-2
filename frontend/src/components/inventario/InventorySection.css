@@ -2,6 +2,53 @@
   min-width: 0;
 }
 
+.inventory-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.inventory-view-button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid #19a99f;
+  border-radius: 6px;
+  color: #0f5f59;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inventory-view-button:hover,
+.inventory-view-button:focus-visible {
+  background: #e3f6f4;
+}
+
+.inventory-view-button[aria-pressed='true'] {
+  color: #fff;
+  background: #19a99f;
+}
+
+.inventory-consumo-button {
+  min-height: 40px;
+  margin-left: auto;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 6px;
+  color: #064c3e;
+  background: #19efa0;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inventory-consumo-button:hover,
+.inventory-consumo-button:focus-visible {
+  background: #14d98f;
+}
+
 .inventory-table-scroll {
   overflow-x: auto;
   border: 1px solid #c3eeee;

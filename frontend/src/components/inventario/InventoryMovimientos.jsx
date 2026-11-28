@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getMovimientosInventario } from '../services/api.js'
-import { cantidadConUnidad, nombreInsumo } from '../utils/insumos.js'
+import { getMovimientosInventario } from '../../services/api.js'
+import { cantidadConUnidad, nombreInsumo } from '../../utils/insumos.js'
 import './InventoryMovimientos.css'
 
 // fecha y hora del movimiento en formato chileno, por ejemplo "25-11-2026 20:43".
@@ -17,10 +17,8 @@ function fechaYHora(valor) {
 // nombre que se ve en la columna Tipo para cada valor del enum TipoMovimiento de la base de datos
 const nombreTipo = { salida: 'Salida', devolucion: 'Devolución' }
 
-// Tabla con los movimientos del inventario: cada salida (un tratamiento del historial médico
-// usó un insumo) y cada devolución (se corrigió o se eliminó ese registro).
-// Solo muestra datos: los movimientos los crea el backend al guardar el historial médico,
-// por eso aquí no hay botones para agregar, modificar ni borrar.
+// Tabla de movimientos del inventario. Los movimientos se crean desde los registros
+// que descuentan stock, por eso aquí no hay botones para agregarlos, modificarlos ni borrarlos.
 export default function InventoryMovimientos() {
   const [movimientos, setMovimientos] = useState([])
   const [estado, setEstado] = useState('cargando')
@@ -68,7 +66,7 @@ export default function InventoryMovimientos() {
             {movimientos.length === 0 ? (
               <tr>
                 <td className="inventory-empty" colSpan="6">
-                  Todavía no hay movimientos. Aparecen al registrar insumos en el historial médico.
+                  Todavía no hay movimientos. Aparecen al registrar insumos en el historial médico o en un consumo diario.
                 </td>
               </tr>
             ) : (

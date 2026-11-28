@@ -8,15 +8,22 @@ import {
   terminarEnvase,
   updateInsumo,
 } from '../controllers/insumo.controller.js';
+import {
+  createConsumoDiario,
+  listConsumosDiarios,
+} from '../controllers/consumo-diario.controller.js';
 import { validate } from '../middlewares/validate.middleware.js';
 import { createInsumoSchema, updateInsumoSchema } from '../schemas/insumos.schema.js';
+import { createConsumoDiarioSchema } from '../schemas/consumo-diario.schema.js';
 
 const router = Router();
 
 router.get('/', listInsumos);
 router.get('/movimientos', listMovimientos);
+router.get('/consumos-diarios', listConsumosDiarios);
 router.get('/:id', getInsumo);
 router.post('/', validate(createInsumoSchema), createInsumo);
+router.post('/consumos-diarios', validate(createConsumoDiarioSchema), createConsumoDiario);
 router.put('/:id', validate(updateInsumoSchema), updateInsumo);
 router.patch('/:id', validate(updateInsumoSchema), updateInsumo);
 router.delete('/:id', removeInsumo);

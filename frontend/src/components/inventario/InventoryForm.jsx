@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarInsumo, crearInsumo } from '../services/api.js'
+import { actualizarInsumo, crearInsumo } from '../../services/api.js'
 import './InventoryForm.css'
 
 const TIPOS_INSUMO = [
@@ -9,6 +9,14 @@ const TIPOS_INSUMO = [
   'Limpieza',
   'Accesorios y juguetes',
   'Otros',
+]
+
+const ESTADOS_INSUMO = [
+  'Nuevo',
+  'Recién usado',
+  'A medio usar',
+  'Usado',
+  'Vencido',
 ]
 
 const EMPTY_FORM = {

@@ -106,8 +106,8 @@ export async function terminarEnvase(id, rut_usuario) {
         cantidad: 1,
         rut_usuario,
         descripcion: insumo.estado_envase === 'abierto'
-          ? 'Envase terminado (se había abierto en un procedimiento)'
-          : 'Envase terminado (sin uso registrado en el historial médico)',
+          ? 'Envase terminado (se había registrado su uso)'
+          : 'Envase terminado (sin uso registrado)',
       },
     });
 

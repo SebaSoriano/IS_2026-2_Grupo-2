@@ -26,6 +26,7 @@ model Usuario {
   rol                Rol                    @relation(fields: [rol_id], references: [id])
   cuentas            cuenta_transferencia[]
   movimientos_insumo movimiento_insumo[] //movimientos del inventario que registró este usuario
+  consumos_diarios   consumo_diario[]
 }
 
 model Agendamiento {
@@ -59,6 +60,7 @@ model Insumo {
   id_donacion       Int?
   donacion          donaciones?         @relation(fields: [id_donacion], references: [id_donacion])
   historial         historial_insumo[] //registros médicos en los que se usó este insumo
+  consumos_diarios  consumo_diario_insumo[]
   movimientos       movimiento_insumo[] //salidas y devoluciones de este insumo
 }
 
@@ -107,6 +109,30 @@ model historial_medico {
 
   insumos     historial_insumo[] //insumos usados en este tratamiento, con su cantidad
   movimientos movimiento_insumo[] //movimientos del inventario que generó este registro
+}
+
+// Un envío diario agrupa los insumos usados en una jornada y quién lo registró.
+model consumo_diario {
+  id_consumo_diario Int      @id @default(autoincrement())
+  fecha             DateTime @default(now())
+  rut_usuario       String
+
+  usuario     Usuario                 @relation(fields: [rut_usuario], references: [rut_usuario], onDelete: Restrict)
+  insumos     consumo_diario_insumo[]
+  movimientos movimiento_insumo[]
+}
+
+// Detalle de los insumos incluidos en un consumo diario.
+// cantidad queda en null para insumos controlados por estado de envase.
+model consumo_diario_insumo {
+  id_consumo_diario Int
+  id_insumo         Int
+  cantidad          Int?
+
+  consumo_diario consumo_diario @relation(fields: [id_consumo_diario], references: [id_consumo_diario], onDelete: Cascade)
+  insumo         Insumo         @relation(fields: [id_insumo], references: [id], onDelete: Restrict)
+
+  @@id([id_consumo_diario, id_insumo])
 }
 
 // Catálogo de procedimientos médicos comunes (vacunas, controles, cirugías, etc.).
@@ -163,6 +189,8 @@ model movimiento_insumo {
   usuario      Usuario           @relation(fields: [rut_usuario], references: [rut_usuario])
   id_historial Int?
   historial    historial_medico? @relation(fields: [id_historial], references: [id_historial], onDelete: SetNull)
+  id_consumo_diario Int?
+  consumo_diario    consumo_diario? @relation(fields: [id_consumo_diario], references: [id_consumo_diario], onDelete: SetNull)
 }
 
 model animales {

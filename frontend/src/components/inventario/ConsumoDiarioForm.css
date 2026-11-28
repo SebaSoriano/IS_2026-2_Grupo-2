@@ -1,0 +1,13 @@
+.consumo-diario-dialog {
+  width: min(900px, calc(100% - 32px));
+}
+
+.consumo-diario-form {
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.consumo-diario-form__ayuda {
+  margin: 0;
+  color: #536d6e;
+}

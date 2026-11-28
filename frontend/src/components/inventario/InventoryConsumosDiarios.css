@@ -1,0 +1,6 @@
+.inventory-consumos__lista {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 20px;
+}
