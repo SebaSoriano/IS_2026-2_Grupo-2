@@ -549,9 +549,24 @@ export function terminarEnvase(id) {
   return sendJson('PATCH', `/insumos/${id}/terminar`)
 }
 
-// Salidas y devoluciones del inventario (las genera el historial médico), de la más reciente a la más antigua
+// Salidas y devoluciones del inventario, de la más reciente a la más antigua
 export function getMovimientosInventario() {
   return getJson('/insumos/movimientos')
+}
+
+// Registra y consulta los lotes de insumos utilizados durante el día.
+export function crearConsumoDiario(insumos) {
+  return postJson('/insumos/consumos-diarios', { insumos })
+}
+
+export async function getConsumosDiarios() {
+  const consumos = await getJson('/insumos/consumos-diarios')
+
+  if (!Array.isArray(consumos)) {
+    throw new Error('La respuesta de consumos diarios no es válida.')
+  }
+
+  return consumos
 }
 
 // ---------- Procedimientos médicos (catálogo) ----------

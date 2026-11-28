@@ -6,6 +6,8 @@ import InventoryForm from './InventoryForm.jsx'
 import InventoryDeleteDialog from './InventoryDeleteDialog.jsx'
 import InventoryItemsTable from './InventoryItemsTable.jsx'
 import InventoryMovimientos from './InventoryMovimientos.jsx'
+import ConsumoDiarioForm from './ConsumoDiarioForm.jsx'
+import InventoryConsumosDiarios from './InventoryConsumosDiarios.jsx'
 import './InventorySection.css'
 
 export default function InventorySection({
@@ -21,6 +23,7 @@ export default function InventorySection({
   const [status, setStatus] = useState('loading')
   const [error, setError] = useState('')
   const [vista, setVista] = useState('insumos')
+  const [isConsumptionFormOpen, setIsConsumptionFormOpen] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
   const [actionError, setActionError] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -32,6 +35,7 @@ export default function InventorySection({
   // cada vez que cambia este número se vuelve a crear InventoryMovimientos (por su key),
   // y al crearse pide de nuevo los movimientos: así aparece la salida recién anotada
   const [versionMovimientos, setVersionMovimientos] = useState(0)
+  const [versionConsumos, setVersionConsumos] = useState(0)
 
   useEffect(() => {
     onSelectionCountChange(selectedIds.size)
@@ -97,6 +101,22 @@ export default function InventorySection({
     setStatus('success')
     setError('')
     setSuccessMessage('El insumo se modificó correctamente.')
+  }
+
+  const consumoDiarioGuardado = () => {
+    setIsConsumptionFormOpen(false)
+    setSelectedIds(new Set())
+    setVista('consumos')
+    setSuccessMessage('El consumo diario se registró correctamente.')
+    setActionError('')
+    setVersionMovimientos((version) => version + 1)
+    setVersionConsumos((version) => version + 1)
+
+    getInsumos()
+      .then(setInsumos)
+      .catch((requestError) => {
+        setActionError(`El consumo se guardó, pero no se pudo actualizar el inventario: ${requestError.message}`)
+      })
   }
 
   // Botón "Se terminó" de un insumo de tipo "estado": pide confirmación, avisa al backend
@@ -206,7 +226,7 @@ export default function InventorySection({
       )}
       {status === 'success' && (
         <>
-          <div className="inventory-views" role="group" aria-label="Vista de inventario">
+          <div className="inventory-views" role="group" aria-label="Vistas de inventario">
             <button
               className="inventory-view-button"
               type="button"
@@ -223,6 +243,21 @@ export default function InventorySection({
             >
               Movimientos de inventario
             </button>
+            <button
+              className="inventory-view-button"
+              type="button"
+              aria-pressed={vista === 'consumos'}
+              onClick={() => cambiarVista('consumos')}
+            >
+              Consumos diarios
+            </button>
+            <button
+              className="inventory-consumo-button"
+              type="button"
+              onClick={() => setIsConsumptionFormOpen(true)}
+            >
+              Registrar consumo diario
+            </button>
           </div>
           <div hidden={vista !== 'insumos'}>
             <InventoryItemsTable
@@ -237,7 +272,17 @@ export default function InventorySection({
           {vista === 'movimientos' && (
             <InventoryMovimientos key={versionMovimientos} />
           )}
+          {vista === 'consumos' && (
+            <InventoryConsumosDiarios key={versionConsumos} />
+          )}
         </>
+      )}
+      {isConsumptionFormOpen && (
+        <ConsumoDiarioForm
+          isOpen
+          onClose={() => setIsConsumptionFormOpen(false)}
+          onSaved={consumoDiarioGuardado}
+        />
       )}
       {(isCreateModalOpen || isEditingModalOpen) && (
         <InventoryForm

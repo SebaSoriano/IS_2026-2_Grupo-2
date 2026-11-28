@@ -45,7 +45,12 @@ function detalleEnLista(insumo, disponible) {
 
 // Selector de los insumos usados en un tratamiento. Muestra el inventario en una 
 // lista desplegable
-export default function HistorialInsumos({ elegidos, onChange, usadosAntes = [] }) {
+export default function HistorialInsumos({
+  elegidos,
+  onChange,
+  usadosAntes = [],
+  mensajeVacio = 'Opcional: si no se usaron insumos, deja esta parte vacía.',
+}) {
   const [inventario, setInventario] = useState([])
   const [cargando, setCargando] = useState(true)
   const [errorCarga, setErrorCarga] = useState('')
@@ -164,11 +169,9 @@ export default function HistorialInsumos({ elegidos, onChange, usadosAntes = [] 
       </div>
 
       {elegidos.length === 0 ? (
-        <p className="historial-insumos__ayuda">
-          Opcional: si no se usaron insumos, deja esta parte vacía.
-        </p>
+        <p className="historial-insumos__ayuda">{mensajeVacio}</p>
       ) : (
-        <ul className="historial-insumos__lista" aria-label="Insumos que se descontarán del inventario">
+        <ul className="historial-insumos__lista" aria-label="Insumos agregados a este registro">
           {elegidos.map((elegido) => {
             const insumo = insumoPorId.get(elegido.id_insumo)
             // Si el insumo ya no está en el inventario (por ejemplo, otra persona lo borró
