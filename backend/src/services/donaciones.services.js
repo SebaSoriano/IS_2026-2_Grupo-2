@@ -1,7 +1,7 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
 import { borrarComprobante, guardarComprobante, rutaComprobante } from '../utils/comprobantes.js';
-import { ROLES } from '../config/roles.js';
+import { sendDonacionConfirmadaNotification } from './email.service.js';
 
 const usuarioPublico = { select: { rut_usuario: true, nombre_usuario: true } };
 const cuentaPublica = { select: { id_cuenta: true, banco: true, titular_nombre: true, rut_usuario: true } };
@@ -33,19 +33,35 @@ const verificarInsumos = (tipo, insumos) => {
   if (tipo === 'monetaria' && insumos) throw new HttpError(400, 'Los insumos solo aplican a donaciones de insumos');
 };
 
-// Quién puede agendar o confirmar una donación:
-// - monetaria: el Admin o el voluntario titular de la cuenta a la que llegó la transferencia
+// Quién puede agendar, confirmar o rechazar una donación:
+// - monetaria: solo el titular de la cuenta a la que llegó la transferencia (la Admin también, solo en sus cuentas)
 // - insumos: cualquier usuario con sesión (no hay una cuenta a la que se haya transferido)
 const verificarPermiso = async (donacion, usuario) => {
-  if (donacion.tipo_donacion !== 'monetaria' || usuario.rol === ROLES.ADMIN) return;
+  if (donacion.tipo_donacion !== 'monetaria') return;
 
   const cuenta = donacion.id_cuenta
     ? await prisma.cuenta_transferencia.findUnique({ where: { id_cuenta: donacion.id_cuenta } })
     : null;
 
   if (cuenta?.rut_usuario !== usuario.rut) {
-    throw new HttpError(403, 'Solo el voluntario titular de la cuenta puede gestionar esta donación');
+    throw new HttpError(403, 'Solo el titular de la cuenta puede gestionar esta donación');
   }
+};
+
+// Al confirmar una monetaria web hay que subir la captura de la transferencia vista desde la cuenta que la recibió.
+// Las presenciales y las de insumos se confirman en persona: no llevan captura
+const verificarCapturaConfirmacion = (donacion, archivo) => {
+  const esMonetariaWeb = donacion.tipo_donacion === 'monetaria' && donacion.origen === 'web';
+  if (esMonetariaWeb && !archivo) throw new HttpError(400, 'Adjunta la captura de la transferencia recibida (JPG o PNG)');
+  if (!esMonetariaWeb && archivo) throw new HttpError(400, 'La captura solo aplica a donaciones monetarias hechas por la web');
+};
+
+// El correo no se espera: si Gmail falla, la confirmación igual queda guardada
+const avisarAlDonante = (donacion) => {
+  if (!donacion.donante_correo) return;
+  sendDonacionConfirmadaNotification(donacion).catch((error) => {
+    console.error(`No se pudo enviar el correo de confirmación de la donación ${donacion.id_donacion}:`, error);
+  });
 };
 
 const filasDeInsumo = (insumos, id_donacion, rut_usuario) =>
@@ -123,11 +139,18 @@ export const getComprobante = async (id) => {
   return rutaComprobante(donacion.comprobante_url);
 };
 
+export const getComprobanteConfirmacion = async (id) => {
+  const donacion = await obtenerDonacion(id);
+  if (!donacion.comprobante_confirmacion_url) throw new HttpError(404, 'Esta donación no tiene captura de confirmación');
+  return rutaComprobante(donacion.comprobante_confirmacion_url);
+};
+
 // Si tenía comprobante, también se borra el archivo. Los insumos ya recibidos quedan en el inventario
 export const deleteDonacion = async (id_donacion) => {
   const donacion = await obtenerDonacion(id_donacion);
   await prisma.donaciones.delete({ where: { id_donacion } });
   if (donacion.comprobante_url) await borrarComprobante(donacion.comprobante_url);
+  if (donacion.comprobante_confirmacion_url) await borrarComprobante(donacion.comprobante_confirmacion_url);
 };
 
 export const getAllDonaciones = ({ fecha_desde, fecha_hasta, categoria_insumo, ...filtros } = {}) => {
@@ -193,24 +216,45 @@ export const agendarDonacion = async (id, { fecha_agendada }) => {
   });
 };
 
-export const confirmarDonacion = async (id, { insumos }, usuario) => {
+// archivo = req.file de multer: la captura que sube el voluntario (solo monetarias web)
+export const confirmarDonacion = async (id, { insumos }, usuario, archivo) => {
   const donacion = await obtenerDonacion(id);
   verificarTransicion(donacion.estado, 'confirmada');
   await verificarPermiso(donacion, usuario);
   verificarInsumos(donacion.tipo_donacion, insumos);
+  verificarCapturaConfirmacion(donacion, archivo);
 
-  return prisma.$transaction(async (tx) => {
-    // El "where estado" evita doble confirmación: si dos voluntarios confirman a la vez,
-    // solo uno actualiza una fila y el otro recibe 409 (así no se duplican los insumos)
-    const { count } = await tx.donaciones.updateMany({
-      where: { id_donacion: id, estado: donacion.estado },
-      data: { estado: 'confirmada', fecha_confirmacion: new Date(), rut_usuario: usuario.rut },
+  // El archivo se guarda cuando todo lo demás ya pasó las validaciones
+  const comprobante_confirmacion_url = archivo ? await guardarComprobante(archivo) : undefined;
+
+  let confirmada;
+  try {
+    confirmada = await prisma.$transaction(async (tx) => {
+      // El "where estado" evita doble confirmación: si dos voluntarios confirman a la vez,
+      // solo uno actualiza una fila y el otro recibe 409 (así no se duplican los insumos)
+      const { count } = await tx.donaciones.updateMany({
+        where: { id_donacion: id, estado: donacion.estado },
+        data: {
+          estado: 'confirmada',
+          fecha_confirmacion: new Date(),
+          rut_usuario: usuario.rut,
+          comprobante_confirmacion_url,
+        },
+      });
+      if (count === 0) throw new HttpError(409, 'La donación cambió de estado, actualiza e inténtalo de nuevo');
+
+      if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id, usuario.rut) });
+      return tx.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });
     });
-    if (count === 0) throw new HttpError(409, 'La donación cambió de estado, actualiza e inténtalo de nuevo');
+  } catch (error) {
+    // si la base de datos falla, no se deja un archivo huérfano en disco
+    if (comprobante_confirmacion_url) await borrarComprobante(comprobante_confirmacion_url);
+    throw error;
+  }
 
-        if (insumos) await tx.insumo.createMany({ data: filasDeInsumo(insumos, id, usuario.rut) });
-    return tx.donaciones.findUnique({ where: { id_donacion: id }, include: incluir });
-  });
+  // Solo las monetarias web avisan por correo: las presenciales y las de insumos se confirman en persona
+  if (confirmada.tipo_donacion === 'monetaria' && confirmada.origen === 'web') avisarAlDonante(confirmada);
+  return confirmada;
 };
 
 // Solo las donaciones monetarias pendientes se pueden rechazar.

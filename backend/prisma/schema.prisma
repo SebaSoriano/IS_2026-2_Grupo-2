@@ -226,6 +226,7 @@ model donaciones {
   monto_donacion      Int?
   metodo_pago         MetodoPago?
   comprobante_url     String?     @db.VarChar(255)
+  comprobante_confirmacion_url String? @db.VarChar(255)
   descripcion_insumos String?     @db.VarChar(500)
 
   fecha_donacion     DateTime

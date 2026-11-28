@@ -275,8 +275,8 @@ export function eliminarDonacion(id) {
   return sendJson('DELETE', `/donaciones/${id}`)
 }
 // Formulario con archivo: el navegador arma solo el Content-Type (incluye un "boundary"), por eso NO se escribe ese header
-async function postFormData(path, formData) {
-  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', credentials: 'include', body: formData }) // ← credentials
+async function postFormData(path, formData, method = 'POST') {
+  const response = await fetch(`${API_BASE_URL}${path}`, { method, credentials: 'include', body: formData })
   revisarSesion(response) // ← nueva
   const contentType = response.headers.get('content-type') ?? ''
 
@@ -338,6 +338,10 @@ export function crearDonacionWebConComprobante(formData) {
 // formData lleva los campos de texto y el archivo en el campo "comprobante"
 export function crearDonacionPresencialConComprobante(formData) {
   return postFormData('/donaciones', formData)
+}
+// Confirmar una monetaria web: formData lleva la captura en el campo "comprobante"
+export function confirmarDonacionConComprobante(id, formData) {
+  return postFormData(`/donaciones/${id}/confirmar`, formData, 'PATCH')
 }
 
 // ---------- Historial medico ----------

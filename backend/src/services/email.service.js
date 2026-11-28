@@ -131,3 +131,37 @@ export async function sendExpiringSuppliesNotification(insumos) {
 export function isLowStock(cantidad) {
   return cantidad <= LOW_STOCK_THRESHOLD;
 }
+
+const formatoPesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' });
+const formatoFecha = new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeZone: 'America/Santiago' });
+
+// Aviso al donante de que su transferencia (hecha por la web) ya fue recibida
+export async function sendDonacionConfirmadaNotification(donacion) {
+  const monto = formatoPesos.format(donacion.monto_donacion);
+  const fecha = formatoFecha.format(donacion.fecha_donacion);
+  const nombre = donacion.donante_nombre || 'donante';
+
+  await getTransporter().sendMail({
+    from: `"StrayPaws" <${process.env.SMTP_USER}>`,
+    to: donacion.donante_correo,
+    subject: '¡Recibimos tu donación! Gracias por apoyar a StrayPaws',
+    attachments: [emailLogoAttachment()],
+    text: [
+      `Hola ${nombre},`,
+      '',
+      `Te confirmamos que recibimos tu transferencia de ${monto} realizada el ${fecha}.`,
+      donacion.cuenta ? `Cuenta de destino: ${donacion.cuenta.banco} · ${donacion.cuenta.titular_nombre}` : null,
+      '',
+      'Gracias por ayudarnos a cuidar a los animales del refugio.',
+      'Equipo StrayPaws',
+    ].filter((linea) => linea !== null).join('\n'),
+    html: await loadEmailTemplate('donation-confirmed.html', {
+      preheader: `Recibimos tu donación de ${monto}. ¡Gracias!`,
+      nombre,
+      monto,
+      fecha,
+      banco: donacion.cuenta?.banco,
+      titular: donacion.cuenta?.titular_nombre,
+    }),
+  });
+}

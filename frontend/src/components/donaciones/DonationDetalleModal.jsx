@@ -10,6 +10,7 @@ import {
   puedeRechazar
 } from './DonationFormato.js'
 
+const Imagen = 'img'
 // una fila "etiqueta: valor" de la lista de datos
 function Dato({ etiqueta, children }) {
   return (
@@ -29,6 +30,7 @@ export default function DonationDetalleModal({ donacion, usuario, onClose, onAcc
   const rechazar = puedeRechazar(donacion, usuario)
   // el navegador manda la cookie de sesión solo, por eso la imagen y el enlace funcionan
   const urlComprobante = `${API_BASE_URL}/donaciones/${donacion.id_donacion}/comprobante`
+  const urlCaptura = `${API_BASE_URL}/donaciones/${donacion.id_donacion}/comprobante-confirmacion`
 
   return (
     <Modal title={`Donación de ${nombreDonante(donacion)}`} onClose={onClose} className="donation-modal-detalle">
@@ -61,13 +63,25 @@ export default function DonationDetalleModal({ donacion, usuario, onClose, onAcc
 
       {donacion.comprobante_url && (
         <section className="donation-detalle__seccion">
-          <h3>Comprobante</h3>
+          <h3>Comprobante del donante</h3>
           <img
             className="donation-detalle__comprobante"
             src={urlComprobante}
             alt="Comprobante de la transferencia"
           />
           <a href={urlComprobante} target="_blank" rel="noreferrer">Abrir en una pestaña nueva</a>
+        </section>
+      )}
+
+      {donacion.comprobante_confirmacion_url && (
+        <section className="donation-detalle__seccion">
+          <h3>Captura de confirmación</h3>
+          <Imagen
+            className="donation-detalle__comprobante"
+            src={urlCaptura}
+            alt="Transferencia vista desde la cuenta que la recibió"
+          />
+          <a href={urlCaptura} target="_blank" rel="noreferrer">Abrir en una pestaña nueva</a>
         </section>
       )}
 

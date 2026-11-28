@@ -1,29 +1,55 @@
 import { useState } from 'react'
 import Modal from '../../schedule/Modal.jsx'
-import { confirmarDonacion } from '../../services/api.js'
+import { confirmarDonacion, confirmarDonacionConComprobante } from '../../services/api.js'
 import DonationListaInsumos from './DonationListaInsumos.jsx'
 import { useListaInsumos } from './useListaInsumos.js'
+import { Campo } from './DonationFormPartes.jsx'
+import { errorDeArchivo } from './DonationFormValidacion.js'
+import { formatoPesos, nombreDonante, requiereCaptura } from './DonationFormato.js'
 import './DonationForm.css'
-import { nombreDonante } from './DonationFormato.js'
-const formatoPesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })
 
-// Confirmar = "ya recibí esto". En monetaria basta con confirmar;
-// en insumos hay que anotar qué se recibió, y eso se agrega al inventario
+const Formulario = 'form'
+const Entrada = 'input'
+
+// Confirmar = "ya recibí esto".
+// - insumos: se anota lo recibido y se agrega al inventario
+// - monetaria web: se sube la captura de la transferencia vista desde la cuenta, y se avisa al donante por correo
 export default function DonationConfirmarModal({ donacion, onClose, onListo }) {
   const esInsumos = donacion.tipo_donacion === 'insumos'
+  const pideCaptura = requiereCaptura(donacion)
   const lista = useListaInsumos()
+  const [archivo, setArchivo] = useState(null)
+  const [errorArchivo, setErrorArchivo] = useState('')
   const [errorGeneral, setErrorGeneral] = useState('')
   const [enviando, setEnviando] = useState(false)
 
+  const elegirArchivo = (event) => {
+    const elegido = event.target.files[0] ?? null
+    setArchivo(elegido)
+    setErrorArchivo(errorDeArchivo(elegido))
+  }
+
   const enviar = async (event) => {
     event.preventDefault()
-    setEnviando(true)
     setErrorGeneral('')
 
-    const datos = esInsumos ? { insumos: lista.comoDatos() } : {}
+    if (pideCaptura) {
+      const error = !archivo ? 'Adjunta la captura de la transferencia recibida' : errorDeArchivo(archivo)
+      if (error) {
+        setErrorArchivo(error)
+        return
+      }
+    }
 
+    setEnviando(true)
     try {
-      await confirmarDonacion(donacion.id_donacion, datos)
+      if (pideCaptura) {
+        const formData = new FormData()
+        formData.append('comprobante', archivo)
+        await confirmarDonacionConComprobante(donacion.id_donacion, formData)
+      } else {
+        await confirmarDonacion(donacion.id_donacion, esInsumos ? { insumos: lista.comoDatos() } : {})
+      }
       onListo()
     } catch (error) {
       // el servidor puede devolver varios errores de campo: se muestran todos juntos
@@ -39,7 +65,7 @@ export default function DonationConfirmarModal({ donacion, onClose, onListo }) {
       onClose={onClose}
       className="donation-modal-confirmar"
     >
-      <form className="donation-form" onSubmit={enviar}>
+      <Formulario className="donation-form" onSubmit={enviar}>
         {esInsumos ? (
           <>
             <p className="donation-form__nota">
@@ -52,8 +78,32 @@ export default function DonationConfirmarModal({ donacion, onClose, onListo }) {
           <p className="donation-form__nota">
             ¿Confirmas que recibiste la transferencia de {formatoPesos.format(donacion.monto_donacion)}
             {donacion.cuenta && ` en la cuenta de ${donacion.cuenta.titular_nombre} (${donacion.cuenta.banco})`}?
-            Revisa el comprobante antes de confirmar.
+            Revisa el comprobante del donante antes de confirmar.
           </p>
+        )}
+
+        {pideCaptura && (
+          <>
+            <Campo
+              etiqueta="Captura de la transferencia recibida"
+              error={errorArchivo}
+              ayuda="Pantallazo desde tu banco donde se vea el abono. Imagen JPG o PNG, máximo 5 MB."
+            >
+              <Entrada
+                name="comprobante"
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={elegirArchivo}
+                required
+                aria-invalid={Boolean(errorArchivo)}
+              />
+            </Campo>
+            {donacion.donante_correo && (
+              <p className="donation-form__nota">
+                Al confirmar se le enviará un correo a {donacion.donante_correo} avisando que recibimos su donación.
+              </p>
+            )}
+          </>
         )}
 
         {errorGeneral && <p className="donation-form__error" role="alert">{errorGeneral}</p>}
@@ -66,7 +116,7 @@ export default function DonationConfirmarModal({ donacion, onClose, onListo }) {
             {enviando ? 'Confirmando...' : 'Confirmar recepción'}
           </button>
         </div>
-      </form>
+      </Formulario>
     </Modal>
   )
 }

@@ -1,5 +1,3 @@
-import { ROLES } from '../../data/permisos.js'
-
 export const formatoPesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' })
 
 // fecha_donacion es un instante exacto: se muestra en la hora del navegador
@@ -29,11 +27,15 @@ export function nombreDonante(donacion) {
 // Solo se agendan las de insumos que todavía están pendientes
 export const puedeAgendar = (donacion) => donacion.tipo_donacion === 'insumos' && donacion.estado === 'pendiente'
 
+// monetarias: solo el titular de la cuenta (la Admin también, solo en sus propias cuentas)
 export const puedeConfirmar = (donacion, usuario) => {
   if (donacion.estado === 'confirmada' || donacion.estado === 'rechazada') return false
   if (donacion.tipo_donacion === 'insumos') return true
-  return usuario.rol === ROLES.ADMIN || donacion.cuenta?.rut_usuario === usuario.rut
+  return donacion.cuenta?.rut_usuario === usuario.rut
 }
+
+// las monetarias web piden la captura de la transferencia al confirmarlas
+export const requiereCaptura = (donacion) => donacion.tipo_donacion === 'monetaria' && donacion.origen === 'web'
 
 // Solo se rechazan las monetarias pendientes, puede rechazar admin y propetario de cuenta
 export const puedeRechazar = (donacion, usuario) =>

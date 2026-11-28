@@ -14,6 +14,10 @@ export const getComprobante = async (req, res) => {
   res.sendFile(await donacionesService.getComprobante(req.params.id));
 };
 
+export const getComprobanteConfirmacion = async (req, res) => {
+  res.sendFile(await donacionesService.getComprobanteConfirmacion(req.params.id));
+};
+
 export const getDonaciones = async (req, res) => {
   // validate guarda la query ya validada en req.validateQuery (en Express 5 req.query es de solo lectura)
   res.json(await donacionesService.getAllDonaciones(req.validateQuery));
@@ -32,7 +36,7 @@ export const agendarDonacion = async (req, res) => {
 };
 
 export const confirmarDonacion = async (req, res) => {
-  res.json(await donacionesService.confirmarDonacion(req.params.id, req.body, req.usuario));
+  res.json(await donacionesService.confirmarDonacion(req.params.id, req.body, req.usuario, req.file));
 };
 
 export const deleteDonacion = async (req, res) => {
