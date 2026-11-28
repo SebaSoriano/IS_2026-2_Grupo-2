@@ -80,12 +80,27 @@ export default function DonationStats({ recarga }) {
               <p className="donation-semana__monto">{formatoPesos.format(datos.semana.total)}</p>
               <p className="donation-ranking__nota">
                 Del lunes {datos.semana.desde} a hoy ({datos.semana.hasta}) ·{' '}
-                {datos.semana.cantidad} {datos.semana.cantidad === 1 ? 'donación' : 'donaciones'} en dinero confirmadas.
+                {datos.semana.cantidad} {datos.semana.cantidad === 1 ? 'donación confirmada' : 'donaciones confirmadas'} en dinero.
               </p>
             </section>
           )}
           <div className="donation-estadisticas__rankings">
-            {/* los dos Ranking quedan exactamente igual que ahora */}
+            <Ranking
+              titulo="Quienes más han donado (monto)"
+              nota="Suma de las donaciones en dinero confirmadas."
+              filas={datos.porMonto}
+              valorDe={(fila) => fila.total}
+              formato={(valor) => formatoPesos.format(valor)}
+              vacio="Todavía no hay donaciones en dinero confirmadas."
+            />
+            <Ranking
+              titulo="Quienes más han donado (cantidad)"
+              nota="Número de donaciones confirmadas, en dinero o insumos."
+              filas={datos.porCantidad}
+              valorDe={(fila) => fila.cantidad}
+              formato={(valor) => `${valor} ${valor === 1 ? 'donación' : 'donaciones'}`}
+              vacio="Todavía no hay donaciones confirmadas."
+            />
           </div>
         </>
       )}
