@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import './PublicPage.css';
-import DonationPanels from './components/DonationPanels.jsx';
-import DonationInsumosForm from './components/DonationFormInsumo.jsx';
-import DonationMonetariaForm from './components/DonationFormMonetaria.jsx';
+import DonationPanels from './components/donaciones/DonationPanels.jsx';
+import DonationInsumosForm from './components/donaciones/DonationFormInsumo.jsx';
+import DonationMonetariaForm from './components/donaciones/DonationFormMonetaria.jsx';
 import Modal from './schedule/Modal.jsx';
 import perroImage from './assets/perro.png';
 import gatoImage from './assets/cat.png';

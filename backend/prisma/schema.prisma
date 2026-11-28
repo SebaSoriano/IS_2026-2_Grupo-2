@@ -210,6 +210,7 @@ enum EstadoDonacion {
   pendiente
   agendada
   confirmada
+  rechazada
 }
 
 enum MetodoPago {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Modal from '../../schedule/Modal.jsx'
 import { agendarVisita } from '../../services/api.js'
 // usa los estilos del formulario de donaciones (donation-form, donation-field)
-import '../DonationForm.css'
+import '../donaciones/DonationForm.css'
 
 // Convierte una fecha al formato del <input type="datetime-local">: "AAAA-MM-DDTHH:MM"
 function formatoInput(fecha) {

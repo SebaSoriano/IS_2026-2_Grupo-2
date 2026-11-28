@@ -3,7 +3,7 @@ import { tipoInsumo } from './insumos.schema.js';
 
 export const TIPOS_DONACION = ['monetaria', 'insumos'];
 export const METODOS_PAGO = ['efectivo', 'transferencia'];
-export const ESTADOS_DONACION = ['pendiente', 'agendada', 'confirmada'];
+export const ESTADOS_DONACION = ['pendiente', 'agendada', 'confirmada', 'rechazada'];
 export const ORIGENES_DONACION = ['presencial', 'web'];
 
 export const rut = z.string().trim().regex(/^\d{7,8}-[\dkK]$/, 'Debe ser un RUT con formato 12345678-9');
@@ -48,21 +48,6 @@ const insumoDonado = z.object({
 }).strict();
 
 const listaInsumos = z.array(insumoDonado).min(1, 'Indica al menos un insumo').max(30).optional();
-// POST /api/donaciones (lo registra un voluntario)
-export const createDonacionPresencialSchema = z
-  .object({
-    ...camposDonacion,
-    fecha_donacion: z.coerce
-      .date({ error: 'Debe ser una fecha válida (AAAA-MM-DD)' })
-      .refine((fecha) => fecha <= new Date(), 'La fecha no puede ser futura')
-      .optional(),
-    insumos: listaInsumos,
-    donante_nombre: z.string().trim().min(1, 'No puede estar vacío').max(100).optional(),
-    donante_correo: z.email('Debe ser un correo válido').max(100).optional(),
-    donante_telefono: z.string().trim().regex(/^\+?\d{8,14}$/, 'Teléfono inválido').optional(),
-  })
-  .strict()
-  .superRefine(reglasPorTipo);
 
 // POST /api/donaciones/web (formulario público del donante)
 // Un formulario con archivo (multipart) manda todo como texto
@@ -72,6 +57,24 @@ const montoDesdeFormulario = z.coerce
   .positive('Debe ser mayor a 0')
   .max(100_000_000, 'El monto es demasiado alto')
   .optional();
+// POST /api/donaciones (lo registra un voluntario)
+// POST /api/donaciones (lo registra un voluntario). Puede venir como JSON o, con comprobante, como multipart
+export const createDonacionPresencialSchema = z
+  .object({
+    ...camposDonacion,
+    monto_donacion: montoDesdeFormulario,
+    fecha_donacion: z.coerce
+      .date({ error: 'Debe ser una fecha válida (AAAA-MM-DD)' })
+      .refine((fecha) => fecha <= new Date(), 'La fecha no puede ser futura')
+      .optional(),
+    insumos: listaInsumos,
+    donante_nombre: z.string().trim().min(1, 'No puede estar vacío').max(100).optional(),
+    donante_correo: z.email('Debe ser un correo válido').max(100).optional(),
+    donante_telefono: z.string().trim().regex(/^\+?\d{8,14}$/, 'Teléfono inválido').optional(),
+  })
+  .omit({ comprobante_url: true }) // el comprobante llega como archivo, no como texto
+  .strict()
+  .superRefine(reglasPorTipo);
 
 // Reglas propias de la web: solo transferencias, y hay que indicar a qué cuenta se transfirió
 const reglasWeb = (datos, ctx) => {
@@ -102,12 +105,20 @@ export const createDonacionWebSchema = z
   .superRefine(reglasPorTipo)
   .superRefine(reglasWeb);
 
-// GET /api/donaciones?estado=&tipo_donacion=&origen=
+// GET /api/donaciones?estado=&tipo_donacion=&origen=&fecha_desde=&fecha_hasta=&categoria_insumo=
 export const filtrosDonacionSchema = z.object({
   estado: z.enum(ESTADOS_DONACION).optional(),
   tipo_donacion: z.enum(TIPOS_DONACION).optional(),
   origen: z.enum(ORIGENES_DONACION).optional(),
-}).strict();
+  // instantes ISO: el navegador manda el inicio y el fin del día en su propia hora
+  fecha_desde: z.coerce.date({ error: 'Debe ser una fecha válida' }).optional(),
+  fecha_hasta: z.coerce.date({ error: 'Debe ser una fecha válida' }).optional(),
+  categoria_insumo: tipoInsumo.optional(),
+}).strict()
+  .refine(
+    (d) => !d.fecha_desde || !d.fecha_hasta || d.fecha_desde <= d.fecha_hasta,
+    { message: '"Desde" no puede ser posterior a "Hasta"', path: ['fecha_desde'] },
+  );
 
 // PATCH /api/donaciones/:id (el tipo no se puede cambiar: si se equivocó, se borra y se registra de nuevo)
 const { tipo_donacion, ...camposEditables } = camposDonacion;

@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import Modal from '../schedule/Modal.jsx'
-import { crearDonacionPresencial } from '../services/api.js'
-import { Campo, erroresPorCampo, sinVacios } from './DonationFormPartes.jsx'
+import Modal from '../../schedule/Modal.jsx'
+import { crearDonacionPresencial, crearDonacionPresencialConComprobante } from '../../services/api.js'
+import { Campo } from './DonationFormPartes.jsx'
+import { errorDeArchivo, erroresPorCampo, sinVacios } from './DonationFormValidacion.js'
 import DonationListaInsumos from './DonationListaInsumos.jsx'
 import { useListaInsumos } from './useListaInsumos.js'
 import './DonationForm.css'
@@ -33,14 +34,42 @@ export default function DonationPresencialForm({ onClose, onListo }) {
   const [errores, setErrores] = useState({})
   const [errorGeneral, setErrorGeneral] = useState('')
   const [enviando, setEnviando] = useState(false)
-
+  const [archivo, setArchivo] = useState(null)
+  
   const cambiar = (event) => {
     const { name, value } = event.target
     setValores((actuales) => ({ ...actuales, [name]: value }))
+    if (name === 'metodo_pago') {
+      setArchivo(null)
+      setErrores((actuales) => ({ ...actuales, comprobante: '' }))
+    }
   }
+
+  const cambiarTipo = (event) => {
+    setTipo(event.target.value)
+    setArchivo(null)
+    setErrores((actuales) => ({ ...actuales, comprobante: '' }))
+  }
+
+  const elegirArchivo = (event) => {
+    const elegido = event.target.files[0] ?? null
+    setArchivo(elegido)
+    setErrores((actuales) => ({ ...actuales, comprobante: errorDeArchivo(elegido) }))
+  }
+
+  const conTransferencia = tipo === 'monetaria' && valores.metodo_pago === 'transferencia'
 
   const enviar = async (event) => {
     event.preventDefault()
+
+    if (conTransferencia) {
+      const errorArchivo = !archivo ? 'Adjunta el comprobante de la transferencia' : errorDeArchivo(archivo)
+      if (errorArchivo) {
+        setErrores((actuales) => ({ ...actuales, comprobante: errorArchivo }))
+        return
+      }
+    }
+
     setEnviando(true)
     setErrores({})
     setErrorGeneral('')
@@ -66,7 +95,15 @@ export default function DonationPresencialForm({ onClose, onListo }) {
     }
 
     try {
-      await crearDonacionPresencial(datos)
+      if (conTransferencia) {
+        // con archivo el envío es un formulario (multipart): todo viaja como texto y el servidor lo convierte
+        const formData = new FormData()
+        for (const [clave, valor] of Object.entries(datos)) formData.append(clave, valor)
+        formData.append('comprobante', archivo)
+        await crearDonacionPresencialConComprobante(formData)
+      } else {
+        await crearDonacionPresencial(datos)
+      }
       onListo()
     } catch (error) {
       const detalles = error.details ?? []
@@ -89,7 +126,7 @@ export default function DonationPresencialForm({ onClose, onListo }) {
         </p>
 
         <Campo etiqueta="Tipo de donación">
-          <select value={tipo} onChange={(event) => setTipo(event.target.value)}>
+          <select value={tipo} onChange={cambiarTipo}>
             <option value="monetaria">Monetaria</option>
             <option value="insumos">Insumos</option>
           </select>
@@ -117,6 +154,22 @@ export default function DonationPresencialForm({ onClose, onListo }) {
                 <option value="transferencia">Transferencia</option>
               </select>
             </Campo>
+            {conTransferencia && (
+              <Campo
+                etiqueta="Comprobante de la transferencia"
+                error={errores.comprobante}
+                ayuda="Imagen JPG o PNG, máximo 5 MB."
+              >
+                <input
+                  name="comprobante"
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={elegirArchivo}
+                  required
+                  aria-invalid={Boolean(errores.comprobante)}
+                />
+              </Campo>
+            )}
           </>
         ) : (
           <DonationListaInsumos lista={lista} />

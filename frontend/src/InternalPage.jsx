@@ -7,7 +7,7 @@ import HistorialSection from './components/historialMedico/HistorialSection.jsx'
 import InventorySection from './components/InventorySection.jsx'
 import ScheduleSection from './schedule/ScheduleSection.jsx'
 import VolunteerSection from './components/signup/VolunteerSection.jsx'
-import DonationSection from './components/DonationSection.jsx'
+import DonationSection from './components/donaciones/DonationSection.jsx'
 import SesionUsuario from './components/SesionUsuario.jsx'
 import { usePermisos } from './sesion/sesion.js'
 
