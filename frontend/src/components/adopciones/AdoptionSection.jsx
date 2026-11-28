@@ -4,6 +4,7 @@ import {
   getSolicitudesAdopcion,
   marcarAdoptado,
   rechazarSolicitud,
+  urlCertificado,
 } from '../../services/api.js'
 import { ESTADOS_SOLICITUD, TIPOS_VIVIENDA } from '../../data/estados.js'
 import AdoptionForm from './AdoptionForm.jsx'
