@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { textoEstadoEnvase } from '../utils/insumos.js'
+import { textoEstadoEnvase } from '../../utils/insumos.js'
 
 function formatDate(value) {
   if (!value) return '—'

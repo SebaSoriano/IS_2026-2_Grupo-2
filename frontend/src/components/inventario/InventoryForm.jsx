@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { actualizarInsumo, crearInsumo } from '../services/api.js'
+import { actualizarInsumo, crearInsumo } from '../../services/api.js'
 import './InventoryForm.css'
 
 const TIPOS_INSUMO = [

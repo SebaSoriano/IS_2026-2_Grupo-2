@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getMovimientosInventario } from '../services/api.js'
-import { cantidadConUnidad, nombreInsumo } from '../utils/insumos.js'
+import { getMovimientosInventario } from '../../services/api.js'
+import { cantidadConUnidad, nombreInsumo } from '../../utils/insumos.js'
 import './InventoryMovimientos.css'
 
 // fecha y hora del movimiento en formato chileno, por ejemplo "25-11-2026 20:43".
