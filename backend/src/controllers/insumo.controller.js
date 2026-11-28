@@ -116,7 +116,7 @@ export async function removeInsumo(req, res) {
     // P2003 al borrar significa que otra tabla todavía apunta a este insumo
     if (error.code === 'P2003') {
       return res.status(409).json({
-        error: 'No se puede eliminar el insumo porque se usó en registros del historial médico',
+        error: 'No se puede eliminar el insumo porque está asociado a un historial médico o a un consumo diario',
       });
     }
     return handleDatabaseError(error, res);
