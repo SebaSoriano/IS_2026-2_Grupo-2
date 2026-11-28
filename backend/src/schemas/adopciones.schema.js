@@ -25,10 +25,10 @@ export const adoptanteSchema = z.object({
     observaciones_adoptante: z.string().trim().max(500, 'Debe tener como máximo 500 caracteres').optional(),
 });
 
-// POST /api/adopciones/solicitudes (página pública)
-// Adoptante + el animal que le interesa (obligatorio)
+// Llega como multipart/form-data (por el PDF): ahí TODO viaja como texto,
+// por eso z.coerce.number() convierte "5" en 5
 export const solicitudAdopcionSchema = adoptanteSchema.extend({
-    id_animal: z.number().int().positive('Debe elegir un animal'),
+    id_animal: z.coerce.number().int().positive('Debe elegir un animal'),
 });
 
 // POST /api/adopciones/solicitudes/manual (intranet)

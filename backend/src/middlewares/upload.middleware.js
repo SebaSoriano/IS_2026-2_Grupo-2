@@ -62,3 +62,15 @@ export const recibirComprobante = (req, res, next) => {
     next(error);
   });
 };
+
+// Formulario público de adopción: el PDF llega en el campo "certificado" y queda en req.file (en memoria)
+export const recibirCertificado = (req, res, next) => {
+  subida.single('certificado')(req, res, (error) => {
+    if (!error) return next();
+    if (error.code === 'LIMIT_FILE_SIZE') return next(new HttpError(413, 'El certificado no puede superar los 5 MB'));
+    if (error.code === 'LIMIT_UNEXPECTED_FILE' || error.code === 'LIMIT_FILE_COUNT') {
+      return next(new HttpError(400, 'Envía un solo archivo en el campo "certificado"'));
+    }
+    next(error);
+  });
+};

@@ -6,12 +6,14 @@ import {
   getSolicitudes,
   createSolicitudManual,
   getAdoptantes,
+  getCertificado,
   createSolicitudExistente,
   agendarVisita,
   rechazarSolicitud,
   marcarAdoptado,
 } from '../controllers/adopciones.controller.js';
 import { validate } from '../middlewares/validate.middleware.js';
+import { recibirCertificado } from '../middlewares/upload.middleware.js';
 import { idParamSchema } from '../schemas/idParam.schema.js';
 import { solicitudAdopcionSchema, ingresoManualSchema, solicitudExistenteSchema, visitaSchema } from '../schemas/adopciones.schema.js';
 import { requireAuth, requireRol } from '../middlewares/auth.middleware.js';
@@ -23,7 +25,8 @@ const id = validate(idParamSchema, 'params');
 // ---------- Públicas: las usa la página principal, sin iniciar sesión ----------
 // Van ANTES del router.use(requireAuth), por eso no piden sesión
 router.get('/animales/:id', id, getAnimalParaAdoptar);
-router.post('/solicitudes', validate(solicitudAdopcionSchema, 'body'), createSolicitudPublica);
+// recibirCertificado va ANTES de validate: multer es el que lee el formulario y llena req.body y req.file
+router.post('/solicitudes', recibirCertificado, validate(solicitudAdopcionSchema, 'body'), createSolicitudPublica);
 
 // ---------- Desde aquí hacia abajo, todas piden sesión ----------
 // Un router.use sin ruta se aplica a todas las rutas que se registran después de él
@@ -44,5 +47,7 @@ const soloAdmin = requireRol(ROLES.ADMIN);
 router.patch('/solicitudes/:id/visita', soloAdmin, id, validate(visitaSchema, 'body'), agendarVisita);
 router.patch('/solicitudes/:id/rechazar', soloAdmin, id, rechazarSolicitud);
 router.patch('/solicitudes/:id/adoptar', soloAdmin, id, marcarAdoptado);
+// El certificado de antecedentes es un dato personal: solo lo ve el Admin
+router.get('/adoptantes/:id/certificado', soloAdmin, id, getCertificado);
 
 export default router;

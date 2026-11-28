@@ -254,6 +254,8 @@ model adoptante {
   fecha_nacimiento        DateTime
   observaciones_adoptante String?
   tipo_vivienda           TipoVivienda
+  // nombre del PDF guardado en backend/uploads/certificados (solo los que postulan desde la página pública)
+  certificado_antecedentes String?               @db.VarChar(255)
   adopciones              adopciones[]
   solicitudes             solicitudes_adopcion[]
 }

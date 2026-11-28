@@ -1,5 +1,6 @@
 import prisma from '../config/prisma.js';
 import { HttpError } from '../middlewares/error.middleware.js';
+import { borrarCertificado, guardarCertificado, rutaCertificado } from '../utils/certificados.js';
 
 // Lo que se trae de cada solicitud para mostrarla en la intranet
 const datosSolicitud = {
@@ -79,7 +80,22 @@ async function crearSolicitud(datos, estado) {
   });
 }
 
-export const crearSolicitudPublica = (datos) => crearSolicitud(datos, 'pendiente');
+// Solicitud desde la página pública: además de los datos, trae el PDF del certificado de antecedentes
+export async function crearSolicitudPublica(datos, archivo) {
+  if (!archivo) throw new HttpError(400, 'Adjunta tu certificado de antecedentes en PDF');
+
+  // 1) Se guarda el PDF en el disco (si no es un PDF de verdad, responde 400)
+  const certificado_antecedentes = await guardarCertificado(archivo);
+
+  try {
+    // 2) Se crea el adoptante (con el nombre del archivo) y su solicitud
+    return await crearSolicitud({ ...datos, certificado_antecedentes }, 'pendiente');
+  } catch (error) {
+    // Si algo falló (ej: el animal ya no está disponible), se borra el PDF para no dejar basura
+    await borrarCertificado(certificado_antecedentes);
+    throw error;
+  }
+}
 
 // ---------- Intranet (piden sesión) ----------
 
@@ -91,6 +107,19 @@ export async function crearSolicitudManual(datos) {
   }
   // Con animal: adoptante + solicitud "en proceso" + animal "en proceso" (como antes)
   return crearSolicitud(datos, 'en_proceso');
+}
+
+// Ruta del PDF del certificado de un adoptante (para que el Admin lo vea)
+export async function getCertificado(id_adoptante) {
+  const adoptante = await prisma.adoptante.findUnique({
+    where: { id_adoptante },
+    select: { certificado_antecedentes: true },
+  });
+  if (!adoptante) throw new HttpError(404, 'Adoptante no encontrado');
+  if (!adoptante.certificado_antecedentes) {
+    throw new HttpError(404, 'Este adoptante no tiene certificado de antecedentes');
+  }
+  return rutaCertificado(adoptante.certificado_antecedentes);
 }
 
 // Adoptantes registrados (desde la página pública o la intranet), ordenados por nombre

@@ -3,6 +3,9 @@ import { enviarSolicitudAdopcion, getAnimalParaAdoptar } from '../../services/ap
 import { SEXOS_ANIMAL, TIPOS_VIVIENDA } from '../../data/estados.js'
 import './AdoptionRequestPage.css'
 
+// El certificado de antecedentes: solo PDF y máximo 5 MB (lo mismo que revisa el backend)
+const TAMANO_MAXIMO_CERTIFICADO = 5 * 1024 * 1024
+
 // Campos del formulario: los datos de la tabla "adoptante"
 const formularioVacio = {
   nombre_adoptante: '',
@@ -38,6 +41,8 @@ export default function AdoptionRequestPage() {
   const [mensajeError, setMensajeError] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [enviada, setEnviada] = useState(false)
+  // El archivo PDF elegido (null = ninguno)
+  const [certificado, setCertificado] = useState(null)
 
   // Al abrir la página se piden los datos del animal
   useEffect(() => {
@@ -61,6 +66,26 @@ export default function AdoptionRequestPage() {
     setFormulario({ ...formulario, [event.target.name]: event.target.value })
   }
 
+  // Se ejecuta al elegir el archivo: revisa que sea PDF y que no pese más de 5 MB
+  function elegirCertificado(event) {
+    const archivo = event.target.files[0] ?? null
+    setErrores({ ...errores, certificado: undefined })
+
+    if (archivo && archivo.type !== 'application/pdf') {
+      setErrores({ ...errores, certificado: 'El certificado debe ser un archivo PDF' })
+      event.target.value = ''
+      setCertificado(null)
+      return
+    }
+    if (archivo && archivo.size > TAMANO_MAXIMO_CERTIFICADO) {
+      setErrores({ ...errores, certificado: 'El certificado puede pesar como máximo 5 MB' })
+      event.target.value = ''
+      setCertificado(null)
+      return
+    }
+    setCertificado(archivo)
+  }
+
   async function enviar(event) {
     event.preventDefault()
     setErrores({})
@@ -79,9 +104,15 @@ export default function AdoptionRequestPage() {
     if (formulario.observaciones_adoptante.trim() !== '') {
       datos.observaciones_adoptante = formulario.observaciones_adoptante
     }
+    // FormData: el "sobre" que lleva los campos de texto y el archivo en la misma petición
+    const formData = new FormData()
+    for (const [campo, valor] of Object.entries(datos)) {
+      formData.append(campo, valor)
+    }
+    formData.append('certificado', certificado)
 
     try {
-      await enviarSolicitudAdopcion(datos)
+      await enviarSolicitudAdopcion(formData)
       setEnviada(true)
     } catch (error) {
       if (error.details && error.details.length > 0) {
@@ -196,7 +227,11 @@ export default function AdoptionRequestPage() {
                 onChange={cambiarCampo} max={fechaDeHoy()} required />
               {errores.fecha_nacimiento && <span className="adoptar__error">{errores.fecha_nacimiento}</span>}
             </label>
-
+            <label className="adoptar__campo">
+              Certificado de antecedentes (PDF, máximo 5 MB)
+              <input type="file" accept="application/pdf" onChange={elegirCertificado} required />
+              {errores.certificado && <span className="adoptar__error">{errores.certificado}</span>}
+            </label>
             <label className="adoptar__campo">
               Cuéntanos por qué quieres adoptar (opcional)
               <textarea name="observaciones_adoptante" value={formulario.observaciones_adoptante}

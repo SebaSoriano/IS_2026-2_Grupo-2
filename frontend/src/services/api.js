@@ -418,9 +418,15 @@ export function getAnimalParaAdoptar(idAnimal) {
   return getJson(`/adopciones/animales/${idAnimal}`)
 }
 
-// Pública: envía los datos del adoptante y el animal que le interesa
-export function enviarSolicitudAdopcion(datos) {
-  return postJson('/adopciones/solicitudes', datos)
+// Pública: envía los datos del adoptante, el animal que le interesa y el PDF del certificado.
+// formData es un FormData (texto + archivo); por eso usa postFormData y no postJson
+export function enviarSolicitudAdopcion(formData) {
+  return postFormData('/adopciones/solicitudes', formData)
+}
+
+// Intranet (solo Admin): dirección para abrir el PDF del certificado en una pestaña nueva
+export function urlCertificado(idAdoptante) {
+  return `${API_BASE_URL}/adopciones/adoptantes/${idAdoptante}/certificado`
 }
 
 // Intranet: solicitudes abiertas (pendientes y en proceso)

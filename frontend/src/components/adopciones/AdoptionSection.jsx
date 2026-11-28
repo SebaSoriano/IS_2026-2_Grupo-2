@@ -251,6 +251,7 @@ export default function AdoptionSection() {
                   <th scope="col">Teléfono</th>
                   <th scope="col">Correo</th>
                   <th scope="col">Vivienda</th>
+                  <th scope="col">Certificado</th>
                   <th scope="col">Estado</th>
                   <th scope="col">Visita</th>
                   <th scope="col">Observaciones</th>
@@ -259,7 +260,7 @@ export default function AdoptionSection() {
               <tbody>
                 {solicitudes.length === 0 ? (
                   <tr>
-                    <td className="adoption-table-empty" colSpan="11">
+                    <td className="adoption-table-empty" colSpan="12">
                       No hay solicitudes abiertas.
                     </td>
                   </tr>
@@ -286,6 +287,21 @@ export default function AdoptionSection() {
                       <td>{solicitud.adoptante.telefono}</td>
                       <td>{solicitud.adoptante.correo}</td>
                       <td>{TIPOS_VIVIENDA[solicitud.adoptante.tipo_vivienda] ?? '—'}</td>
+                      <td>
+                        {/* Solo el Admin puede abrir el PDF (el backend también lo exige) */}
+                        {solicitud.adoptante.certificado_antecedentes && puedeGestionarAdopciones ? (
+                          <a
+                            href={urlCertificado(solicitud.adoptante.id_adoptante)}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            Ver PDF
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
                       <td>{ESTADOS_SOLICITUD[solicitud.estado] ?? solicitud.estado}</td>
                       <td>{formatearFechaHora(solicitud.fecha_visita)}</td>
                       <td>{solicitud.adoptante.observaciones_adoptante || '—'}</td>
