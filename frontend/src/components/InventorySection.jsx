@@ -95,6 +95,7 @@ export default function InventorySection({
   const [error, setError] = useState('')
   const [sort, setSort] = useState({ key: 'id', direction: 'ascending' })
   const [search, setSearch] = useState('')
+  const [vista, setVista] = useState('insumos')
   const [successMessage, setSuccessMessage] = useState('')
   const [actionError, setActionError] = useState('')
   const [isDeleting, setIsDeleting] = useState(false)
@@ -194,6 +195,12 @@ export default function InventorySection({
           ? 'descending'
           : 'ascending',
     }))
+  }
+
+  const cambiarVista = (nuevaVista) => {
+    if (nuevaVista === vista) return
+    setSelectedIds(new Set())
+    setVista(nuevaVista)
   }
 
   const toggleSelection = (id) => {
@@ -339,138 +346,160 @@ export default function InventorySection({
       )}
       {status === 'success' && (
         <>
-          <label className="inventory-search">
-            <span>Buscar insumos</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por nombre, descripción, fecha..."
-            />
-          </label>
-          <div className="inventory-table-scroll">
-            <table className="inventory-table">
-              <caption>Insumos registrados en el inventario</caption>
-              <thead>
-                <tr>
-                  <th scope="col">
-                    <span className="visually-hidden">Seleccionar registro</span>
-                  </th>
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Tipo de insumo"
-                    onSort={sortBy}
-                    sortKey="tipo_insumo"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Marca"
-                    onSort={sortBy}
-                    sortKey="marca"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Descripción"
-                    onSort={sortBy}
-                    sortKey="descripcion"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Cantidad"
-                    onSort={sortBy}
-                    sortKey="cantidad"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Fecha de ingreso"
-                    onSort={sortBy}
-                    sortKey="fecha_ingreso"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Fecha de vencimiento"
-                    onSort={sortBy}
-                    sortKey="fecha_vencimiento"
-                  />
-                  <SortableHeader
-                    activeSort={sort}
-                    label="Registrado por"
-                    onSort={sortBy}
-                    sortKey="usuario"
-                  />
-                  <th scope="col">Envase</th>
-                </tr>
-              </thead>
-              <tbody>
-                {insumos.length === 0 ? (
-                  <tr>
-                    <td className="inventory-empty" colSpan="9">
-                      No hay insumos registrados.
-                    </td>
-                  </tr>
-                ) : sortedInsumos.length === 0 ? (
-                  <tr>
-                    <td className="inventory-empty" colSpan="9">
-                      No se encontraron insumos para “{search}”.
-                    </td>
-                  </tr>
-                ) : (
-                  sortedInsumos.map((insumo) => (
-                    <tr
-                      className={isExpired(insumo) ? 'inventory-row--expired' : ''}
-                      key={insumo.id}
-                    >
-                      <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(insumo.id)}
-                          onChange={() => toggleSelection(insumo.id)}
-                          aria-label={`Seleccionar insumo ${insumo.id}`}
-                        />
-                      </td>
-                      <td>{insumo.tipo_insumo}</td>
-                      <td>{insumo.marca || '—'}</td>
-                      <td>{insumo.descripcion || '—'}</td>
-                      <td>
-                        {insumo.cantidad} {insumo.unidad_medida === 'kg'
-                          ? 'kg'
-                          : insumo.unidad_medida === 'g'
-                            ? 'g'
-                            : 'unidades'}
-                      </td>
-                      <td>{formatDate(insumo.fecha_ingreso)}</td>
-                      <td>{formatDate(insumo.fecha_vencimiento)}</td>
-                      <td>{insumo.usuario?.nombre_usuario || '—'}</td>
-                      <td>
-                        {/* solo los insumos de tipo "estado" tienen envase; los contables muestran una raya */}
-                        {insumo.tipo_control === 'estado' ? (
-                          <div className="inventory-envase">
-                            <span className={`inventory-envase__estado inventory-envase__estado--${insumo.estado_envase}`}>
-                              {textoEstadoEnvase(insumo)}
-                            </span>
-                            {puedeEditar && insumo.estado_envase !== 'terminado' && insumo.cantidad > 0 && (
-                              <button
-                                className="inventory-envase__terminar"
-                                type="button"
-                                onClick={() => marcarTerminado(insumo)}
-                                disabled={terminandoId === insumo.id}
-                              >
-                                {terminandoId === insumo.id ? 'Guardando...' : 'Se terminó'}
-                              </button>
-                            )}
-                          </div>
-                        ) : (
-                          '—'
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="inventory-views" role="group" aria-label="Vista de inventario">
+            <button
+              className="inventory-view-button"
+              type="button"
+              aria-pressed={vista === 'insumos'}
+              onClick={() => cambiarVista('insumos')}
+            >
+              Insumos registrados
+            </button>
+            <button
+              className="inventory-view-button"
+              type="button"
+              aria-pressed={vista === 'movimientos'}
+              onClick={() => cambiarVista('movimientos')}
+            >
+              Movimientos de inventario
+            </button>
           </div>
-          {/* debajo de los insumos, las salidas y devoluciones que generó el historial médico */}
-          <InventoryMovimientos key={versionMovimientos} />
+          {vista === 'insumos' ? (
+            <>
+              <label className="inventory-search">
+                <span>Buscar insumos</span>
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar por nombre, descripción, fecha..."
+                />
+              </label>
+              <div className="inventory-table-scroll">
+                <table className="inventory-table">
+                  <caption>Insumos registrados en el inventario</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">
+                        <span className="visually-hidden">Seleccionar registro</span>
+                      </th>
+                      <SortableHeader
+                        activeSort={sort}
+                        label="Tipo de insumo"
+                        onSort={sortBy}
+                        sortKey="tipo_insumo"
+                      />
+                      <SortableHeader
+                        activeSort={sort}
+                        label="Marca"
+                        onSort={sortBy}
+                        sortKey="marca"
+                      />
+                      <SortableHeader
+                        activeSort={sort}
+                        label="Descripción"
+                        onSort={sortBy}
+                        sortKey="descripcion"
+                      />
+                      <SortableHeader
+                        activeSort={sort}
+                        label="Cantidad"
+                        onSort={sortBy}
+                        sortKey="cantidad"
+                      />
+                      <SortableHeader
+                        activeSort={sort}
+                        label="Fecha de ingreso"
+                        onSort={sortBy}
+                        sortKey="fecha_ingreso"
+                      />
+                      <SortableHeader
+                        activeSort={sort}
+                        label="Fecha de vencimiento"
+                        onSort={sortBy}
+                        sortKey="fecha_vencimiento"
+                      />
+                      <SortableHeader
+                        activeSort={sort}
+                        label="Registrado por"
+                        onSort={sortBy}
+                        sortKey="usuario"
+                      />
+                      <th scope="col">Envase</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insumos.length === 0 ? (
+                      <tr>
+                        <td className="inventory-empty" colSpan="9">
+                          No hay insumos registrados.
+                        </td>
+                      </tr>
+                    ) : sortedInsumos.length === 0 ? (
+                      <tr>
+                        <td className="inventory-empty" colSpan="9">
+                          No se encontraron insumos para “{search}”.
+                        </td>
+                      </tr>
+                    ) : (
+                      sortedInsumos.map((insumo) => (
+                        <tr
+                          className={isExpired(insumo) ? 'inventory-row--expired' : ''}
+                          key={insumo.id}
+                        >
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(insumo.id)}
+                              onChange={() => toggleSelection(insumo.id)}
+                              aria-label={`Seleccionar insumo ${insumo.id}`}
+                            />
+                          </td>
+                          <td>{insumo.tipo_insumo}</td>
+                          <td>{insumo.marca || '—'}</td>
+                          <td>{insumo.descripcion || '—'}</td>
+                          <td>
+                            {insumo.cantidad} {insumo.unidad_medida === 'kg'
+                              ? 'kg'
+                              : insumo.unidad_medida === 'g'
+                                ? 'g'
+                                : 'unidades'}
+                          </td>
+                          <td>{formatDate(insumo.fecha_ingreso)}</td>
+                          <td>{formatDate(insumo.fecha_vencimiento)}</td>
+                          <td>{insumo.usuario?.nombre_usuario || '—'}</td>
+                          <td>
+                            {/* solo los insumos de tipo "estado" tienen envase; los contables muestran una raya */}
+                            {insumo.tipo_control === 'estado' ? (
+                              <div className="inventory-envase">
+                                <span className={`inventory-envase__estado inventory-envase__estado--${insumo.estado_envase}`}>
+                                  {textoEstadoEnvase(insumo)}
+                                </span>
+                                {puedeEditar && insumo.estado_envase !== 'terminado' && insumo.cantidad > 0 && (
+                                  <button
+                                    className="inventory-envase__terminar"
+                                    type="button"
+                                    onClick={() => marcarTerminado(insumo)}
+                                    disabled={terminandoId === insumo.id}
+                                  >
+                                    {terminandoId === insumo.id ? 'Guardando...' : 'Se terminó'}
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              '—'
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <InventoryMovimientos key={versionMovimientos} />
+          )}
         </>
       )}
       {(isCreateModalOpen || isEditingModalOpen) && (

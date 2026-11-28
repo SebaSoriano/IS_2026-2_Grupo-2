@@ -2,6 +2,35 @@
   min-width: 0;
 }
 
+.inventory-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.inventory-view-button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid #19a99f;
+  border-radius: 6px;
+  color: #0f5f59;
+  background: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inventory-view-button:hover,
+.inventory-view-button:focus-visible {
+  background: #e3f6f4;
+}
+
+.inventory-view-button[aria-pressed='true'] {
+  color: #fff;
+  background: #19a99f;
+}
+
 .inventory-table-scroll {
   overflow-x: auto;
   border: 1px solid #c3eeee;
