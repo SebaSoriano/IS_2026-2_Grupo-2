@@ -14,6 +14,12 @@ export const SEXOS_ANIMAL = {
   hembra: 'Hembra',
 }
 
+// Textos para el enum TipoVivienda de schema.prisma
+export const TIPOS_VIVIENDA = {
+  casa: 'Casa',
+  departamento: 'Departamento',
+}
+
 export const ESTADOS_SOLICITUD = {
   pendiente: 'Pendiente',
   en_proceso: 'En proceso',

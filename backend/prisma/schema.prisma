@@ -172,7 +172,6 @@ model animales {
   via_ingreso          String       @db.VarChar(100)
   peso_animal          Float
   especie_animal       String       @db.VarChar(100)
-  // macho o hembra (opcional en la base de datos porque los animales antiguos no lo tenían; la API lo exige)
   sexo_animal          SexoAnimal
   observaciones_animal String?
   foto_animal          String?      @db.VarChar(255)
@@ -254,6 +253,7 @@ model adoptante {
   correo                  String
   fecha_nacimiento        DateTime
   observaciones_adoptante String?
+  tipo_vivienda           TipoVivienda
   adopciones              adopciones[]
   solicitudes             solicitudes_adopcion[]
 }
@@ -272,6 +272,11 @@ model solicitudes_adopcion {
 
   id_adoptante Int
   adoptante    adoptante @relation(fields: [id_adoptante], references: [id_adoptante])
+}
+
+enum TipoVivienda {
+  casa
+  departamento
 }
 
 enum SexoAnimal {

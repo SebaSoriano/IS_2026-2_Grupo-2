@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { getAnimales, registrarSolicitudManual } from '../../services/api.js'
-import { SEXOS_ANIMAL } from '../../data/estados.js'
+import { SEXOS_ANIMAL, TIPOS_VIVIENDA } from '../../data/estados.js'
 import './AdoptionForm.css'
 
 // Fecha de hoy en formato AAAA-MM-DD usando la hora de Chile (no la hora UTC)
@@ -19,6 +19,7 @@ const formularioVacio = {
   telefono: '',
   correo: '',
   fecha_nacimiento: '',
+  tipo_vivienda: '',
   observaciones_adoptante: '',
 }
 
@@ -71,6 +72,7 @@ export default function AdoptionForm({ onClose, onSaved }) {
       telefono: formulario.telefono.trim(),
       correo: formulario.correo.trim(),
       fecha_nacimiento: formulario.fecha_nacimiento,
+      tipo_vivienda: formulario.tipo_vivienda,
     }
     // El animal es opcional: solo se envía si se eligió uno
     const conAnimal = formulario.id_animal !== ''
@@ -195,6 +197,26 @@ export default function AdoptionForm({ onClose, onSaved }) {
             )}
           </label>
 
+          <label className="adoption-form__field">
+            Tipo de vivienda
+            <select
+              name="tipo_vivienda"
+              value={formulario.tipo_vivienda}
+              onChange={cambiarCampo}
+              required
+            >
+              <option value="">Selecciona una opción</option>
+              {Object.entries(TIPOS_VIVIENDA).map(([valor, texto]) => (
+                <option value={valor} key={valor}>
+                  {texto}
+                </option>
+              ))}
+            </select>
+            {errores.tipo_vivienda && (
+              <span className="adoption-form__error">{errores.tipo_vivienda}</span>
+            )}
+          </label>
+          
           <div className="adoption-form__row">
             <label className="adoption-form__field">
               Teléfono

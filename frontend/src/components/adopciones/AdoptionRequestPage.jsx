@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { enviarSolicitudAdopcion, getAnimalParaAdoptar } from '../../services/api.js'
-import { SEXOS_ANIMAL } from '../../data/estados.js'
+import { SEXOS_ANIMAL, TIPOS_VIVIENDA } from '../../data/estados.js'
 import './AdoptionRequestPage.css'
 
 // Campos del formulario: los datos de la tabla "adoptante"
@@ -10,6 +10,7 @@ const formularioVacio = {
   telefono: '',
   correo: '',
   fecha_nacimiento: '',
+  tipo_vivienda: '',
   observaciones_adoptante: '',
 }
 
@@ -73,6 +74,7 @@ export default function AdoptionRequestPage() {
       telefono: formulario.telefono.trim(),
       correo: formulario.correo.trim(),
       fecha_nacimiento: formulario.fecha_nacimiento,
+      tipo_vivienda: formulario.tipo_vivienda,
     }
     if (formulario.observaciones_adoptante.trim() !== '') {
       datos.observaciones_adoptante = formulario.observaciones_adoptante
@@ -161,6 +163,17 @@ export default function AdoptionRequestPage() {
               <input name="direccion" value={formulario.direccion} onChange={cambiarCampo}
                 minLength={5} maxLength={200} autoComplete="street-address" required />
               {errores.direccion && <span className="adoptar__error">{errores.direccion}</span>}
+            </label>
+                      
+            <label className="adoptar__campo">
+              Tipo de vivienda
+              <select name="tipo_vivienda" value={formulario.tipo_vivienda} onChange={cambiarCampo} required>
+                <option value="">Selecciona una opción</option>
+                {Object.entries(TIPOS_VIVIENDA).map(([valor, texto]) => (
+                  <option value={valor} key={valor}>{texto}</option>
+                ))}
+              </select>
+              {errores.tipo_vivienda && <span className="adoptar__error">{errores.tipo_vivienda}</span>}
             </label>
 
             <label className="adoptar__campo">

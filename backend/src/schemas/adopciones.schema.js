@@ -21,6 +21,7 @@ export const adoptanteSchema = z.object({
     telefono: z.string().trim().regex(/^\+?\d{8,15}$/, 'Debe tener entre 8 y 15 dígitos (puede empezar con +)'),
     correo: z.string().trim().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Debe ser un correo válido'),
     fecha_nacimiento: fechaNoFutura,
+    tipo_vivienda: z.enum(['casa', 'departamento'], 'Debe elegir casa o departamento'),
     observaciones_adoptante: z.string().trim().max(500, 'Debe tener como máximo 500 caracteres').optional(),
 });
 

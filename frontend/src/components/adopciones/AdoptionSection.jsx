@@ -5,7 +5,7 @@ import {
   marcarAdoptado,
   rechazarSolicitud,
 } from '../../services/api.js'
-import { ESTADOS_SOLICITUD } from '../../data/estados.js'
+import { ESTADOS_SOLICITUD, TIPOS_VIVIENDA } from '../../data/estados.js'
 import AdoptionForm from './AdoptionForm.jsx'
 import VisitaForm from './VisitaForm.jsx'
 import SolicitudExistenteForm from './SolicitudExistenteForm.jsx'
@@ -250,6 +250,7 @@ export default function AdoptionSection() {
                   <th scope="col">Adoptante</th>
                   <th scope="col">Teléfono</th>
                   <th scope="col">Correo</th>
+                  <th scope="col">Vivienda</th>
                   <th scope="col">Estado</th>
                   <th scope="col">Visita</th>
                   <th scope="col">Observaciones</th>
@@ -258,7 +259,7 @@ export default function AdoptionSection() {
               <tbody>
                 {solicitudes.length === 0 ? (
                   <tr>
-                    <td className="adoption-table-empty" colSpan="10">
+                    <td className="adoption-table-empty" colSpan="11">
                       No hay solicitudes abiertas.
                     </td>
                   </tr>
@@ -284,6 +285,7 @@ export default function AdoptionSection() {
                       <td>{solicitud.adoptante.nombre_adoptante ?? '—'}</td>
                       <td>{solicitud.adoptante.telefono}</td>
                       <td>{solicitud.adoptante.correo}</td>
+                      <td>{TIPOS_VIVIENDA[solicitud.adoptante.tipo_vivienda] ?? '—'}</td>
                       <td>{ESTADOS_SOLICITUD[solicitud.estado] ?? solicitud.estado}</td>
                       <td>{formatearFechaHora(solicitud.fecha_visita)}</td>
                       <td>{solicitud.adoptante.observaciones_adoptante || '—'}</td>
